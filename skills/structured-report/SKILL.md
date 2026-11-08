@@ -66,6 +66,10 @@ The report separates **how you know** each thing. Readers rely on this; never bl
   (done / partial / failed / skipped / planned / in_progress / blocked) and `uses` (context ids).
   Dead ends are stages too (`failed` / `skipped`) — they show why the final path was chosen.
   Use `flow` edges when work branched or ran in parallel; omit `flow` for a straight line.
+  A stage that was itself several steps gets its own `stages` (and `flow`), to any depth — the
+  reader opens it like a folder. Keep each level to 2–8 stages; nest instead of making one level
+  long. Typical: an investigation stage containing its queries, a migration stage containing its
+  batches.
 - **approvals** — decisions only the reader can make (merge/ship, spend, scope, anything
   irreversible or customer-facing). State the question, `why` it is theirs, and `options` if
   there are clear choices. Never present something you already did as needing approval.

@@ -66,7 +66,9 @@ Everything is HTML-escaped.
       "detail": "what was done",
       "outcome": "what it produced or showed",
       "status": "done (default) | partial | failed | skipped | planned | in_progress | blocked",
-      "uses": ["C2"]                                           // context ids
+      "uses": ["C2"],                                          // context ids
+      "stages": [ … ],                                         // optional nested steps, same shape, any depth
+      "flow": [ … ]                                            // edges between those nested steps
     }],
     "flow": [{"from": "stage id", "to": "stage id", "label": "optional"}],
     // flow omitted → stages are chained in order
@@ -102,6 +104,10 @@ Warnings: task without context or stages, inference without basis, assumption wi
   Tabbing to a card brings it into view. Layout: left → right by `depends` / `blocks`, dashed
   for `related`. Each card: status icon, title,
   `brief` (falls back to `result.summary`), and the task's approvals and actions.
+- Workflow is the same kind of canvas inside the report (drag to move, pinch / Ctrl+wheel to zoom;
+  plain wheel keeps scrolling the report). The expand button opens it full page (Esc to leave).
+  Stages with nested `stages` look like a stack; clicking one opens its level, numbered
+  hierarchically (3 → 3.1 → 3.1.2), with breadcrumbs to go back. Each level keeps its own view.
 - Click a card → drawer with the task report in the template's fixed section order;
   `#task=<id>` deep-links to it; Esc closes; Alt+←/→ moves between tasks.
 - Print / Save as PDF prints every task report, one per page, with stages as a numbered list.
@@ -109,5 +115,6 @@ Warnings: task without context or stages, inference without basis, assumption wi
 ## Template placeholders
 
 See the docstring of `scripts/build.py`. The template receives the JSON plus derived fields:
-`status_label`, `waiting` (task has approvals or actions), `flow_edges` (stages chained when
+`status_label`, `waiting` (task has approvals or actions), `levels` (the workflow flattened into
+levels: `key`, `trail`, `root`, `stages` with `num` and `child`, `edges` — stages chained when
 `flow` is omitted), `confidence_dots`, top-level `edges` and `has_blocks`.

@@ -144,6 +144,68 @@
           "outcome": "`EMFILE` from the payments client dominates.",
           "uses": [
             "C4"
+          ],
+          "stages": [
+            {
+              "id": "q",
+              "title": "Export peak logs",
+              "detail": "Log store query for 19:00–19:30",
+              "outcome": "**41,200** lines",
+              "uses": [
+                "C4"
+              ]
+            },
+            {
+              "id": "g",
+              "title": "Group the errors",
+              "detail": "By message and source service",
+              "outcome": "Top: `EMFILE` — 76%",
+              "stages": [
+                {
+                  "id": "g1",
+                  "title": "Normalise messages",
+                  "detail": "Stripped ids and timestamps"
+                },
+                {
+                  "id": "g2",
+                  "title": "Count by source",
+                  "outcome": "Payments client produces every `EMFILE`"
+                },
+                {
+                  "id": "g3",
+                  "title": "Check other pods",
+                  "status": "skipped",
+                  "detail": "Errors only in checkout — skipped"
+                }
+              ],
+              "flow": [
+                {
+                  "from": "g1",
+                  "to": "g2"
+                },
+                {
+                  "from": "g1",
+                  "to": "g3"
+                }
+              ]
+            },
+            {
+              "id": "c",
+              "title": "Match socket metrics",
+              "status": "failed",
+              "detail": "Open-files metric is not collected",
+              "outcome": "Dead end — moved to the changelog"
+            }
+          ],
+          "flow": [
+            {
+              "from": "q",
+              "to": "g"
+            },
+            {
+              "from": "q",
+              "to": "c"
+            }
           ]
         },
         {

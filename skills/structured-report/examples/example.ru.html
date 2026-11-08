@@ -48,32 +48,38 @@ code{font:12.5px/1.4 ui-monospace,"SF Mono",Menlo,monospace;background:var(--pan
 .st-done{color:var(--ok)} .st-in_progress,.st-partial{color:var(--warn)} .st-blocked,.st-failed{color:var(--bad)}
 .st-needs_review{color:var(--cobalt)} .st-planned,.st-skipped{color:var(--idle)}
 
-/* ── page 1: map only, never scrolls ─────────────────── */
+.iconbtn{all:unset;cursor:pointer;width:36px;height:36px;display:grid;place-items:center;border-radius:8px;border:1px solid var(--rule);background:var(--panel);color:var(--ink)}
+.iconbtn:hover{border-color:var(--ink-3)} .iconbtn:focus-visible{outline:2px solid var(--cobalt)}
+.iconbtn[disabled]{opacity:.35;cursor:default}
+
+/* ── canvas: shared by the work map and every workflow ─── */
+.canvas{position:relative;overflow:hidden;touch-action:none;cursor:grab;
+  background-image:radial-gradient(var(--dot) 1px,transparent 1.2px);background-size:18px 18px}
+.canvas.dragging{cursor:grabbing} .canvas.dragging .node,.canvas.dragging .stage{cursor:grabbing}
+.canvas .graph{position:absolute;left:0;top:0;transform-origin:0 0}
+.canvas.animate .graph{transition:transform .25s cubic-bezier(.2,.7,.2,1)}
+.canvas .graph[hidden]{display:none}
+.graph > svg{position:absolute;inset:0;overflow:visible;pointer-events:none}
+.edge{fill:none;stroke:var(--ink-2);stroke-width:1.5}
+.edge.related{stroke-dasharray:5 5;stroke:var(--ink-3)}
+.edge.blocks{stroke:var(--bad)}
+.edge-label{font:12px var(--text);fill:var(--ink-2);paint-order:stroke;stroke:var(--paper);stroke-width:5px}
+.zoom{position:absolute;left:12px;bottom:12px;display:flex;gap:4px;z-index:2}
+.zoom .iconbtn{width:32px;height:32px}
+.zoom output{min-width:50px;height:32px;display:grid;place-items:center;font-size:12.5px;color:var(--ink-2);background:var(--panel);border:1px solid var(--rule);border-radius:8px}
+.minimap{position:absolute;right:12px;bottom:12px;z-index:2;background:rgba(248,249,246,.92);border:1px solid var(--rule);border-radius:8px;cursor:pointer;touch-action:none}
+.minimap[hidden]{display:none}
+.minimap rect.n{fill:var(--rule)} .minimap rect.n.mine{fill:var(--marker)} .minimap rect.n.deep{fill:var(--ink-3)}
+.minimap rect.vp{fill:rgba(45,79,214,.08);stroke:var(--cobalt);stroke-width:1.5}
+
+/* ── page 1: map only; the page never scrolls ─────────── */
 body.map-page{height:100vh;overflow:hidden;display:flex;flex-direction:column}
 .bar{display:flex;align-items:center;gap:24px;padding:14px clamp(16px,3vw,36px);border-bottom:1px solid var(--rule)}
 .bar h1{font:600 22px/1.15 var(--display);margin:0;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .legend{display:flex;gap:16px;color:var(--ink-2);font-size:13px;align-items:center}
 .legend span{display:inline-flex;align-items:center;gap:7px}
 .legend svg.line{width:30px;height:10px}
-.iconbtn{all:unset;cursor:pointer;width:36px;height:36px;display:grid;place-items:center;border-radius:8px;border:1px solid var(--rule);background:var(--panel);color:var(--ink)}
-.iconbtn:hover{border-color:var(--ink-3)} .iconbtn:focus-visible{outline:2px solid var(--cobalt)}
-.iconbtn[disabled]{opacity:.35;cursor:default}
-.map{flex:1;position:relative;overflow:hidden;touch-action:none;cursor:grab;background-image:radial-gradient(var(--dot) 1px,transparent 1.2px);background-size:18px 18px}
-.graph{position:absolute;left:0;top:0;transform-origin:0 0}
-.map.dragging{cursor:grabbing} .map.dragging .node{cursor:grabbing}
-.map.animate .graph{transition:transform .25s cubic-bezier(.2,.7,.2,1)}
-.zoom{position:absolute;left:16px;bottom:16px;display:flex;gap:4px;z-index:2}
-.zoom .iconbtn{width:34px;height:34px}
-.zoom output{min-width:52px;height:34px;display:grid;place-items:center;font-size:12.5px;color:var(--ink-2);background:var(--panel);border:1px solid var(--rule);border-radius:8px}
-.minimap{position:absolute;right:16px;bottom:16px;z-index:2;background:rgba(248,249,246,.92);border:1px solid var(--rule);border-radius:8px;cursor:pointer;touch-action:none}
-.minimap[hidden]{display:none}
-.minimap rect.n{fill:var(--rule)} .minimap rect.n.mine{fill:var(--marker)}
-.minimap rect.vp{fill:rgba(45,79,214,.08);stroke:var(--cobalt);stroke-width:1.5}
-.graph > svg{position:absolute;inset:0;overflow:visible;pointer-events:none}
-.edge{fill:none;stroke:var(--ink-2);stroke-width:1.5}
-.edge.related{stroke-dasharray:5 5;stroke:var(--ink-3)}
-.edge.blocks{stroke:var(--bad)}
-.edge-label{font:12px var(--text);fill:var(--ink-2);paint-order:stroke;stroke:var(--paper);stroke-width:5px}
+#map{flex:1}
 
 .node{position:absolute;width:300px;text-align:left;font:inherit;color:inherit;cursor:pointer;
   background:var(--panel);border:1px solid var(--rule);border-radius:var(--r);padding:14px 16px;
@@ -92,7 +98,7 @@ body.map-page{height:100vh;overflow:hidden;display:flex;flex-direction:column}
 /* ── task report (drawer) ─────────────────────────────── */
 .scrim{position:fixed;inset:0;background:rgba(23,38,43,.28);opacity:0;pointer-events:none;transition:opacity .2s}
 .scrim.open{opacity:1;pointer-events:auto}
-.drawer{position:fixed;top:0;right:0;height:100%;width:min(880px,100%);background:var(--paper);border-left:1px solid var(--rule);
+.drawer{position:fixed;top:0;right:0;height:100%;width:min(920px,100%);background:var(--paper);border-left:1px solid var(--rule);
   transform:translateX(102%);transition:transform .28s cubic-bezier(.2,.7,.2,1);overflow:auto;box-shadow:-20px 0 40px -30px rgba(23,38,43,.6)}
 .drawer.open{transform:none} .drawer:focus{outline:none}
 .d-nav{position:sticky;top:0;z-index:3;display:flex;justify-content:flex-end;gap:6px;padding:12px 20px 0;height:0;overflow:visible}
@@ -137,11 +143,29 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
 .results .k{font-size:12.5px;color:var(--ink-2);padding-top:2px}
 .results .v b{font:600 18px var(--display);margin-right:8px}
 
-.flow{position:relative;overflow:auto;padding:16px 6px 20px;margin:0 -6px 8px;background-image:radial-gradient(var(--dot) 1px,transparent 1.2px);background-size:16px 16px;border-radius:var(--r-s)}
-.flow .graph{position:relative}
+/* ── workflow: canvas with nested levels, expandable to the full page ── */
+.flow{border:1px solid var(--rule);border-radius:var(--r);background:var(--paper);display:flex;flex-direction:column;margin:0 0 12px;overflow:hidden}
+.flow-bar{display:flex;align-items:center;gap:10px;padding:8px 8px 8px 12px;border-bottom:1px solid var(--rule);background:var(--panel)}
+.crumbs{flex:1;min-width:0;display:flex;align-items:center;gap:4px;flex-wrap:wrap;font-size:13.5px}
+.crumbs[hidden]{display:none}
+.crumbs button{all:unset;cursor:pointer;padding:2px 6px;border-radius:5px;color:var(--cobalt)}
+.crumbs button:hover{background:var(--panel-2)} .crumbs button:focus-visible{outline:2px solid var(--cobalt)}
+.crumbs button[aria-current="true"]{color:var(--ink);font-weight:600;cursor:default}
+.crumbs .sep{color:var(--ink-3)}
+.crumbs .num{font:600 12px var(--display);margin-right:4px;color:var(--ink-2)}
+.flow-bar .iconbtn{width:32px;height:32px}
+.flow .canvas{height:460px}
+.flow.full{position:fixed;inset:0;z-index:50;margin:0;border:0;border-radius:0}
+.flow.full .canvas{height:auto;flex:1}
+.flow.full .flow-bar{padding:12px 16px 12px 20px}
+.flow-title{display:none;font:600 18px var(--display);margin-right:12px;white-space:nowrap}
+.flow.full .flow-title{display:block}
+.flow [data-expand] .i-collapse,.flow.full [data-expand] .i-expand{display:none}
+.flow.full [data-expand] .i-collapse{display:block}
+
 .stage{position:absolute;width:300px;background:var(--panel);border:1px solid var(--rule);border-radius:var(--r);padding:10px 12px}
 .stage .h{display:grid;grid-template-columns:auto 1fr auto;gap:8px;align-items:start}
-.stage .num{font:600 13px/1 var(--display);width:24px;height:24px;border-radius:50%;display:grid;place-items:center;background:var(--ink);color:var(--panel)}
+.stage .num{font:600 12px/1 var(--display);min-width:24px;height:24px;padding:0 6px;border-radius:12px;display:grid;place-items:center;background:var(--ink);color:var(--panel)}
 .stage h4{font:600 16px/1.25 var(--display);margin:2px 0 0}
 .stage .d{font-size:13.5px;margin:8px 0 0}
 .stage .o{font-size:13px;margin:8px 0 0;padding-top:8px;border-top:1px solid var(--rule);display:grid;grid-template-columns:15px 1fr;gap:6px}
@@ -149,6 +173,10 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
 .stage .refs{margin-top:8px}
 .stage.s-failed{border-color:var(--bad)} .stage.s-skipped,.stage.s-planned{border-style:dashed} .stage.s-skipped{opacity:.65}
 .stage.s-partial,.stage.s-in_progress{border-color:var(--warn)}
+/* a stage with nested steps is a stack you can open */
+.stage.deep{cursor:pointer;box-shadow:4px 4px 0 -1px var(--panel),4px 4px 0 0 var(--rule),8px 8px 0 -1px var(--panel),8px 8px 0 0 var(--rule)}
+.stage.deep:hover{border-color:var(--ink-3)}
+.stage .open{display:flex;align-items:center;gap:6px;margin-top:10px;padding-top:8px;border-top:1px solid var(--rule);font-size:13px;color:var(--cobalt)}
 .stages-print{display:none}
 
 .mine{list-style:none;margin:0 0 12px;padding:0;display:grid;gap:10px}
@@ -163,16 +191,16 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
 .copy:focus-visible{outline:2px solid var(--cobalt)}
 
 .reports{display:none}
-@media (max-width:760px){.legend span{display:none} .report{padding:0 16px 48px} .r-head{padding-right:120px}}
+@media (max-width:760px){.legend span{display:none} .report{padding:0 16px 48px} .r-head{padding-right:120px} .flow .canvas{height:380px}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 @media print{
-  .zoom,.minimap{display:none!important}
   body.map-page{height:auto;overflow:visible;display:block;background:#fff}
-  .map,.legend,.drawer,.scrim,#print-btn{display:none!important}
+  #map,.legend,.drawer,.scrim,#print-btn,.zoom,.minimap{display:none!important}
   .reports{display:block!important}
   .reports .report{break-before:page;padding:0}
   .reports .r-head{position:static;padding-right:0}
   .reports .flow{display:none} .reports .stages-print{display:block}
+  .stages-print h5{font:600 14px var(--display);margin:10px 0 4px}
 }
 </style>
 </head>
@@ -203,16 +231,19 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
   <symbol id="i-approve" viewBox="0 0 24 24"><path d="M4 20h16"/><path d="M6.5 15.5 15 7l2.5 2.5L9 18H6.5z"/><path d="m13.5 8.5 2.5 2.5"/></symbol>
   <symbol id="i-action" viewBox="0 0 24 24"><path d="M9 11.5V5.5a1.5 1.5 0 0 1 3 0V11m0-1.5a1.5 1.5 0 0 1 3 0V11m0-.5a1.5 1.5 0 0 1 3 0v4c0 3.5-2.5 6-6 6h-1c-2 0-3.2-.8-4.5-2.4L4.3 15a1.5 1.5 0 0 1 2.4-1.8L9 15.5"/></symbol>
   <symbol id="i-outcome" viewBox="0 0 24 24"><path d="M5 12h12M13 7l5 5-5 5"/></symbol>
+  <symbol id="i-nested" viewBox="0 0 24 24"><rect x="3" y="3" width="13" height="10" rx="1.5"/><path d="M8 17h12V8"/><path d="M12 21h10"/></symbol>
   <!-- controls -->
   <symbol id="i-close" viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></symbol>
   <symbol id="i-prev" viewBox="0 0 24 24"><path d="m15 5-7 7 7 7"/></symbol>
   <symbol id="i-next" viewBox="0 0 24 24"><path d="m9 5 7 7-7 7"/></symbol>
   <symbol id="i-link" viewBox="0 0 24 24"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></symbol>
   <symbol id="i-print" viewBox="0 0 24 24"><path d="M7 9V3.5h10V9M7 17H4.5V9h15v8H17"/><rect x="7" y="14" width="10" height="6.5"/></symbol>
+  <symbol id="i-copy" viewBox="0 0 24 24"><rect x="8" y="8" width="12" height="12" rx="1.5"/><path d="M16 8V4H4v12h4"/></symbol>
   <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
   <symbol id="i-minus" viewBox="0 0 24 24"><path d="M5 12h14"/></symbol>
   <symbol id="i-fit" viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></symbol>
-  <symbol id="i-copy" viewBox="0 0 24 24"><rect x="8" y="8" width="12" height="12" rx="1.5"/><path d="M16 8V4H4v12h4"/></symbol>
+  <symbol id="i-expand" viewBox="0 0 24 24"><path d="M14 4h6v6M10 20H4v-6M20 4l-7 7M4 20l7-7"/></symbol>
+  <symbol id="i-collapse" viewBox="0 0 24 24"><path d="M20 10h-6V4M4 14h6v6M14 10l7-7M10 14l-7 7"/></symbol>
 </svg>
 
 <!-- ═══ Page 1 — Work map ═══════════════════════════════════════════════════ -->
@@ -226,10 +257,10 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
   <button class="iconbtn" id="print-btn" title="Print all tasks" aria-label="Print all tasks"><svg class="icon"><use href="#i-print"/></svg></button>
 </header>
 
-<main class="map" id="map" aria-label="Work map">
-  <div class="graph" id="graph" data-edges="[{&quot;from&quot;: &quot;latency&quot;, &quot;to&quot;: &quot;pool&quot;, &quot;kind&quot;: &quot;depends&quot;, &quot;label&quot;: null}, {&quot;from&quot;: &quot;latency&quot;, &quot;to&quot;: &quot;replay&quot;, &quot;kind&quot;: &quot;depends&quot;, &quot;label&quot;: null}, {&quot;from&quot;: &quot;pool&quot;, &quot;to&quot;: &quot;alerts&quot;, &quot;kind&quot;: &quot;depends&quot;, &quot;label&quot;: &quot;нужна метрика&quot;}, {&quot;from&quot;: &quot;runbook&quot;, &quot;to&quot;: &quot;replay&quot;, &quot;kind&quot;: &quot;related&quot;, &quot;label&quot;: null}, {&quot;from&quot;: &quot;runbook&quot;, &quot;to&quot;: &quot;alerts&quot;, &quot;kind&quot;: &quot;related&quot;, &quot;label&quot;: null}]">
+<main class="canvas" id="map" aria-label="Work map" data-dir="LR">
+  <div class="graph" data-key="map" data-edges="[{&quot;from&quot;: &quot;latency&quot;, &quot;to&quot;: &quot;pool&quot;, &quot;kind&quot;: &quot;depends&quot;, &quot;label&quot;: null}, {&quot;from&quot;: &quot;latency&quot;, &quot;to&quot;: &quot;replay&quot;, &quot;kind&quot;: &quot;depends&quot;, &quot;label&quot;: null}, {&quot;from&quot;: &quot;pool&quot;, &quot;to&quot;: &quot;alerts&quot;, &quot;kind&quot;: &quot;depends&quot;, &quot;label&quot;: &quot;нужна метрика&quot;}, {&quot;from&quot;: &quot;runbook&quot;, &quot;to&quot;: &quot;replay&quot;, &quot;kind&quot;: &quot;related&quot;, &quot;label&quot;: null}, {&quot;from&quot;: &quot;runbook&quot;, &quot;to&quot;: &quot;alerts&quot;, &quot;kind&quot;: &quot;related&quot;, &quot;label&quot;: null}]">
     
-    <button class="node" type="button" data-task="latency" aria-label="Почему p95 оформления удвоился после 2.14 — Done">
+    <button class="node" type="button" data-id="latency" data-task="latency" aria-label="Почему p95 оформления удвоился после 2.14 — Done">
       <div class="nh"><span class="st-done" title="Done"><svg class="icon"><use href="#i-done"/></svg></span><h2>Почему p95 оформления удвоился после 2.14</h2></div>
       <div class="brief rich"><dl class="kv"><dt>Причина</dt><dd>лимит соединений снят в клиенте 4.0</dd><dt>Доказано</dt><dd>нагрузочным тестом</dd></dl></div>
       <ul class="waiting">
@@ -238,7 +269,7 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
       </ul>
     </button>
     
-    <button class="node" type="button" data-task="pool" aria-label="Ограничить соединения платёжного клиента — Needs review">
+    <button class="node" type="button" data-id="pool" data-task="pool" aria-label="Ограничить соединения платёжного клиента — Needs review">
       <div class="nh"><span class="st-needs_review" title="Needs review"><svg class="icon"><use href="#i-needs_review"/></svg></span><h2>Ограничить соединения платёжного клиента</h2></div>
       <div class="brief rich"><dl class="kv"><dt>Лимит</dt><dd>50 соединений на под</dd><dt>Статус</dt><dd>PR #1290 на ревью</dd></dl></div>
       <ul class="waiting">
@@ -247,7 +278,7 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
       </ul>
     </button>
     
-    <button class="node" type="button" data-task="replay" aria-label="Восстановить заказы, упавшие во время инцидента — Blocked">
+    <button class="node" type="button" data-id="replay" data-task="replay" aria-label="Восстановить заказы, упавшие во время инцидента — Blocked">
       <div class="nh"><span class="st-blocked" title="Blocked"><svg class="icon"><use href="#i-blocked"/></svg></span><h2>Восстановить заказы, упавшие во время инцидента</h2></div>
       <div class="brief rich"><dl class="kv"><dt>Затронуто</dt><dd><strong>212</strong> клиентов, $18 406</dd><dt>Скрипт</dt><dd>готов, ждёт решения</dd></dl></div>
       <ul class="waiting">
@@ -256,26 +287,26 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
       </ul>
     </button>
     
-    <button class="node" type="button" data-task="alerts" aria-label="Алерты на таймауты провайдера и заполненность пула — In progress">
+    <button class="node" type="button" data-id="alerts" data-task="alerts" aria-label="Алерты на таймауты провайдера и заполненность пула — In progress">
       <div class="nh"><span class="st-in_progress" title="In progress"><svg class="icon"><use href="#i-in_progress"/></svg></span><h2>Алерты на таймауты провайдера и заполненность пула</h2></div>
       <div class="brief rich"><dl class="kv"><dt>Таймауты</dt><dd>черновик алерта</dd><dt>Пул</dt><dd>ждёт метрику</dd></dl></div>
       
     </button>
     
-    <button class="node" type="button" data-task="runbook" aria-label="Обновить ранбук платёжных инцидентов — Planned">
+    <button class="node" type="button" data-id="runbook" data-task="runbook" aria-label="Обновить ранбук платёжных инцидентов — Planned">
       <div class="nh"><span class="st-planned" title="Planned"><svg class="icon"><use href="#i-planned"/></svg></span><h2>Обновить ранбук платёжных инцидентов</h2></div>
       <div class="brief rich"><p>Не начато</p></div>
       
     </button>
     
   </div>
-  <div class="zoom" aria-label="Zoom">
+  <div class="zoom">
     <button class="iconbtn" data-zoom="out" title="Zoom out (−)" aria-label="Zoom out"><svg class="icon"><use href="#i-minus"/></svg></button>
-    <output id="zoom-level" aria-live="polite">100%</output>
+    <output aria-live="polite">100%</output>
     <button class="iconbtn" data-zoom="in" title="Zoom in (+)" aria-label="Zoom in"><svg class="icon"><use href="#i-plus"/></svg></button>
     <button class="iconbtn" data-zoom="fit" title="Show everything (0)" aria-label="Show everything"><svg class="icon"><use href="#i-fit"/></svg></button>
   </div>
-  <svg class="minimap" id="minimap" hidden aria-hidden="true"></svg>
+  <svg class="minimap" hidden aria-hidden="true"></svg>
 </main>
 
 <!-- ═══ Task reports — one per task, shown in the drawer ═══════════════════ -->
@@ -291,7 +322,7 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
 
 <div class="reports" id="reports">
 
-<article class="report" id="report-latency" data-task="latency" data-flow="[{&quot;from&quot;: &quot;s1&quot;, &quot;to&quot;: &quot;s2&quot;}, {&quot;from&quot;: &quot;s1&quot;, &quot;to&quot;: &quot;s3&quot;}, {&quot;from&quot;: &quot;s2&quot;, &quot;to&quot;: &quot;s4&quot;}, {&quot;from&quot;: &quot;s3&quot;, &quot;to&quot;: &quot;s4&quot;}, {&quot;from&quot;: &quot;s4&quot;, &quot;to&quot;: &quot;s5&quot;}, {&quot;from&quot;: &quot;s5&quot;, &quot;to&quot;: &quot;s6&quot;}]">
+<article class="report" id="report-latency" data-task="latency">
   <header class="r-head">
     <span class="st-done" title="Done"><svg class="icon"><use href="#i-done"/></svg></span>
     <h2>Почему p95 оформления удвоился после 2.14</h2>
@@ -371,45 +402,108 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
     </ul></section>
 
   <section class="sec"><h3><svg class="icon"><use href="#i-flow"/></svg>Workflow</h3>
-    <div class="flow"><div class="graph">
-      <div class="stage s-done" data-id="s1">
-        <div class="h"><span class="num">1</span><h4>Подтвердить регрессию</h4><span class="st-done" title="Done"><svg class="icon sm"><use href="#i-done"/></svg></span></div>
-        <div class="d rich"><p>Сравнил p95 по часам за две недели вокруг релиза</p></div>
-        <div class="o"><svg class="icon sm"><use href="#i-outcome"/></svg><div class="rich"><p>Ступенька в момент выкладки 2.14</p></div></div>
-        <div class="refs"><a class="ref-chip" href="#ctx-C1" data-ctx="C1">C1</a></div>
+    <div class="flow">
+      <div class="flow-bar">
+        <span class="flow-title">Почему p95 оформления удвоился после 2.14</span>
+        <nav class="crumbs" data-for="root" aria-label="Workflow level">
+          <button type="button" data-goto="root">Workflow</button>
+        </nav><nav class="crumbs" data-for="root/s3" aria-label="Workflow level" hidden>
+          <button type="button" data-goto="root">Workflow</button><span class="sep">›</span><button type="button" data-goto="root/s3"><span class="num">3</span>Прочитать логи ошибок</button>
+        </nav><nav class="crumbs" data-for="root/s3/g" aria-label="Workflow level" hidden>
+          <button type="button" data-goto="root">Workflow</button><span class="sep">›</span><button type="button" data-goto="root/s3"><span class="num">3</span>Прочитать логи ошибок</button><span class="sep">›</span><button type="button" data-goto="root/s3/g"><span class="num">3.2</span>Сгруппировать ошибки</button>
+        </nav>
+        <button class="iconbtn" data-expand title="Expand to full page" aria-label="Expand workflow"><svg class="icon i-expand"><use href="#i-expand"/></svg><svg class="icon i-collapse"><use href="#i-collapse"/></svg></button>
       </div>
-      <div class="stage s-done" data-id="s2">
-        <div class="h"><span class="num">2</span><h4>Разобрать diff релиза</h4><span class="st-done" title="Done"><svg class="icon sm"><use href="#i-done"/></svg></span></div>
-        <div class="d rich"><p>Выписал все изменения зависимостей и конфигов в 2.14</p></div>
-        <div class="o"><svg class="icon sm"><use href="#i-outcome"/></svg><div class="rich"><p><strong>Одно рискованное:</strong> клиент 3.2 → 4.0</p></div></div>
-        <div class="refs"><a class="ref-chip" href="#ctx-C2" data-ctx="C2">C2</a></div>
+      <div class="canvas" data-dir="TB" data-embedded>
+        <div class="graph" data-key="root" data-edges="[{&quot;from&quot;: &quot;s1&quot;, &quot;to&quot;: &quot;s2&quot;}, {&quot;from&quot;: &quot;s1&quot;, &quot;to&quot;: &quot;s3&quot;}, {&quot;from&quot;: &quot;s2&quot;, &quot;to&quot;: &quot;s4&quot;}, {&quot;from&quot;: &quot;s3&quot;, &quot;to&quot;: &quot;s4&quot;}, {&quot;from&quot;: &quot;s4&quot;, &quot;to&quot;: &quot;s5&quot;}, {&quot;from&quot;: &quot;s5&quot;, &quot;to&quot;: &quot;s6&quot;}]">
+          <div class="stage s-done" data-id="s1">
+            <div class="h"><span class="num">1</span><h4>Подтвердить регрессию</h4><span class="st-done" title="Done"><svg class="icon sm"><use href="#i-done"/></svg></span></div>
+            <div class="d rich"><p>Сравнил p95 по часам за две недели вокруг релиза</p></div>
+            <div class="o"><svg class="icon sm"><use href="#i-outcome"/></svg><div class="rich"><p>Ступенька в момент выкладки 2.14</p></div></div>
+            <div class="refs"><a class="ref-chip" href="#ctx-C1" data-ctx="C1">C1</a></div>
+            
+          </div><div class="stage s-done" data-id="s2">
+            <div class="h"><span class="num">2</span><h4>Разобрать diff релиза</h4><span class="st-done" title="Done"><svg class="icon sm"><use href="#i-done"/></svg></span></div>
+            <div class="d rich"><p>Выписал все изменения зависимостей и конфигов в 2.14</p></div>
+            <div class="o"><svg class="icon sm"><use href="#i-outcome"/></svg><div class="rich"><p><strong>Одно рискованное:</strong> клиент 3.2 → 4.0</p></div></div>
+            <div class="refs"><a class="ref-chip" href="#ctx-C2" data-ctx="C2">C2</a></div>
+            
+          </div><div class="stage s-done deep" data-id="s3" data-child="root/s3" tabindex="0" role="button" aria-label="Open steps of Прочитать логи ошибок">
+            <div class="h"><span class="num">3</span><h4>Прочитать логи ошибок</h4><span class="st-done" title="Done"><svg class="icon sm"><use href="#i-done"/></svg></span></div>
+            <div class="d rich"><p>Сгруппировал ошибки вечернего пика по тексту и источнику</p></div>
+            <div class="o"><svg class="icon sm"><use href="#i-outcome"/></svg><div class="rich"><p>Доминирует <code>EMFILE</code> из платёжного клиента</p></div></div>
+            <div class="refs"><a class="ref-chip" href="#ctx-C4" data-ctx="C4">C4</a></div>
+            <div class="open"><svg class="icon sm"><use href="#i-nested"/></svg>Open nested steps</div>
+          </div><div class="stage s-done" data-id="s4">
+            <div class="h"><span class="num">4</span><h4>Проверить changelog клиента</h4><span class="st-done" title="Done"><svg class="icon sm"><use href="#i-done"/></svg></span></div>
+            <div class="d rich"><p>Искал изменения поведения в 4.0</p></div>
+            <div class="o"><svg class="icon sm"><use href="#i-outcome"/></svg><div class="rich"><p>Лимит пула по умолчанию стал «без ограничений»</p></div></div>
+            <div class="refs"><a class="ref-chip" href="#ctx-C3" data-ctx="C3">C3</a><a class="ref-chip" href="#ctx-C6" data-ctx="C6">C6</a></div>
+            
+          </div><div class="stage s-done" data-id="s5">
+            <div class="h"><span class="num">5</span><h4>Воспроизвести под нагрузкой</h4><span class="st-done" title="Done"><svg class="icon sm"><use href="#i-done"/></svg></span></div>
+            <div class="d rich"><p>Прогнал нагрузочный тест с лимитом пула и без</p></div>
+            <div class="o"><svg class="icon sm"><use href="#i-outcome"/></svg><div class="rich"><p>С лимитом ошибки уходят, задержка возвращается</p></div></div>
+            
+            
+          </div><div class="stage s-done" data-id="s6">
+            <div class="h"><span class="num">6</span><h4>Описать</h4><span class="st-done" title="Done"><svg class="icon sm"><use href="#i-done"/></svg></span></div>
+            <div class="d rich"><p>Причина, доказательства и предлагаемый фикс — в задаче</p></div>
+            <div class="o"><svg class="icon sm"><use href="#i-outcome"/></svg><div class="rich"><p>Передано в задачу с исправлением</p></div></div>
+            
+            
+          </div>
+        </div><div class="graph" data-key="root/s3" data-edges="[{&quot;from&quot;: &quot;q&quot;, &quot;to&quot;: &quot;g&quot;}, {&quot;from&quot;: &quot;q&quot;, &quot;to&quot;: &quot;c&quot;}]" hidden>
+          <div class="stage s-done" data-id="q">
+            <div class="h"><span class="num">3.1</span><h4>Выгрузить логи пика</h4><span class="st-done" title="Done"><svg class="icon sm"><use href="#i-done"/></svg></span></div>
+            <div class="d rich"><p>Запрос в лог-хранилище за 19:00–19:30</p></div>
+            <div class="o"><svg class="icon sm"><use href="#i-outcome"/></svg><div class="rich"><p><strong>41 200</strong> строк</p></div></div>
+            <div class="refs"><a class="ref-chip" href="#ctx-C4" data-ctx="C4">C4</a></div>
+            
+          </div><div class="stage s-done deep" data-id="g" data-child="root/s3/g" tabindex="0" role="button" aria-label="Open steps of Сгруппировать ошибки">
+            <div class="h"><span class="num">3.2</span><h4>Сгруппировать ошибки</h4><span class="st-done" title="Done"><svg class="icon sm"><use href="#i-done"/></svg></span></div>
+            <div class="d rich"><p>По тексту и сервису-источнику</p></div>
+            <div class="o"><svg class="icon sm"><use href="#i-outcome"/></svg><div class="rich"><p><strong>Топ-1:</strong> <code>EMFILE</code> — 76%</p></div></div>
+            
+            <div class="open"><svg class="icon sm"><use href="#i-nested"/></svg>Open nested steps</div>
+          </div><div class="stage s-failed" data-id="c">
+            <div class="h"><span class="num">3.3</span><h4>Сверить с метриками сокетов</h4><span class="st-failed" title="Failed"><svg class="icon sm"><use href="#i-failed"/></svg></span></div>
+            <div class="d rich"><p>Метрика открытых файлов не собирается</p></div>
+            <div class="o"><svg class="icon sm"><use href="#i-outcome"/></svg><div class="rich"><p>Тупик — перешёл к changelog</p></div></div>
+            
+            
+          </div>
+        </div><div class="graph" data-key="root/s3/g" data-edges="[{&quot;from&quot;: &quot;g1&quot;, &quot;to&quot;: &quot;g2&quot;}, {&quot;from&quot;: &quot;g1&quot;, &quot;to&quot;: &quot;g3&quot;}]" hidden>
+          <div class="stage s-done" data-id="g1">
+            <div class="h"><span class="num">3.2.1</span><h4>Нормализовать тексты</h4><span class="st-done" title="Done"><svg class="icon sm"><use href="#i-done"/></svg></span></div>
+            <div class="d rich"><p>Убрал id и таймстемпы</p></div>
+            
+            
+            
+          </div><div class="stage s-done" data-id="g2">
+            <div class="h"><span class="num">3.2.2</span><h4>Посчитать по источнику</h4><span class="st-done" title="Done"><svg class="icon sm"><use href="#i-done"/></svg></span></div>
+            
+            <div class="o"><svg class="icon sm"><use href="#i-outcome"/></svg><div class="rich"><p>Платёжный клиент — источник всех <code>EMFILE</code></p></div></div>
+            
+            
+          </div><div class="stage s-skipped" data-id="g3">
+            <div class="h"><span class="num">3.2.3</span><h4>Проверить другие поды</h4><span class="st-skipped" title="Skipped"><svg class="icon sm"><use href="#i-skipped"/></svg></span></div>
+            <div class="d rich"><p>Ошибка только в checkout — пропустил</p></div>
+            
+            
+            
+          </div>
+        </div>
+        <div class="zoom">
+          <button class="iconbtn" data-zoom="out" title="Zoom out" aria-label="Zoom out"><svg class="icon"><use href="#i-minus"/></svg></button>
+          <output aria-live="polite">100%</output>
+          <button class="iconbtn" data-zoom="in" title="Zoom in" aria-label="Zoom in"><svg class="icon"><use href="#i-plus"/></svg></button>
+          <button class="iconbtn" data-zoom="fit" title="Show everything" aria-label="Show everything"><svg class="icon"><use href="#i-fit"/></svg></button>
+        </div>
+        <svg class="minimap" hidden aria-hidden="true"></svg>
       </div>
-      <div class="stage s-done" data-id="s3">
-        <div class="h"><span class="num">3</span><h4>Прочитать логи ошибок</h4><span class="st-done" title="Done"><svg class="icon sm"><use href="#i-done"/></svg></span></div>
-        <div class="d rich"><p>Сгруппировал ошибки вечернего пика по тексту и источнику</p></div>
-        <div class="o"><svg class="icon sm"><use href="#i-outcome"/></svg><div class="rich"><p>Доминирует <code>EMFILE</code> из платёжного клиента</p></div></div>
-        <div class="refs"><a class="ref-chip" href="#ctx-C4" data-ctx="C4">C4</a></div>
-      </div>
-      <div class="stage s-done" data-id="s4">
-        <div class="h"><span class="num">4</span><h4>Проверить changelog клиента</h4><span class="st-done" title="Done"><svg class="icon sm"><use href="#i-done"/></svg></span></div>
-        <div class="d rich"><p>Искал изменения поведения в 4.0</p></div>
-        <div class="o"><svg class="icon sm"><use href="#i-outcome"/></svg><div class="rich"><p>Лимит пула по умолчанию стал «без ограничений»</p></div></div>
-        <div class="refs"><a class="ref-chip" href="#ctx-C3" data-ctx="C3">C3</a><a class="ref-chip" href="#ctx-C6" data-ctx="C6">C6</a></div>
-      </div>
-      <div class="stage s-done" data-id="s5">
-        <div class="h"><span class="num">5</span><h4>Воспроизвести под нагрузкой</h4><span class="st-done" title="Done"><svg class="icon sm"><use href="#i-done"/></svg></span></div>
-        <div class="d rich"><p>Прогнал нагрузочный тест с лимитом пула и без</p></div>
-        <div class="o"><svg class="icon sm"><use href="#i-outcome"/></svg><div class="rich"><p>С лимитом ошибки уходят, задержка возвращается</p></div></div>
-        
-      </div>
-      <div class="stage s-done" data-id="s6">
-        <div class="h"><span class="num">6</span><h4>Описать</h4><span class="st-done" title="Done"><svg class="icon sm"><use href="#i-done"/></svg></span></div>
-        <div class="d rich"><p>Причина, доказательства и предлагаемый фикс — в задаче</p></div>
-        <div class="o"><svg class="icon sm"><use href="#i-outcome"/></svg><div class="rich"><p>Передано в задачу с исправлением</p></div></div>
-        
-      </div>
-    </div></div>
-    <ol class="stages-print"><li><strong>Подтвердить регрессию</strong> — Done<div class="rich"><p>Сравнил p95 по часам за две недели вокруг релиза</p></div><div class="rich">→ <p>Ступенька в момент выкладки 2.14</p></div></li><li><strong>Разобрать diff релиза</strong> — Done<div class="rich"><p>Выписал все изменения зависимостей и конфигов в 2.14</p></div><div class="rich">→ <p><strong>Одно рискованное:</strong> клиент 3.2 → 4.0</p></div></li><li><strong>Прочитать логи ошибок</strong> — Done<div class="rich"><p>Сгруппировал ошибки вечернего пика по тексту и источнику</p></div><div class="rich">→ <p>Доминирует <code>EMFILE</code> из платёжного клиента</p></div></li><li><strong>Проверить changelog клиента</strong> — Done<div class="rich"><p>Искал изменения поведения в 4.0</p></div><div class="rich">→ <p>Лимит пула по умолчанию стал «без ограничений»</p></div></li><li><strong>Воспроизвести под нагрузкой</strong> — Done<div class="rich"><p>Прогнал нагрузочный тест с лимитом пула и без</p></div><div class="rich">→ <p>С лимитом ошибки уходят, задержка возвращается</p></div></li><li><strong>Описать</strong> — Done<div class="rich"><p>Причина, доказательства и предлагаемый фикс — в задаче</p></div><div class="rich">→ <p>Передано в задачу с исправлением</p></div></li></ol>
+    </div>
+    <div class="stages-print"><ol><li><strong>1 Подтвердить регрессию</strong> — Done<div class="rich"><p>Сравнил p95 по часам за две недели вокруг релиза</p></div><div class="rich">→ <p>Ступенька в момент выкладки 2.14</p></div></li><li><strong>2 Разобрать diff релиза</strong> — Done<div class="rich"><p>Выписал все изменения зависимостей и конфигов в 2.14</p></div><div class="rich">→ <p><strong>Одно рискованное:</strong> клиент 3.2 → 4.0</p></div></li><li><strong>3 Прочитать логи ошибок</strong> — Done<div class="rich"><p>Сгруппировал ошибки вечернего пика по тексту и источнику</p></div><div class="rich">→ <p>Доминирует <code>EMFILE</code> из платёжного клиента</p></div></li><li><strong>4 Проверить changelog клиента</strong> — Done<div class="rich"><p>Искал изменения поведения в 4.0</p></div><div class="rich">→ <p>Лимит пула по умолчанию стал «без ограничений»</p></div></li><li><strong>5 Воспроизвести под нагрузкой</strong> — Done<div class="rich"><p>Прогнал нагрузочный тест с лимитом пула и без</p></div><div class="rich">→ <p>С лимитом ошибки уходят, задержка возвращается</p></div></li><li><strong>6 Описать</strong> — Done<div class="rich"><p>Причина, доказательства и предлагаемый фикс — в задаче</p></div><div class="rich">→ <p>Передано в задачу с исправлением</p></div></li></ol><h5>3 Прочитать логи ошибок › </h5><ol><li><strong>3.1 Выгрузить логи пика</strong> — Done<div class="rich"><p>Запрос в лог-хранилище за 19:00–19:30</p></div><div class="rich">→ <p><strong>41 200</strong> строк</p></div></li><li><strong>3.2 Сгруппировать ошибки</strong> — Done<div class="rich"><p>По тексту и сервису-источнику</p></div><div class="rich">→ <p><strong>Топ-1:</strong> <code>EMFILE</code> — 76%</p></div></li><li><strong>3.3 Сверить с метриками сокетов</strong> — Failed<div class="rich"><p>Метрика открытых файлов не собирается</p></div><div class="rich">→ <p>Тупик — перешёл к changelog</p></div></li></ol><h5>3 Прочитать логи ошибок › 3.2 Сгруппировать ошибки › </h5><ol><li><strong>3.2.1 Нормализовать тексты</strong> — Done<div class="rich"><p>Убрал id и таймстемпы</p></div></li><li><strong>3.2.2 Посчитать по источнику</strong> — Done<div class="rich"></div><div class="rich">→ <p>Платёжный клиент — источник всех <code>EMFILE</code></p></div></li><li><strong>3.2.3 Проверить другие поды</strong> — Skipped<div class="rich"><p>Ошибка только в checkout — пропустил</p></div></li></ol></div>
     </section>
 
   <section class="sec"><h3><svg class="icon"><use href="#i-approve"/></svg>Needs approval</h3>
@@ -423,7 +517,7 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
     </ul></section>
 </article>
 
-<article class="report" id="report-pool" data-task="pool" data-flow="[{&quot;from&quot;: &quot;a&quot;, &quot;to&quot;: &quot;b&quot;}, {&quot;from&quot;: &quot;b&quot;, &quot;to&quot;: &quot;c&quot;}, {&quot;from&quot;: &quot;b&quot;, &quot;to&quot;: &quot;d&quot;}, {&quot;from&quot;: &quot;c&quot;, &quot;to&quot;: &quot;d&quot;}]">
+<article class="report" id="report-pool" data-task="pool">
   <header class="r-head">
     <span class="st-needs_review" title="Needs review"><svg class="icon"><use href="#i-needs_review"/></svg></span>
     <h2>Ограничить соединения платёжного клиента</h2>
@@ -481,33 +575,52 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
     </ul></section>
 
   <section class="sec"><h3><svg class="icon"><use href="#i-flow"/></svg>Workflow</h3>
-    <div class="flow"><div class="graph">
-      <div class="stage s-done" data-id="a">
-        <div class="h"><span class="num">1</span><h4>Подобрать лимиты</h4><span class="st-done" title="Done"><svg class="icon sm"><use href="#i-done"/></svg></span></div>
-        <div class="d rich"><p>Вывел размер пула из пиковой конкурентности</p></div>
-        <div class="o"><svg class="icon sm"><use href="#i-outcome"/></svg><div class="rich"><p>50 на под, таймаут очереди 2 с</p></div></div>
-        <div class="refs"><a class="ref-chip" href="#ctx-C3" data-ctx="C3">C3</a></div>
+    <div class="flow">
+      <div class="flow-bar">
+        <span class="flow-title">Ограничить соединения платёжного клиента</span>
+        <nav class="crumbs" data-for="root" aria-label="Workflow level">
+          <button type="button" data-goto="root">Workflow</button>
+        </nav>
+        <button class="iconbtn" data-expand title="Expand to full page" aria-label="Expand workflow"><svg class="icon i-expand"><use href="#i-expand"/></svg><svg class="icon i-collapse"><use href="#i-collapse"/></svg></button>
       </div>
-      <div class="stage s-done" data-id="b">
-        <div class="h"><span class="num">2</span><h4>Сделать лимит и backoff</h4><span class="st-done" title="Done"><svg class="icon sm"><use href="#i-done"/></svg></span></div>
-        <div class="d rich"><p>Настроил пул; обернул ретраи в хелпер backoff</p></div>
-        
-        <div class="refs"><a class="ref-chip" href="#ctx-C1" data-ctx="C1">C1</a><a class="ref-chip" href="#ctx-C2" data-ctx="C2">C2</a></div>
+      <div class="canvas" data-dir="TB" data-embedded>
+        <div class="graph" data-key="root" data-edges="[{&quot;from&quot;: &quot;a&quot;, &quot;to&quot;: &quot;b&quot;}, {&quot;from&quot;: &quot;b&quot;, &quot;to&quot;: &quot;c&quot;}, {&quot;from&quot;: &quot;b&quot;, &quot;to&quot;: &quot;d&quot;}, {&quot;from&quot;: &quot;c&quot;, &quot;to&quot;: &quot;d&quot;}]">
+          <div class="stage s-done" data-id="a">
+            <div class="h"><span class="num">1</span><h4>Подобрать лимиты</h4><span class="st-done" title="Done"><svg class="icon sm"><use href="#i-done"/></svg></span></div>
+            <div class="d rich"><p>Вывел размер пула из пиковой конкурентности</p></div>
+            <div class="o"><svg class="icon sm"><use href="#i-outcome"/></svg><div class="rich"><p>50 на под, таймаут очереди 2 с</p></div></div>
+            <div class="refs"><a class="ref-chip" href="#ctx-C3" data-ctx="C3">C3</a></div>
+            
+          </div><div class="stage s-done" data-id="b">
+            <div class="h"><span class="num">2</span><h4>Сделать лимит и backoff</h4><span class="st-done" title="Done"><svg class="icon sm"><use href="#i-done"/></svg></span></div>
+            <div class="d rich"><p>Настроил пул; обернул ретраи в хелпер backoff</p></div>
+            
+            <div class="refs"><a class="ref-chip" href="#ctx-C1" data-ctx="C1">C1</a><a class="ref-chip" href="#ctx-C2" data-ctx="C2">C2</a></div>
+            
+          </div><div class="stage s-done" data-id="c">
+            <div class="h"><span class="num">3</span><h4>Добавить метрику заполненности</h4><span class="st-done" title="Done"><svg class="icon sm"><use href="#i-done"/></svg></span></div>
+            <div class="d rich"><p>Экспорт занятых соединений по подам</p></div>
+            
+            
+            
+          </div><div class="stage s-done" data-id="d">
+            <div class="h"><span class="num">4</span><h4>Проверить</h4><span class="st-done" title="Done"><svg class="icon sm"><use href="#i-done"/></svg></span></div>
+            <div class="d rich"><p>Юнит-тесты и нагрузочный тест инцидента</p></div>
+            <div class="o"><svg class="icon sm"><use href="#i-outcome"/></svg><div class="rich"><p>Зелёные</p></div></div>
+            
+            
+          </div>
+        </div>
+        <div class="zoom">
+          <button class="iconbtn" data-zoom="out" title="Zoom out" aria-label="Zoom out"><svg class="icon"><use href="#i-minus"/></svg></button>
+          <output aria-live="polite">100%</output>
+          <button class="iconbtn" data-zoom="in" title="Zoom in" aria-label="Zoom in"><svg class="icon"><use href="#i-plus"/></svg></button>
+          <button class="iconbtn" data-zoom="fit" title="Show everything" aria-label="Show everything"><svg class="icon"><use href="#i-fit"/></svg></button>
+        </div>
+        <svg class="minimap" hidden aria-hidden="true"></svg>
       </div>
-      <div class="stage s-done" data-id="c">
-        <div class="h"><span class="num">3</span><h4>Добавить метрику заполненности</h4><span class="st-done" title="Done"><svg class="icon sm"><use href="#i-done"/></svg></span></div>
-        <div class="d rich"><p>Экспорт занятых соединений по подам</p></div>
-        
-        
-      </div>
-      <div class="stage s-done" data-id="d">
-        <div class="h"><span class="num">4</span><h4>Проверить</h4><span class="st-done" title="Done"><svg class="icon sm"><use href="#i-done"/></svg></span></div>
-        <div class="d rich"><p>Юнит-тесты и нагрузочный тест инцидента</p></div>
-        <div class="o"><svg class="icon sm"><use href="#i-outcome"/></svg><div class="rich"><p>Зелёные</p></div></div>
-        
-      </div>
-    </div></div>
-    <ol class="stages-print"><li><strong>Подобрать лимиты</strong> — Done<div class="rich"><p>Вывел размер пула из пиковой конкурентности</p></div><div class="rich">→ <p>50 на под, таймаут очереди 2 с</p></div></li><li><strong>Сделать лимит и backoff</strong> — Done<div class="rich"><p>Настроил пул; обернул ретраи в хелпер backoff</p></div></li><li><strong>Добавить метрику заполненности</strong> — Done<div class="rich"><p>Экспорт занятых соединений по подам</p></div></li><li><strong>Проверить</strong> — Done<div class="rich"><p>Юнит-тесты и нагрузочный тест инцидента</p></div><div class="rich">→ <p>Зелёные</p></div></li></ol>
+    </div>
+    <div class="stages-print"><ol><li><strong>1 Подобрать лимиты</strong> — Done<div class="rich"><p>Вывел размер пула из пиковой конкурентности</p></div><div class="rich">→ <p>50 на под, таймаут очереди 2 с</p></div></li><li><strong>2 Сделать лимит и backoff</strong> — Done<div class="rich"><p>Настроил пул; обернул ретраи в хелпер backoff</p></div></li><li><strong>3 Добавить метрику заполненности</strong> — Done<div class="rich"><p>Экспорт занятых соединений по подам</p></div></li><li><strong>4 Проверить</strong> — Done<div class="rich"><p>Юнит-тесты и нагрузочный тест инцидента</p></div><div class="rich">→ <p>Зелёные</p></div></li></ol></div>
     </section>
 
   <section class="sec"><h3><svg class="icon"><use href="#i-approve"/></svg>Needs approval</h3>
@@ -521,7 +634,7 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
     <p class="none">—</p></section>
 </article>
 
-<article class="report" id="report-replay" data-task="replay" data-flow="[{&quot;from&quot;: &quot;r1&quot;, &quot;to&quot;: &quot;r2&quot;}, {&quot;from&quot;: &quot;r2&quot;, &quot;to&quot;: &quot;r3&quot;}, {&quot;from&quot;: &quot;r3&quot;, &quot;to&quot;: &quot;r4&quot;}]">
+<article class="report" id="report-replay" data-task="replay">
   <header class="r-head">
     <span class="st-blocked" title="Blocked"><svg class="icon"><use href="#i-blocked"/></svg></span>
     <h2>Восстановить заказы, упавшие во время инцидента</h2>
@@ -577,33 +690,52 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
     </ul></section>
 
   <section class="sec"><h3><svg class="icon"><use href="#i-flow"/></svg>Workflow</h3>
-    <div class="flow"><div class="graph">
-      <div class="stage s-done" data-id="r1">
-        <div class="h"><span class="num">1</span><h4>Найти затронутые платежи</h4><span class="st-done" title="Done"><svg class="icon sm"><use href="#i-done"/></svg></span></div>
-        <div class="d rich"><p>Сопоставил списания провайдера с заказами по id платежа</p></div>
-        <div class="o"><svg class="icon sm"><use href="#i-outcome"/></svg><div class="rich"><p>212 платежей без заказов</p></div></div>
-        <div class="refs"><a class="ref-chip" href="#ctx-C1" data-ctx="C1">C1</a></div>
+    <div class="flow">
+      <div class="flow-bar">
+        <span class="flow-title">Восстановить заказы, упавшие во время инцидента</span>
+        <nav class="crumbs" data-for="root" aria-label="Workflow level">
+          <button type="button" data-goto="root">Workflow</button>
+        </nav>
+        <button class="iconbtn" data-expand title="Expand to full page" aria-label="Expand workflow"><svg class="icon i-expand"><use href="#i-expand"/></svg><svg class="icon i-collapse"><use href="#i-collapse"/></svg></button>
       </div>
-      <div class="stage s-done" data-id="r2">
-        <div class="h"><span class="num">2</span><h4>Написать скрипт восстановления</h4><span class="st-done" title="Done"><svg class="icon sm"><use href="#i-done"/></svg></span></div>
-        <div class="d rich"><p>Создаёт заказы через обычный сервис с идемпотентным ключом</p></div>
-        
-        <div class="refs"><a class="ref-chip" href="#ctx-C2" data-ctx="C2">C2</a></div>
+      <div class="canvas" data-dir="TB" data-embedded>
+        <div class="graph" data-key="root" data-edges="[{&quot;from&quot;: &quot;r1&quot;, &quot;to&quot;: &quot;r2&quot;}, {&quot;from&quot;: &quot;r2&quot;, &quot;to&quot;: &quot;r3&quot;}, {&quot;from&quot;: &quot;r3&quot;, &quot;to&quot;: &quot;r4&quot;}]">
+          <div class="stage s-done" data-id="r1">
+            <div class="h"><span class="num">1</span><h4>Найти затронутые платежи</h4><span class="st-done" title="Done"><svg class="icon sm"><use href="#i-done"/></svg></span></div>
+            <div class="d rich"><p>Сопоставил списания провайдера с заказами по id платежа</p></div>
+            <div class="o"><svg class="icon sm"><use href="#i-outcome"/></svg><div class="rich"><p>212 платежей без заказов</p></div></div>
+            <div class="refs"><a class="ref-chip" href="#ctx-C1" data-ctx="C1">C1</a></div>
+            
+          </div><div class="stage s-done" data-id="r2">
+            <div class="h"><span class="num">2</span><h4>Написать скрипт восстановления</h4><span class="st-done" title="Done"><svg class="icon sm"><use href="#i-done"/></svg></span></div>
+            <div class="d rich"><p>Создаёт заказы через обычный сервис с идемпотентным ключом</p></div>
+            
+            <div class="refs"><a class="ref-chip" href="#ctx-C2" data-ctx="C2">C2</a></div>
+            
+          </div><div class="stage s-done" data-id="r3">
+            <div class="h"><span class="num">3</span><h4>Сухой прогон на стейдже</h4><span class="st-done" title="Done"><svg class="icon sm"><use href="#i-done"/></svg></span></div>
+            
+            <div class="o"><svg class="icon sm"><use href="#i-outcome"/></svg><div class="rich"><p>7 заказов упираются в отсутствие товара</p></div></div>
+            
+            
+          </div><div class="stage s-planned" data-id="r4">
+            <div class="h"><span class="num">4</span><h4>Запуск в проде</h4><span class="st-planned" title="Planned"><svg class="icon sm"><use href="#i-planned"/></svg></span></div>
+            <div class="d rich"><p>Ждёт решения по товарам, которых нет</p></div>
+            
+            
+            
+          </div>
+        </div>
+        <div class="zoom">
+          <button class="iconbtn" data-zoom="out" title="Zoom out" aria-label="Zoom out"><svg class="icon"><use href="#i-minus"/></svg></button>
+          <output aria-live="polite">100%</output>
+          <button class="iconbtn" data-zoom="in" title="Zoom in" aria-label="Zoom in"><svg class="icon"><use href="#i-plus"/></svg></button>
+          <button class="iconbtn" data-zoom="fit" title="Show everything" aria-label="Show everything"><svg class="icon"><use href="#i-fit"/></svg></button>
+        </div>
+        <svg class="minimap" hidden aria-hidden="true"></svg>
       </div>
-      <div class="stage s-done" data-id="r3">
-        <div class="h"><span class="num">3</span><h4>Сухой прогон на стейдже</h4><span class="st-done" title="Done"><svg class="icon sm"><use href="#i-done"/></svg></span></div>
-        
-        <div class="o"><svg class="icon sm"><use href="#i-outcome"/></svg><div class="rich"><p>7 заказов упираются в отсутствие товара</p></div></div>
-        
-      </div>
-      <div class="stage s-planned" data-id="r4">
-        <div class="h"><span class="num">4</span><h4>Запуск в проде</h4><span class="st-planned" title="Planned"><svg class="icon sm"><use href="#i-planned"/></svg></span></div>
-        <div class="d rich"><p>Ждёт решения по товарам, которых нет</p></div>
-        
-        
-      </div>
-    </div></div>
-    <ol class="stages-print"><li><strong>Найти затронутые платежи</strong> — Done<div class="rich"><p>Сопоставил списания провайдера с заказами по id платежа</p></div><div class="rich">→ <p>212 платежей без заказов</p></div></li><li><strong>Написать скрипт восстановления</strong> — Done<div class="rich"><p>Создаёт заказы через обычный сервис с идемпотентным ключом</p></div></li><li><strong>Сухой прогон на стейдже</strong> — Done<div class="rich"></div><div class="rich">→ <p>7 заказов упираются в отсутствие товара</p></div></li><li><strong>Запуск в проде</strong> — Planned<div class="rich"><p>Ждёт решения по товарам, которых нет</p></div></li></ol>
+    </div>
+    <div class="stages-print"><ol><li><strong>1 Найти затронутые платежи</strong> — Done<div class="rich"><p>Сопоставил списания провайдера с заказами по id платежа</p></div><div class="rich">→ <p>212 платежей без заказов</p></div></li><li><strong>2 Написать скрипт восстановления</strong> — Done<div class="rich"><p>Создаёт заказы через обычный сервис с идемпотентным ключом</p></div></li><li><strong>3 Сухой прогон на стейдже</strong> — Done<div class="rich"></div><div class="rich">→ <p>7 заказов упираются в отсутствие товара</p></div></li><li><strong>4 Запуск в проде</strong> — Planned<div class="rich"><p>Ждёт решения по товарам, которых нет</p></div></li></ol></div>
     </section>
 
   <section class="sec"><h3><svg class="icon"><use href="#i-approve"/></svg>Needs approval</h3>
@@ -621,7 +753,7 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
     </ul></section>
 </article>
 
-<article class="report" id="report-alerts" data-task="alerts" data-flow="[{&quot;from&quot;: &quot;x1&quot;, &quot;to&quot;: &quot;x2&quot;}, {&quot;from&quot;: &quot;x1&quot;, &quot;to&quot;: &quot;x3&quot;}]">
+<article class="report" id="report-alerts" data-task="alerts">
   <header class="r-head">
     <span class="st-in_progress" title="In progress"><svg class="icon"><use href="#i-in_progress"/></svg></span>
     <h2>Алерты на таймауты провайдера и заполненность пула</h2>
@@ -665,27 +797,46 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
     </ul></section>
 
   <section class="sec"><h3><svg class="icon"><use href="#i-flow"/></svg>Workflow</h3>
-    <div class="flow"><div class="graph">
-      <div class="stage s-done" data-id="x1">
-        <div class="h"><span class="num">1</span><h4>Подобрать порог на истории</h4><span class="st-done" title="Done"><svg class="icon sm"><use href="#i-done"/></svg></span></div>
-        
-        <div class="o"><svg class="icon sm"><use href="#i-outcome"/></svg><div class="rich"><p>0,3% / 5 мин</p></div></div>
-        <div class="refs"><a class="ref-chip" href="#ctx-C2" data-ctx="C2">C2</a></div>
+    <div class="flow">
+      <div class="flow-bar">
+        <span class="flow-title">Алерты на таймауты провайдера и заполненность пула</span>
+        <nav class="crumbs" data-for="root" aria-label="Workflow level">
+          <button type="button" data-goto="root">Workflow</button>
+        </nav>
+        <button class="iconbtn" data-expand title="Expand to full page" aria-label="Expand workflow"><svg class="icon i-expand"><use href="#i-expand"/></svg><svg class="icon i-collapse"><use href="#i-collapse"/></svg></button>
       </div>
-      <div class="stage s-partial" data-id="x2">
-        <div class="h"><span class="num">2</span><h4>Алерт на таймауты</h4><span class="st-partial" title="Partly done"><svg class="icon sm"><use href="#i-partial"/></svg></span></div>
-        <div class="d rich"><p>Правило написано, маршрут на дежурного не настроен</p></div>
-        
-        
+      <div class="canvas" data-dir="TB" data-embedded>
+        <div class="graph" data-key="root" data-edges="[{&quot;from&quot;: &quot;x1&quot;, &quot;to&quot;: &quot;x2&quot;}, {&quot;from&quot;: &quot;x1&quot;, &quot;to&quot;: &quot;x3&quot;}]">
+          <div class="stage s-done" data-id="x1">
+            <div class="h"><span class="num">1</span><h4>Подобрать порог на истории</h4><span class="st-done" title="Done"><svg class="icon sm"><use href="#i-done"/></svg></span></div>
+            
+            <div class="o"><svg class="icon sm"><use href="#i-outcome"/></svg><div class="rich"><p>0,3% / 5 мин</p></div></div>
+            <div class="refs"><a class="ref-chip" href="#ctx-C2" data-ctx="C2">C2</a></div>
+            
+          </div><div class="stage s-partial" data-id="x2">
+            <div class="h"><span class="num">2</span><h4>Алерт на таймауты</h4><span class="st-partial" title="Partly done"><svg class="icon sm"><use href="#i-partial"/></svg></span></div>
+            <div class="d rich"><p>Правило написано, маршрут на дежурного не настроен</p></div>
+            
+            
+            
+          </div><div class="stage s-planned" data-id="x3">
+            <div class="h"><span class="num">3</span><h4>Алерт на заполненность пула</h4><span class="st-planned" title="Planned"><svg class="icon sm"><use href="#i-planned"/></svg></span></div>
+            <div class="d rich"><p>Нужна <code>payments_pool_in_use</code> в проде</p></div>
+            
+            
+            
+          </div>
+        </div>
+        <div class="zoom">
+          <button class="iconbtn" data-zoom="out" title="Zoom out" aria-label="Zoom out"><svg class="icon"><use href="#i-minus"/></svg></button>
+          <output aria-live="polite">100%</output>
+          <button class="iconbtn" data-zoom="in" title="Zoom in" aria-label="Zoom in"><svg class="icon"><use href="#i-plus"/></svg></button>
+          <button class="iconbtn" data-zoom="fit" title="Show everything" aria-label="Show everything"><svg class="icon"><use href="#i-fit"/></svg></button>
+        </div>
+        <svg class="minimap" hidden aria-hidden="true"></svg>
       </div>
-      <div class="stage s-planned" data-id="x3">
-        <div class="h"><span class="num">3</span><h4>Алерт на заполненность пула</h4><span class="st-planned" title="Planned"><svg class="icon sm"><use href="#i-planned"/></svg></span></div>
-        <div class="d rich"><p>Нужна <code>payments_pool_in_use</code> в проде</p></div>
-        
-        
-      </div>
-    </div></div>
-    <ol class="stages-print"><li><strong>Подобрать порог на истории</strong> — Done<div class="rich"></div><div class="rich">→ <p>0,3% / 5 мин</p></div></li><li><strong>Алерт на таймауты</strong> — Partly done<div class="rich"><p>Правило написано, маршрут на дежурного не настроен</p></div></li><li><strong>Алерт на заполненность пула</strong> — Planned<div class="rich"><p>Нужна <code>payments_pool_in_use</code> в проде</p></div></li></ol>
+    </div>
+    <div class="stages-print"><ol><li><strong>1 Подобрать порог на истории</strong> — Done<div class="rich"></div><div class="rich">→ <p>0,3% / 5 мин</p></div></li><li><strong>2 Алерт на таймауты</strong> — Partly done<div class="rich"><p>Правило написано, маршрут на дежурного не настроен</p></div></li><li><strong>3 Алерт на заполненность пула</strong> — Planned<div class="rich"><p>Нужна <code>payments_pool_in_use</code> в проде</p></div></li></ol></div>
     </section>
 
   <section class="sec"><h3><svg class="icon"><use href="#i-approve"/></svg>Needs approval</h3>
@@ -695,7 +846,7 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
     <p class="none">—</p></section>
 </article>
 
-<article class="report" id="report-runbook" data-task="runbook" data-flow="[]">
+<article class="report" id="report-runbook" data-task="runbook">
   <header class="r-head">
     <span class="st-planned" title="Planned"><svg class="icon"><use href="#i-planned"/></svg></span>
     <h2>Обновить ранбук платёжных инцидентов</h2>
@@ -740,10 +891,9 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
 </div>
 
 <script>
-/* Behaviour only: graph layout, drawer, navigation. No content is created here. */
+/* Behaviour only: graph layout, canvases, drawer, navigation. No content is created here. */
 (() => {
 "use strict";
-let current = null;
 const $ = (s, r = document) => r.querySelector(s), $$ = (s, r = document) => [...r.querySelectorAll(s)];
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 
@@ -810,15 +960,18 @@ function edgePath(a, b, dir) {
   const x1 = a.x + a.w, y1 = a.y + a.h / 2, x2 = b.x + b.w + 2, y2 = b.y + b.h / 2, bx = Math.max(x1, x2) + 46;
   return [`M${x1},${y1} C${bx},${y1} ${bx},${y2} ${x2},${y2}`, [bx - 8, (y1 + y2) / 2]];
 }
-// Positions the existing children of `host` and draws the edges between them.
-function arrange(host, sel, key, edges, dir, o) {
-  host.querySelector(":scope > svg")?.remove();
-  const els = $$(sel, host);
-  const sizes = els.map(el => ({id: el.getAttribute(key), w: el.offsetWidth, h: el.offsetHeight}));
+// Position the existing children of a .graph and draw its edges. Returns its size.
+function arrange(graph, dir) {
+  graph.querySelector(":scope > svg")?.remove();
+  const els = $$(":scope > [data-id]", graph);
+  const edges = JSON.parse(graph.dataset.edges || "[]").map(e => dir === "TB" ? {...e, kind: e.kind || "depends"} : e);
+  const labelled = edges.some(e => e.label);
+  const o = dir === "LR" ? {gapMain: labelled ? 150 : 100, gapCross: 40, pad: 24} : {gapMain: labelled ? 70 : 46, gapCross: 28, pad: 24};
+  const sizes = els.map(el => ({id: el.dataset.id, w: el.offsetWidth, h: el.offsetHeight}));
   const g = layout(sizes, edges, dir, o.gapMain, o.gapCross), pad = o.pad;
   els.forEach((el, i) => { const p = g.P[sizes[i].id]; el.style.left = p.x + pad + "px"; el.style.top = p.y + pad + "px"; });
-  const W = g.width + pad * 2 + (dir === "TB" ? 60 : 0), H = g.height + pad * 2;
-  host.style.width = W + "px"; host.style.height = H + "px";
+  const W = g.width + pad * 2 + (dir === "TB" ? 50 : 0), H = g.height + pad * 2;
+  graph.style.width = W + "px"; graph.style.height = H + "px";
   let s = "";
   for (const e of g.edges) {
     const a = {...g.P[e.from]}, b = {...g.P[e.to]}; a.x += pad; a.y += pad; b.x += pad; b.y += pad;
@@ -828,139 +981,159 @@ function arrange(host, sel, key, edges, dir, o) {
   }
   const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
   svg.setAttribute("width", W); svg.setAttribute("height", H); svg.innerHTML = s;
-  host.prepend(svg);
+  graph.prepend(svg);
+  graph.dataset.w = W; graph.dataset.h = H;
   return {W, H};
 }
 
-// ── page 1: the work map is a canvas — pan, zoom, minimap; the page itself never scrolls ──
-const map = $("#map"), graph = $("#graph"), mini = $("#minimap"), zl = $("#zoom-level");
-const mapEdges = JSON.parse(graph.dataset.edges || "[]");
-const labelled = mapEdges.some(e => e.label);
+// ── Canvas: pan / zoom / minimap over one visible .graph at a time ──
 const READABLE = 0.72, MIN = 0.2, MAX = 1.6;
-let G = {W: 0, H: 0}, V = {x: 0, y: 0, s: 1};
-const clampS = s => Math.min(MAX, Math.max(MIN, s));
-function clampV() {                       // keep at least a strip of the graph on screen
-  const cw = map.clientWidth, ch = map.clientHeight, k = 120;
-  V.x = Math.min(cw - k, Math.max(k - G.W * V.s, V.x));
-  V.y = Math.min(ch - k, Math.max(k - G.H * V.s, V.y));
-}
-function apply(animate) {
-  clampV();
-  map.classList.toggle("animate", !!animate);
-  graph.style.transform = `translate(${V.x}px, ${V.y}px) scale(${V.s})`;
-  zl.textContent = Math.round(V.s * 100) + "%";
-  drawMini();
-}
-const fitScale = () => Math.min(1, (map.clientWidth - 32) / G.W, (map.clientHeight - 32) / G.H);
-function fit(animate) {
-  V.s = clampS(fitScale());
-  V.x = (map.clientWidth - G.W * V.s) / 2; V.y = (map.clientHeight - G.H * V.s) / 2;
-  apply(animate);
-}
-function home() {                          // everything if readable, otherwise start readable at the first tasks
-  if (fitScale() >= READABLE) return fit();
-  V.s = READABLE;
-  V.x = 24; V.y = Math.max(24, (map.clientHeight - G.H * V.s) / 2);
-  if (G.H * V.s > map.clientHeight) {      // tall: align with the first column's centre
-    const first = $$(":scope > .node", graph).sort((a, b) => a.offsetLeft - b.offsetLeft)[0];
-    if (first) V.y = map.clientHeight / 2 - (first.offsetTop + first.offsetHeight / 2) * V.s;
+class Canvas {
+  constructor(el) {
+    this.el = el; this.dir = el.dataset.dir || "LR"; this.embedded = el.hasAttribute("data-embedded");
+    this.mini = $(":scope > .minimap", el); this.out = $(":scope > .zoom output", el);
+    this.V = {x: 0, y: 0, s: 1}; this.G = {W: 1, H: 1}; this.graph = null; this.views = {};
+    this.bind();
   }
-  apply();
-}
-function zoomAt(f, cx, cy, animate) {
-  const s = clampS(V.s * f), k = s / V.s;
-  V.x = cx - (cx - V.x) * k; V.y = cy - (cy - V.y) * k; V.s = s;
-  apply(animate);
-}
-function centreOn(gx, gy, animate) { V.x = map.clientWidth / 2 - gx * V.s; V.y = map.clientHeight / 2 - gy * V.s; apply(animate); }
-function reveal(el) {                      // bring a card fully into view
-  const pad = 40, x1 = V.x + el.offsetLeft * V.s, y1 = V.y + el.offsetTop * V.s;
-  const x2 = x1 + el.offsetWidth * V.s, y2 = y1 + el.offsetHeight * V.s, cw = map.clientWidth, ch = map.clientHeight;
-  if (x1 >= pad && y1 >= pad && x2 <= cw - pad && y2 <= ch - pad) return;
-  centreOn(el.offsetLeft + el.offsetWidth / 2, el.offsetTop + el.offsetHeight / 2, true);
+  show(key) {
+    if (this.graph) this.views[this.graph.dataset.key] = {...this.V};
+    $$(":scope > .graph", this.el).forEach(g => g.hidden = g.dataset.key !== key);
+    this.graph = $(`:scope > .graph[data-key="${CSS.escape(key)}"]`, this.el);
+    this.graph.style.transform = "none";
+    if (!this.graph.dataset.w) arrange(this.graph, this.dir);
+    this.G = {W: +this.graph.dataset.w, H: +this.graph.dataset.h};
+    if (this.views[key]) { this.V = this.views[key]; this.apply(); } else this.home();
+    this.el.dispatchEvent(new CustomEvent("level", {detail: key}));
+  }
+  get cw() { return this.el.clientWidth; } get ch() { return this.el.clientHeight; }
+  clamp() { const k = 100, {W, H} = this.G, V = this.V;
+    V.x = Math.min(this.cw - k, Math.max(k - W * V.s, V.x)); V.y = Math.min(this.ch - k, Math.max(k - H * V.s, V.y)); }
+  apply(animate) {
+    this.clamp();
+    this.el.classList.toggle("animate", !!animate);
+    this.graph.style.transform = `translate(${this.V.x}px, ${this.V.y}px) scale(${this.V.s})`;
+    if (this.out) this.out.textContent = Math.round(this.V.s * 100) + "%";
+    this.drawMini();
+  }
+  fitScale() { return Math.min(1, (this.cw - 32) / this.G.W, (this.ch - 32) / this.G.H); }
+  fit(animate) { const V = this.V; V.s = Math.min(MAX, Math.max(MIN, this.fitScale()));
+    V.x = (this.cw - this.G.W * V.s) / 2; V.y = (this.ch - this.G.H * V.s) / 2; this.apply(animate); }
+  home() {          // everything if readable; otherwise readable, starting where the flow starts
+    if (this.fitScale() >= READABLE) return this.fit();
+    const V = this.V; V.s = READABLE;
+    if (this.dir === "LR") { V.x = 24; V.y = (this.ch - this.G.H * V.s) / 2;
+      const first = $$(":scope > [data-id]", this.graph).sort((a, b) => a.offsetLeft - b.offsetLeft)[0];
+      if (first && this.G.H * V.s > this.ch) V.y = this.ch / 2 - (first.offsetTop + first.offsetHeight / 2) * V.s;
+    } else { V.y = 16; V.x = (this.cw - this.G.W * V.s) / 2; }
+    this.apply();
+  }
+  zoomAt(f, cx, cy, animate) { const V = this.V, s = Math.min(MAX, Math.max(MIN, V.s * f)), k = s / V.s;
+    V.x = cx - (cx - V.x) * k; V.y = cy - (cy - V.y) * k; V.s = s; this.apply(animate); }
+  centreOn(gx, gy, animate) { this.V.x = this.cw / 2 - gx * this.V.s; this.V.y = this.ch / 2 - gy * this.V.s; this.apply(animate); }
+  pan(dx, dy, animate) { this.V.x += dx; this.V.y += dy; this.apply(animate); }
+  reveal(el) { const V = this.V, pad = 30, x1 = V.x + el.offsetLeft * V.s, y1 = V.y + el.offsetTop * V.s;
+    if (x1 >= pad && y1 >= pad && x1 + el.offsetWidth * V.s <= this.cw - pad && y1 + el.offsetHeight * V.s <= this.ch - pad) return;
+    this.centreOn(el.offsetLeft + el.offsetWidth / 2, el.offsetTop + el.offsetHeight / 2, true); }
+  drawMini() {
+    const m = this.mini; if (!m) return;
+    const show = this.G.W * this.V.s > this.cw + 2 || this.G.H * this.V.s > this.ch + 2;
+    m.toggleAttribute("hidden", !show); if (!show) return;
+    const k = Math.min(180 / this.G.W, 130 / this.G.H), w = this.G.W * k, h = this.G.H * k; this.k = k;
+    m.setAttribute("width", w); m.setAttribute("height", h); m.setAttribute("viewBox", `0 0 ${w} ${h}`);
+    let s = "";
+    for (const n of $$(":scope > [data-id]", this.graph))
+      s += `<rect class="n${n.querySelector(".waiting") ? " mine" : ""}${n.dataset.child ? " deep" : ""}" x="${n.offsetLeft * k}" y="${n.offsetTop * k}" width="${n.offsetWidth * k}" height="${n.offsetHeight * k}" rx="2"/>`;
+    const V = this.V;
+    s += `<rect class="vp" x="${-V.x / V.s * k}" y="${-V.y / V.s * k}" width="${this.cw / V.s * k}" height="${this.ch / V.s * k}" rx="3"/>`;
+    m.innerHTML = s;
+  }
+  bind() {
+    const el = this.el, m = this.mini;
+    if (m) {
+      const to = e => { const r = m.getBoundingClientRect(); this.centreOn((e.clientX - r.left) / this.k, (e.clientY - r.top) / this.k); };
+      m.addEventListener("pointerdown", e => { e.stopPropagation(); m.setPointerCapture(e.pointerId); to(e); });
+      m.addEventListener("pointermove", e => { if (m.hasPointerCapture(e.pointerId)) to(e); });
+    }
+    let drag = null, suppress = false;
+    el.addEventListener("pointerdown", e => {
+      if (e.button !== 0 || e.target.closest(".zoom,.minimap")) return;
+      drag = {x: e.clientX, y: e.clientY, vx: this.V.x, vy: this.V.y, id: e.pointerId, moved: false};
+    });
+    el.addEventListener("pointermove", e => {
+      if (!drag || e.pointerId !== drag.id) return;
+      const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+      if (!drag.moved && Math.hypot(dx, dy) < 5) return;
+      if (!drag.moved) { drag.moved = true; el.classList.add("dragging"); el.setPointerCapture(e.pointerId); }
+      this.V.x = drag.vx + dx; this.V.y = drag.vy + dy; this.apply();
+    });
+    const end = () => { if (drag?.moved) { suppress = true; setTimeout(() => suppress = false, 0); } drag = null; el.classList.remove("dragging"); };
+    el.addEventListener("pointerup", end); el.addEventListener("pointercancel", end);
+    el.addEventListener("click", e => { if (suppress) { e.stopPropagation(); e.preventDefault(); } }, true);
+    el.addEventListener("wheel", e => {
+      const zoom = e.ctrlKey || e.metaKey;
+      // embedded (inside a scrolling report): plain wheel scrolls the report; pinch / Ctrl+wheel zooms
+      if (this.embedded && !zoom && !this.el.closest(".flow.full")) return;
+      e.preventDefault();
+      const r = el.getBoundingClientRect();
+      if (zoom) this.zoomAt(Math.exp(-e.deltaY * (e.deltaMode ? 0.05 : 0.01)), e.clientX - r.left, e.clientY - r.top);
+      else { const k = e.deltaMode ? 30 : 1; this.pan(-(e.shiftKey ? e.deltaY : e.deltaX) * k, -(e.shiftKey ? 0 : e.deltaY) * k); }
+    }, {passive: false});
+    el.addEventListener("dblclick", e => { if (!e.target.closest("[data-id],.zoom,.minimap")) this.fit(true); });
+    el.addEventListener("click", e => {
+      const z = e.target.closest("[data-zoom]"); if (!z || !el.contains(z)) return;
+      const cx = this.cw / 2, cy = this.ch / 2;
+      ({in: () => this.zoomAt(1.25, cx, cy, true), out: () => this.zoomAt(0.8, cx, cy, true), fit: () => this.fit(true)})[z.dataset.zoom]();
+    });
+    el.addEventListener("focusin", e => { const n = e.target.closest("[data-id]"); if (n && this.graph?.contains(n)) this.reveal(n); });
+  }
+  key(e) {        // keyboard: arrows pan, + − zoom, 0 fits
+    const cx = this.cw / 2, cy = this.ch / 2, s = 80;
+    const act = {ArrowLeft: () => this.pan(s, 0, true), ArrowRight: () => this.pan(-s, 0, true), ArrowUp: () => this.pan(0, s, true), ArrowDown: () => this.pan(0, -s, true),
+      "+": () => this.zoomAt(1.25, cx, cy, true), "=": () => this.zoomAt(1.25, cx, cy, true), "-": () => this.zoomAt(0.8, cx, cy, true), "0": () => this.fit(true)}[e.key];
+    if (act && !e.altKey && !e.metaKey && !e.ctrlKey) { e.preventDefault(); act(); return true; }
+    return false;
+  }
 }
 
-// minimap
-let M = {k: 1};
-function drawMini() {
-  const show = G.W * V.s > map.clientWidth + 2 || G.H * V.s > map.clientHeight + 2;
-  mini.toggleAttribute("hidden", !show); if (!show) return;
-  const k = Math.min(200 / G.W, 150 / G.H), w = G.W * k, h = G.H * k;
-  M = {k};
-  mini.setAttribute("width", w); mini.setAttribute("height", h); mini.setAttribute("viewBox", `0 0 ${w} ${h}`);
-  let s = "";
-  for (const n of $$(":scope > .node", graph))
-    s += `<rect class="n${n.querySelector(".waiting") ? " mine" : ""}" x="${n.offsetLeft * k}" y="${n.offsetTop * k}" width="${n.offsetWidth * k}" height="${n.offsetHeight * k}" rx="2"/>`;
-  const vx = -V.x / V.s * k, vy = -V.y / V.s * k, vw = map.clientWidth / V.s * k, vh = map.clientHeight / V.s * k;
-  s += `<rect class="vp" x="${vx}" y="${vy}" width="${vw}" height="${vh}" rx="3"/>`;
-  mini.innerHTML = s;
+// ── page 1 ──
+const mapCanvas = new Canvas($("#map"));
+mapCanvas.show("map");
+
+// ── workflow canvases (one per report, created on first open) ──
+const flows = new WeakMap();
+function flowOf(art) {
+  const box = $(".flow", art); if (!box) return null;
+  if (!flows.has(box)) {
+    const c = new Canvas($(":scope > .canvas", box));
+    c.el.addEventListener("level", e => {
+      $$(".crumbs", box).forEach(n => n.hidden = n.dataset.for !== e.detail);
+      $$(".crumbs button", box).forEach(b => b.setAttribute("aria-current", String(b.dataset.goto === e.detail)));
+    });
+    flows.set(box, c);
+    c.show("root");
+  }
+  return flows.get(box);
 }
-const miniTo = e => { const r = mini.getBoundingClientRect(); centreOn((e.clientX - r.left) / M.k, (e.clientY - r.top) / M.k); };
-mini.addEventListener("pointerdown", e => { e.stopPropagation(); mini.setPointerCapture(e.pointerId); miniTo(e); });
-mini.addEventListener("pointermove", e => { if (mini.hasPointerCapture(e.pointerId)) miniTo(e); });
-
-// drag to pan (a short click on a card still opens it)
-let drag = null, suppressClick = false;
-map.addEventListener("pointerdown", e => {
-  if (e.button !== 0 || e.target.closest(".zoom,.minimap")) return;
-  drag = {x: e.clientX, y: e.clientY, vx: V.x, vy: V.y, id: e.pointerId, moved: false};
-});
-map.addEventListener("pointermove", e => {
-  if (!drag || e.pointerId !== drag.id) return;
-  const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
-  if (!drag.moved && Math.hypot(dx, dy) < 5) return;
-  if (!drag.moved) { drag.moved = true; map.classList.add("dragging"); map.setPointerCapture(e.pointerId); }
-  V.x = drag.vx + dx; V.y = drag.vy + dy; apply();
-});
-const endDrag = () => { if (drag?.moved) { suppressClick = true; setTimeout(() => suppressClick = false, 0); } drag = null; map.classList.remove("dragging"); };
-map.addEventListener("pointerup", endDrag); map.addEventListener("pointercancel", endDrag);
-map.addEventListener("click", e => { if (suppressClick) { e.stopPropagation(); e.preventDefault(); } }, true);
-
-// trackpad / wheel: two-finger scroll pans, pinch or Ctrl/⌘+wheel zooms at the pointer
-map.addEventListener("wheel", e => {
-  e.preventDefault();
-  const r = map.getBoundingClientRect();
-  if (e.ctrlKey || e.metaKey) zoomAt(Math.exp(-e.deltaY * (e.deltaMode ? 0.05 : 0.0025) * 4), e.clientX - r.left, e.clientY - r.top);
-  else { const k = e.deltaMode ? 30 : 1; V.x -= (e.shiftKey ? e.deltaY : e.deltaX) * k; V.y -= (e.shiftKey ? 0 : e.deltaY) * k; apply(); }
-}, {passive: false});
-map.addEventListener("dblclick", e => { if (!e.target.closest(".node,.zoom,.minimap")) fit(true); });
-document.addEventListener("click", e => {
-  const z = e.target.closest("[data-zoom]"); if (!z) return;
-  const cx = map.clientWidth / 2, cy = map.clientHeight / 2;
-  if (z.dataset.zoom === "in") zoomAt(1.25, cx, cy, true);
-  if (z.dataset.zoom === "out") zoomAt(0.8, cx, cy, true);
-  if (z.dataset.zoom === "fit") fit(true);
-});
-map.addEventListener("focusin", e => { const n = e.target.closest(".node"); if (n) reveal(n); });
-document.addEventListener("keydown", e => {
-  if (current || e.target.closest?.("input,textarea")) return;
-  const step = 80, cx = map.clientWidth / 2, cy = map.clientHeight / 2;
-  const act = {ArrowLeft: () => (V.x += step, apply(true)), ArrowRight: () => (V.x -= step, apply(true)),
-    ArrowUp: () => (V.y += step, apply(true)), ArrowDown: () => (V.y -= step, apply(true)),
-    "+": () => zoomAt(1.25, cx, cy, true), "=": () => zoomAt(1.25, cx, cy, true), "-": () => zoomAt(0.8, cx, cy, true), "0": () => fit(true)}[e.key];
-  if (act && !e.altKey && !e.metaKey && !e.ctrlKey) { e.preventDefault(); act(); }
-});
-
-function drawMap() {
-  graph.style.transform = "none";
-  G = arrange(graph, ":scope > .node", "data-task", mapEdges, "LR", {gapMain: labelled ? 150 : 100, gapCross: 40, pad: 24});
+let expanded = null;
+function expand(box, on) {
+  const c = flows.get(box);
+  box.classList.toggle("full", on); expanded = on ? box : null;
+  document.body.style.overflow = on ? "hidden" : "";
+  requestAnimationFrame(() => c.home());
 }
-drawMap(); home();
-let rt; addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(() => { apply(); }, 120); });
 
 // ── drawer ──
 const drawer = $("#drawer"), scrim = $("#scrim"), slot = $("#slot"), reports = $("#reports");
 const order = $$(".report", reports).map(r => r.dataset.task);
-let lastFocus = null;
+let current = null, lastFocus = null;
 function open(id) {
   const art = document.getElementById("report-" + id); if (!art) return;
   if (!current) lastFocus = document.activeElement;
   if (current) reports.appendChild(document.getElementById("report-" + current));
   slot.appendChild(art); current = id;
   drawer.classList.add("open"); scrim.classList.add("open");
-  $$(".node").forEach(n => n.setAttribute("aria-current", String(n.dataset.task === id)));
-  const fg = $(".flow > .graph", art);
-  if (fg) arrange(fg, ":scope > .stage", "data-id", JSON.parse(art.dataset.flow || "[]").map(e => ({...e, kind: "depends"})), "TB", {gapMain: 46, gapCross: 28, pad: 6});
+  $$("#map .node").forEach(n => n.setAttribute("aria-current", String(n.dataset.task === id)));
+  flowOf(art);
   const i = order.indexOf(id);
   $('[data-nav="-1"]', drawer).disabled = i <= 0;
   $('[data-nav="1"]', drawer).disabled = i >= order.length - 1;
@@ -969,35 +1142,59 @@ function open(id) {
 }
 function close() {
   if (!current) return;
+  if (expanded) expand(expanded, false);
   reports.appendChild(document.getElementById("report-" + current)); current = null;
   drawer.classList.remove("open"); scrim.classList.remove("open");
-  $$(".node").forEach(n => n.setAttribute("aria-current", "false"));
+  $$("#map .node").forEach(n => n.setAttribute("aria-current", "false"));
   history.replaceState(null, "", location.pathname + location.search);
   lastFocus?.focus();
 }
 const step = d => { const i = order.indexOf(current) + d; if (order[i]) open(order[i]); };
+
 document.addEventListener("click", e => {
-  const node = e.target.closest(".node"); if (node) return open(node.dataset.task);
+  const node = e.target.closest("#map .node"); if (node) return open(node.dataset.task);
   if (e.target.closest("[data-close]") || e.target === scrim) return close();
   const nav = e.target.closest("[data-nav]"); if (nav) return step(+nav.dataset.nav);
+  const box = e.target.closest(".flow");
+  if (box) {
+    const c = flows.get(box);
+    const deep = e.target.closest(".stage[data-child]"), go = e.target.closest("[data-goto]");
+    if (deep && !e.target.closest("a")) return c.show(deep.dataset.child);
+    if (go) return c.show(go.dataset.goto);
+    if (e.target.closest("[data-expand]")) return expand(box, !box.classList.contains("full"));
+  }
   const cp = e.target.closest("[data-copy]");
   if (cp) { navigator.clipboard?.writeText(cp.dataset.copy); cp.style.color = "var(--ok)"; setTimeout(() => cp.style.color = "", 1200); return; }
   const chip = e.target.closest("a[data-ctx]");
   if (chip && current) {
     e.preventDefault();
+    if (expanded) expand(expanded, false);
     const el = slot.querySelector(`[id="ctx-${chip.dataset.ctx}"]`);
     if (el) { $$(".item.flash", slot).forEach(x => x.classList.remove("flash")); el.classList.add("flash"); el.scrollIntoView({block: "center", behavior: "smooth"}); }
   }
   if (e.target.closest("#print-btn")) print();
 });
 document.addEventListener("keydown", e => {
-  if (!current) return;
-  if (e.key === "Escape") close();
-  if (e.altKey && e.key === "ArrowRight") step(1);
-  if (e.altKey && e.key === "ArrowLeft") step(-1);
+  if (e.target.closest?.("input,textarea")) return;
+  if (expanded) {
+    if (e.key === "Escape") { e.preventDefault(); return expand(expanded, false); }
+    const st = e.target.closest?.(".stage[data-child]");
+    if (st && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); return flows.get(expanded).show(st.dataset.child); }
+    return flows.get(expanded).key(e);
+  }
+  if (current) {
+    const st = e.target.closest?.(".stage[data-child]");
+    if (st && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); return flows.get(st.closest(".flow")).show(st.dataset.child); }
+    if (e.key === "Escape") close();
+    if (e.altKey && e.key === "ArrowRight") step(1);
+    if (e.altKey && e.key === "ArrowLeft") step(-1);
+    return;
+  }
+  mapCanvas.key(e);
 });
+let rt; addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(() => { mapCanvas.apply(); if (expanded) flows.get(expanded).apply(); }, 120); });
 addEventListener("beforeprint", () => { if (current) close(); });
-const m = /^#task=(.+)$/.exec(location.hash); if (m) open(decodeURIComponent(m[1]));
+const hm = /^#task=(.+)$/.exec(location.hash); if (hm) open(decodeURIComponent(hm[1]));
 })();
 </script>
 </body>

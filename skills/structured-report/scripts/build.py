@@ -210,6 +210,33 @@ def render(tpl, data):
 
 # ── view model: derive what the template needs, without changing the content ──
 
+def _levels(stages, flow):
+    """Flatten nested stages into levels: the root workflow, then one level per stage that has
+    its own `stages`. Each level: key, trail (breadcrumb), stages (with hierarchical num), edges."""
+    out = []
+
+    def walk(sts, fl, key, trail, prefix):
+        level = {"key": key, "trail": trail, "root": key == "root", "stages": sts,
+                 "edges": fl or [{"from": sts[i]["id"], "to": sts[i + 1]["id"]} for i in range(len(sts) - 1)]}
+        out.append(level)
+        for i, s in enumerate(sts):
+            s.setdefault("status", "done")
+            s["status_label"] = STATUS_LABEL.get(s["status"], s["status"])
+            s["num"] = f"{prefix}{i + 1}"
+            for k in ("detail", "outcome", "uses"):
+                s.setdefault(k, None)
+            s["child"] = None
+            if s.get("stages"):
+                s["child"] = f"{key}/{s['id']}"
+                walk(s["stages"], s.get("flow"), s["child"],
+                     trail + [{"key": s["child"], "num": s["num"], "title": s["title"], "root": False}], s["num"] + ".")
+            else:
+                s["stages"] = None
+    if stages:
+        walk(stages, flow, "root", [{"key": "root", "num": None, "title": None, "root": True}], "")
+    return out
+
+
 def view(d):
     v = json.loads(json.dumps(d))
     v.setdefault("meta", {})
@@ -218,7 +245,7 @@ def view(d):
     # Every optional key exists explicitly, so a missing field never resolves to a parent's value.
     OPT = {
         "context": ("url", "note"), "inferences": ("basis", "confidence"),
-        "assumptions": ("why", "verify", "risk"), "stages": ("detail", "outcome", "uses"),
+        "assumptions": ("why", "verify", "risk"),
         "approvals": ("why", "options"), "actions": ("why", "command"),
     }
     for t in tasks:
@@ -241,11 +268,7 @@ def view(d):
         t["status_label"] = STATUS_LABEL.get(t["status"], t["status"])
         t["brief"] = t.get("brief") or (t.get("result") or {}).get("summary") or ""
         t["waiting"] = bool(t.get("approvals") or t.get("actions"))
-        for s in t.get("stages") or []:
-            s.setdefault("status", "done")
-            s["status_label"] = STATUS_LABEL.get(s["status"], s["status"])
-        st = t.get("stages") or []
-        t["flow_edges"] = t.get("flow") or [{"from": st[i]["id"], "to": st[i + 1]["id"]} for i in range(len(st) - 1)]
+        t["levels"] = _levels(t.get("stages") or [], t.get("flow"))
         for i in t.get("inferences") or []:
             i["confidence_dots"] = {"high": 3, "medium": 2, "low": 1}.get(i.get("confidence"), 0)
     # "A depends on B" is drawn B -> A (prerequisite first)
@@ -318,22 +341,28 @@ def validate(d):
         for r in res.get("items") or []:
             if r.get("kind") and r["kind"] not in RESULT_KINDS:
                 err(f"{where}: result kind {r['kind']!r} not in {sorted(RESULT_KINDS)}")
-        st_ids = set()
-        for s in t.get("stages") or []:
-            if not s.get("id") or not s.get("title"):
-                err(f"{where}: every stage needs id and title")
-            if s.get("id") in st_ids:
-                err(f"{where}: stage id {s.get('id')!r} duplicated")
-            st_ids.add(s.get("id"))
-            if s.get("status") and s["status"] not in STAGE_STATUS:
-                err(f"{where}: stage status {s['status']!r} not in {sorted(STAGE_STATUS)}")
-            for u in s.get("uses") or []:
-                if u not in ctx_ids:
-                    err(f"{where}: stage {s.get('id')!r} uses unknown context {u!r}")
-        for f in t.get("flow") or []:
-            if f.get("from") not in st_ids or f.get("to") not in st_ids:
-                err(f"{where}: flow edge {f} references unknown stage")
-        if not st_ids:
+        def check_stages(sts, fl, at):
+            ids_ = set()
+            for s in sts:
+                if not s.get("id") or not s.get("title"):
+                    err(f"{where}: every stage needs id and title ({at})")
+                if s.get("id") in ids_:
+                    err(f"{where}: stage id {s.get('id')!r} duplicated ({at})")
+                ids_.add(s.get("id"))
+                if s.get("status") and s["status"] not in STAGE_STATUS:
+                    err(f"{where}: stage status {s['status']!r} not in {sorted(STAGE_STATUS)}")
+                for u in s.get("uses") or []:
+                    if u not in ctx_ids:
+                        err(f"{where}: stage {s.get('id')!r} uses unknown context {u!r}")
+                if s.get("stages"):
+                    check_stages(s["stages"], s.get("flow"), f"{at} › {s.get('id')}")
+                elif s.get("flow"):
+                    err(f"{where}: stage {s.get('id')!r} has flow but no stages")
+            for f in fl or []:
+                if f.get("from") not in ids_ or f.get("to") not in ids_:
+                    err(f"{where}: flow edge {f} references unknown stage ({at})")
+            return ids_
+        if not check_stages(t.get("stages") or [], t.get("flow"), "workflow"):
             warn(f"{where}: no stages — the workflow chart will be empty")
         for k in ("approvals", "actions"):
             for a in t.get(k) or []:
