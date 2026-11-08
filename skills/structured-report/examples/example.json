@@ -1,0 +1,195 @@
+{
+  "meta": {
+    "title": "Checkout reliability: week 45",
+    "lang": "en",
+    "author": "Coding agent",
+    "audience": "For the engineering lead",
+    "period": {"from": "2026-11-02", "to": "2026-11-06"},
+    "generated": "2026-11-06 18:40"
+  },
+  "summary": "Checkout p95 latency doubled after release **2.14**. The cause is an unbounded connection pool in the payments client that exhausts sockets under retry storms. The fix is ready for review, 212 orders that failed during the incident can be replayed, and alerting is half done. Two decisions and two manual steps are waiting on you.",
+  "tasks": [
+    {
+      "id": "latency",
+      "title": "Find why checkout p95 doubled after 2.14",
+      "status": "done",
+      "ref": {"label": "ACME-412", "url": "https://example.com/issues/ACME-412"},
+      "tags": ["incident", "payments"],
+      "problem": "Since release 2.14 (Nov 2), checkout p95 latency rose from 820 ms to 1.7 s, and 0.9% of payment attempts time out. Support reports customers being charged without an order.",
+      "goal": "Find the root cause with evidence, and say what to change so that latency returns to the pre-2.14 level.",
+      "context": [
+        {"id": "C1", "kind": "data", "title": "Checkout latency dashboard, Oct 26 – Nov 4", "url": "https://example.com/dash/checkout", "note": "p95 jumps at 14:05 on Nov 2, the deploy time of 2.14."},
+        {"id": "C2", "kind": "commit", "title": "2.14 diff: payments client upgraded 3.2 → 4.0", "url": "https://example.com/acme/shop/compare/v2.13...v2.14"},
+        {"id": "C3", "kind": "doc", "title": "payments-client 4.0 changelog", "url": "https://example.com/payments-client/CHANGELOG.md#400", "note": "\"maxConnections now defaults to unlimited\"."},
+        {"id": "C4", "kind": "log", "title": "Pod logs during the peak, 2026-11-03 19:00–19:30", "url": "https://example.com/logs/q/8812", "note": "3,140 × `EMFILE: too many open files`, all from the payments client."},
+        {"id": "C5", "kind": "chat", "title": "Support thread about double charges", "url": "https://example.com/support/t/5521"},
+        {"id": "C6", "kind": "file", "title": "src/payments/client.ts", "url": "https://example.com/acme/shop/blob/main/src/payments/client.ts#L18-L44"}
+      ],
+      "inferences": [
+        {"text": "The regression starts exactly with the 2.14 deploy, so it is caused by a change inside 2.14, not by traffic.", "basis": ["C1", "C2"], "confidence": "high"},
+        {"text": "The payments client opens a new socket per retry and never caps them; under retries the pod runs out of file descriptors.", "basis": ["C3", "C4", "C6"], "confidence": "high"},
+        {"text": "Double charges happen when the provider accepts a payment but our side times out before writing the order.", "basis": ["C4", "C5"], "confidence": "medium"}
+      ],
+      "assumptions": [
+        {"text": "The provider itself was healthy during the incident.", "why": "Their status page shows no incident, but we have no provider-side metrics.", "verify": "Ask the provider for request logs for Nov 3, 19:00–19:30.", "risk": "medium"}
+      ],
+      "result": {
+        "summary": "Root cause found and confirmed by a load test: unbounded connections in payments client 4.0.",
+        "items": [
+          {"kind": "decision", "text": "Cap the pool at 50 connections per pod and add jittered backoff."},
+          {"kind": "verified", "text": "Load test with the cap: no `EMFILE` errors at 3× peak traffic.", "ref": {"label": "load test #77", "url": "https://example.com/ci/load/77"}},
+          {"kind": "metric", "value": "780 ms", "text": "p95 in the load test with the cap (was 1.7 s)"},
+          {"kind": "doc", "text": "Incident timeline written up.", "ref": {"label": "timeline", "url": "https://example.com/wiki/incidents/2026-11-03"}}
+        ]
+      },
+      "stages": [
+        {"id": "s1", "title": "Confirm the regression", "detail": "Compared p95 per hour for two weeks around the release.", "outcome": "Step change at the 2.14 deploy.", "uses": ["C1"]},
+        {"id": "s2", "title": "Diff the release", "detail": "Listed every dependency and config change in 2.14.", "outcome": "One risky change: payments client 3.2 → 4.0.", "uses": ["C2"]},
+        {"id": "s3", "title": "Read the error logs", "detail": "Grouped errors during the evening peak by message and source.", "outcome": "`EMFILE` from the payments client dominates.", "uses": ["C4"]},
+        {"id": "s4", "title": "Check the client changelog", "detail": "Looked for behaviour changes in 4.0.", "outcome": "Pool limit default changed to unlimited.", "uses": ["C3", "C6"]},
+        {"id": "s5", "title": "Reproduce under load", "detail": "Ran the checkout load test with and without a pool cap.", "outcome": "Cap removes the errors and restores latency."},
+        {"id": "s6", "title": "Write it up", "detail": "Root cause, evidence and the proposed fix in the issue.", "outcome": "Handed over to the fix task."}
+      ],
+      "flow": [
+        {"from": "s1", "to": "s2"}, {"from": "s1", "to": "s3"},
+        {"from": "s2", "to": "s4"}, {"from": "s3", "to": "s4"},
+        {"from": "s4", "to": "s5"}, {"from": "s5", "to": "s6"}
+      ],
+      "approvals": [],
+      "actions": [
+        {"text": "Request provider-side logs for Nov 3, 19:00–19:30.", "why": "Only an account owner can open a ticket with the provider; it confirms the one open assumption."}
+      ]
+    },
+    {
+      "id": "pool",
+      "title": "Cap connections in the payments client",
+      "status": "needs_review",
+      "ref": {"label": "PR #1290", "url": "https://example.com/acme/shop/pull/1290"},
+      "tags": ["payments"],
+      "problem": "The payments client opens unlimited sockets, which exhausts file descriptors under retries.",
+      "goal": "Limit the pool and make retries back off, without changing payment semantics.",
+      "context": [
+        {"id": "C1", "kind": "file", "title": "src/payments/client.ts", "url": "https://example.com/acme/shop/blob/main/src/payments/client.ts"},
+        {"id": "C2", "kind": "doc", "title": "payments-client pool options", "url": "https://example.com/payments-client/docs/pool"},
+        {"id": "C3", "kind": "issue", "title": "Root cause analysis (ACME-412)", "url": "https://example.com/issues/ACME-412"}
+      ],
+      "inferences": [
+        {"text": "50 connections per pod covers peak with 2× headroom: peak is ~22 concurrent payment calls per pod.", "basis": ["C3"], "confidence": "medium"}
+      ],
+      "assumptions": [
+        {"text": "Idempotency keys are already sent on every retry, so backoff cannot create duplicate charges.", "why": "The code path sets the key, but I did not see it in provider logs.", "verify": "Check one retried request in the provider dashboard for the same idempotency key.", "risk": "high"}
+      ],
+      "result": {
+        "summary": "PR ready: pool cap, jittered exponential backoff, and a metric for pool saturation.",
+        "items": [
+          {"kind": "changed", "text": "`maxConnections: 50`, `queueTimeout: 2s` in the client factory.", "ref": {"label": "client.ts", "url": "https://example.com/acme/shop/pull/1290/files"}},
+          {"kind": "added", "text": "Backoff 100 ms → 1.6 s with full jitter, 4 attempts max."},
+          {"kind": "added", "text": "Metric `payments_pool_in_use`."},
+          {"kind": "verified", "text": "Unit tests pass; the load test from ACME-412 passes with this branch."}
+        ]
+      },
+      "stages": [
+        {"id": "a", "title": "Pick limits", "detail": "Derived the pool size from peak concurrency.", "outcome": "50 per pod, 2 s queue timeout.", "uses": ["C3"]},
+        {"id": "b", "title": "Implement cap and backoff", "detail": "Configured the pool; wrapped retries in a backoff helper.", "uses": ["C1", "C2"]},
+        {"id": "c", "title": "Add saturation metric", "detail": "Exported in-use connections per pod."},
+        {"id": "d", "title": "Test", "detail": "Unit tests and the incident load test.", "outcome": "Green."}
+      ],
+      "flow": [{"from": "a", "to": "b"}, {"from": "b", "to": "c"}, {"from": "b", "to": "d"}, {"from": "c", "to": "d"}],
+      "approvals": [
+        {"text": "Merge PR #1290 and ship it as 2.14.1 today.", "why": "Every evening peak until then repeats the incident.", "options": ["Ship today", "Ship with Monday's release"]}
+      ],
+      "actions": []
+    },
+    {
+      "id": "replay",
+      "title": "Replay orders that failed during the incident",
+      "status": "blocked",
+      "tags": ["data", "customers"],
+      "problem": "212 customers were charged but have no order, because our side timed out after the provider accepted the payment.",
+      "goal": "Create the missing orders from provider records, without charging anyone twice.",
+      "context": [
+        {"id": "C1", "kind": "data", "title": "Provider payments without a matching order, Nov 2–5", "url": "https://example.com/sql/saved/931", "note": "212 rows, total $18,406."},
+        {"id": "C2", "kind": "code", "title": "Order creation service", "url": "https://example.com/acme/shop/blob/main/src/orders/create.ts"},
+        {"id": "C3", "kind": "chat", "title": "Support thread about double charges", "url": "https://example.com/support/t/5521"}
+      ],
+      "inferences": [
+        {"text": "All 212 payments are captured and none was refunded, so creating orders is safe; no new charges are needed.", "basis": ["C1"], "confidence": "high"}
+      ],
+      "assumptions": [
+        {"text": "Stock for the affected items is still available.", "why": "Not checked per item yet; 9 SKUs are low-stock.", "verify": "Dry run of the replay script reports stock per order.", "risk": "medium"}
+      ],
+      "result": {
+        "summary": "Replay script written and dry-run on staging; production run waits for your decision.",
+        "items": [
+          {"kind": "added", "text": "`scripts/replay-orders.ts` with `--dry-run` and an idempotent order key."},
+          {"kind": "verified", "text": "Staging dry run: 212 orders, 0 duplicates, 7 items out of stock."}
+        ]
+      },
+      "stages": [
+        {"id": "r1", "title": "Find affected payments", "detail": "Joined provider captures with orders by payment id.", "outcome": "212 payments without orders.", "uses": ["C1"]},
+        {"id": "r2", "title": "Write replay script", "detail": "Creates orders through the normal service with an idempotent key.", "uses": ["C2"]},
+        {"id": "r3", "title": "Dry run on staging", "outcome": "7 orders hit out-of-stock items."},
+        {"id": "r4", "title": "Run in production", "status": "planned", "detail": "Waiting for the out-of-stock decision."}
+      ],
+      "approvals": [
+        {"text": "What to do with the 7 orders whose items are out of stock.", "why": "This changes what customers receive, so it is a business decision.", "options": ["Refund those 7", "Backorder and email customers", "Substitute a similar item"]}
+      ],
+      "actions": [
+        {"text": "Run the replay in production after you decide.", "why": "Production write access is limited to on-call leads.", "command": "npm run replay-orders -- --from 2026-11-02 --to 2026-11-05 --out-of-stock=refund"}
+      ]
+    },
+    {
+      "id": "alerts",
+      "title": "Alert on provider timeouts and pool saturation",
+      "status": "in_progress",
+      "tags": ["observability"],
+      "problem": "The incident was noticed by support two hours after it started; no alert fired.",
+      "goal": "Page on-call within 5 minutes when payment timeouts or pool saturation rise.",
+      "context": [
+        {"id": "C1", "kind": "doc", "title": "Alerting guidelines", "url": "https://example.com/wiki/alerting"},
+        {"id": "C2", "kind": "data", "title": "Timeout rate, last 30 days", "url": "https://example.com/dash/payments-timeouts"}
+      ],
+      "inferences": [
+        {"text": "A threshold of 0.3% timeouts over 5 minutes would have fired 9 minutes into the incident and never in the previous 30 days.", "basis": ["C2"], "confidence": "medium"}
+      ],
+      "assumptions": [],
+      "result": {
+        "summary": "Timeout alert drafted; saturation alert waits for the new metric from the pool fix.",
+        "items": [
+          {"kind": "added", "text": "Alert rule `PaymentsTimeoutRate > 0.3% for 5m` (not deployed)."}
+        ]
+      },
+      "stages": [
+        {"id": "x1", "title": "Backtest thresholds", "uses": ["C2"], "outcome": "0.3% / 5 min."},
+        {"id": "x2", "title": "Timeout alert", "status": "partial", "detail": "Rule written, routing to on-call not set."},
+        {"id": "x3", "title": "Saturation alert", "status": "planned", "detail": "Needs `payments_pool_in_use` in production."}
+      ],
+      "flow": [{"from": "x1", "to": "x2"}, {"from": "x1", "to": "x3"}],
+      "approvals": [],
+      "actions": []
+    },
+    {
+      "id": "runbook",
+      "title": "Update the payments incident runbook",
+      "status": "planned",
+      "problem": "The runbook does not mention connection exhaustion or how to replay orders.",
+      "goal": "Add both, so the next on-call can act without this week's investigation.",
+      "context": [
+        {"id": "C1", "kind": "doc", "title": "Payments runbook", "url": "https://example.com/wiki/runbooks/payments"}
+      ],
+      "inferences": [],
+      "assumptions": [],
+      "result": {"summary": "Not started."},
+      "stages": [],
+      "approvals": [],
+      "actions": []
+    }
+  ],
+  "links": [
+    {"from": "pool", "to": "latency", "kind": "depends"},
+    {"from": "replay", "to": "latency", "kind": "depends"},
+    {"from": "alerts", "to": "pool", "kind": "depends", "label": "needs the metric"},
+    {"from": "runbook", "to": "replay", "kind": "related"},
+    {"from": "runbook", "to": "alerts", "kind": "related"}
+  ]
+}
