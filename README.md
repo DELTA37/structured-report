@@ -41,7 +41,7 @@ icons, keyboard navigation, deep links (`#task=<id>`), and a print view that pri
 - **Prompts rail** — bind a Claude Code session (`track.py start`) and a `UserPromptSubmit` hook logs
   every prompt; each rebuild stamps the blocks that appeared or changed. Pick a prompt to see what
   it produced.
-- **Answer in the report** — decisions and manual steps have inputs; *Send to agent* posts them to
+- **Answer in the report** — the *Needs approval* section has inputs; its *Send to agent* posts them to
   a local answer service, and the session picks them up as its next prompt (a background
   `track.py wait`, or the Stop / UserPromptSubmit hooks).
 - **Copy as Markdown** — every report, card, section, item, step and prompt has a copy button.

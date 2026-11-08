@@ -182,20 +182,21 @@ body.at-prompt #map .node:not(.p-new):not(.p-changed),body.at-prompt .stage:not(
 .answered .pn{font:600 11px/18px var(--display);padding:0 7px;border-radius:9px;background:var(--ink);color:var(--panel)}
 .mine li.is-answered{border-left-color:var(--ok)}
 .waiting li.ans{background:var(--panel-2);border-left-color:var(--ok);text-decoration:line-through;text-decoration-color:var(--ink-3)}
-.sendbar{position:fixed;left:50%;bottom:18px;z-index:70;transform:translate(-50%,140%);transition:transform .3s cubic-bezier(.2,.7,.2,1);
-  display:flex;align-items:center;gap:12px;padding:10px 10px 10px 18px;border-radius:14px;background:var(--ink);color:var(--panel);box-shadow:0 18px 40px -18px rgba(23,38,43,.8);max-width:calc(100vw - 32px)}
-.sendbar.show{transform:translate(-50%,0)}
-.sendbar textarea{font:14px var(--text);width:min(360px,40vw);height:36px;min-height:36px;resize:none;border-radius:8px;border:0;padding:8px 10px;background:rgba(255,255,255,.1);color:var(--panel)}
-.sendbar textarea::placeholder{color:rgba(248,249,246,.55)}
-.sendbar button{all:unset;cursor:pointer;font:600 14px var(--text);padding:9px 14px;border-radius:9px;background:var(--marker);color:var(--ink);white-space:nowrap}
-.sendbar button:focus-visible{outline:2px solid #fff}
-.sendbar .msg{font-size:13.5px;white-space:nowrap}
-
 .unchecked{list-style:none;margin:0 0 12px;padding:0;display:grid;gap:8px}
 .unchecked li{padding:8px 12px;border-radius:var(--r-s);border:1px dashed var(--ink-3)}
 .unchecked .kv{margin-top:4px;font-size:14px}
 .results .how,.stage .when{font-size:13px;color:var(--ink-2);margin-top:4px}
 .stage .when{display:grid;grid-template-columns:auto 1fr;gap:6px;margin-top:8px;padding:6px 8px;border-radius:6px;background:var(--panel-2)}
+
+.send{margin:4px 0 14px;padding:12px;border-radius:var(--r-s);background:var(--panel);border:1px solid var(--rule);display:grid;gap:10px}
+.send textarea{font:14px/1.45 var(--text);color:var(--ink);background:#fff;border:1px solid var(--rule);border-radius:8px;padding:8px 10px;resize:vertical;min-height:38px}
+.send textarea:focus{outline:none;border-color:var(--ink);box-shadow:0 0 0 3px rgba(45,79,214,.12)}
+.send-row{display:flex;align-items:center;gap:12px;justify-content:flex-end}
+.send .note{flex:1;font-size:13px;color:var(--ink-2)}
+.send button{all:unset;cursor:pointer;font:600 14px var(--text);padding:9px 16px;border-radius:9px;background:var(--ink);color:var(--panel);white-space:nowrap}
+.send button:disabled{cursor:default;background:var(--rule);color:var(--ink-2)}
+.send button:focus-visible{outline:2px solid var(--cobalt);outline-offset:2px}
+.opts .rec{font:600 11px var(--display);padding:0 6px;border-radius:8px;background:var(--marker);color:var(--ink);font-style:normal}
 
 /* ── copy as Markdown ─────────────────────────────────── */
 .copybtn{all:unset;box-sizing:border-box;cursor:pointer;display:inline-flex;align-items:center;gap:5px;color:var(--ink-3);border-radius:6px;
@@ -227,9 +228,9 @@ body.at-prompt #map .node:not(.p-new):not(.p-changed),body.at-prompt .stage:not(
 .drawer{position:fixed;top:var(--bar-h,66px);right:0;height:calc(100% - var(--bar-h,66px));z-index:40;width:min(920px,100%);background:var(--paper);border-left:1px solid var(--rule);
   transform:translateX(102%);transition:transform .28s cubic-bezier(.2,.7,.2,1);overflow:auto;box-shadow:-20px 0 40px -30px rgba(23,38,43,.6)}
 .drawer.open{transform:none} .drawer:focus{outline:none}
-.d-nav{position:sticky;top:0;z-index:3;display:flex;justify-content:flex-end;gap:6px;padding:12px 20px 0;height:0;overflow:visible}
+.d-nav{position:sticky;top:0;z-index:7;display:flex;justify-content:flex-end;gap:6px;padding:12px 20px 0;height:0;overflow:visible}
 .report{padding:0 28px 64px}
-.r-head{position:sticky;top:0;z-index:2;background:var(--paper);border-bottom:1px solid var(--rule);padding:14px 140px 14px 0;display:grid;grid-template-columns:26px 1fr;gap:4px 10px;align-items:start}
+.r-head{position:sticky;top:0;z-index:6;background:var(--paper);border-bottom:1px solid var(--rule);padding:14px 140px 14px 0;display:grid;grid-template-columns:26px 1fr;gap:4px 10px;align-items:start}
 .r-head .icon{width:24px;height:24px;margin-top:3px}
 .r-head h2{font:600 28px/1.1 var(--display);margin:0}
 .r-head h2 .num,.flow-title .num{font:600 14px/1 var(--display);display:inline-grid;place-items:center;min-width:28px;height:26px;padding:0 7px;border-radius:13px;background:var(--ink);color:var(--panel);vertical-align:4px;margin-right:10px}
@@ -332,7 +333,7 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 @media print{
   body.map-page{height:auto;overflow:visible;display:block;background:#fff}
-  #map,.drawer,.scrim,#print-btn,.zoom,.minimap,.search,.rail,.sendbar,.answer{display:none!important}
+  #map,.drawer,.scrim,#print-btn,.zoom,.minimap,.search,.rail,.send,.answer{display:none!important}
   .reports{display:block!important}
   .reports .report{break-before:page;padding:0}
   .reports .r-head{position:static;padding-right:0}
@@ -620,10 +621,7 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
       <li><svg class="icon"><use href="#i-action"/></svg><div><div class="t">Request provider-side logs for Nov 3, 19:00–19:30.</div>
         <dl class="kv"><dt>Why you</dt><dd class="rich"><p>Only an account owner can open a ticket with the provider; it confirms the one open assumption.</p></dd></dl>
         
-        <form class="answer" data-akey="latency#d0" data-type="action" data-question="Request provider-side logs for Nov 3, 19:00–19:30.">
-          <label class="donebox"><input type="checkbox"> Done</label>
-          <textarea rows="1" placeholder="Comment (optional)" aria-label="Comment"></textarea>
-        </form>
+
       </div></li>
     </ul></section>
 </article>
@@ -1238,12 +1236,11 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
       <li><svg class="icon"><use href="#i-approve"/></svg><div><div class="t">Merge PR #1290 and ship it as 2.14.1 today.</div>
         <dl class="kv"><dt>Why you</dt><dd class="rich"><p>Every evening peak until then repeats the incident.</p></dd><dt>Decide by</dt><dd>today 18:00</dd></dl>
         
-        <form class="answer" data-akey="pool#a0" data-type="approval" data-question="Merge PR #1290 and ship it as 2.14.1 today.">
-          <div class="choices" role="radiogroup" aria-label="Your decision"><label class="choice"><input type="radio" name="pool#a0" value="Ship today"><span>Ship today <i class="rec">Recommended</i></span></label><label class="choice"><input type="radio" name="pool#a0" value="Ship with Monday&#x27;s release"><span>Ship with Monday&#x27;s release</span></label></div>
-          <textarea rows="1" placeholder="Comment (optional)" aria-label="Comment"></textarea>
-        </form>
+        
+        <dl class="kv"><dt>Options</dt><dd class="opts"><span>Ship today <i class="rec">Recommended</i></span><span>Ship with Monday&#x27;s release</span></dd></dl>
       </div></li>
-    </ul></section>
+    </ul>
+    </section>
 
   
 </article>
@@ -1528,22 +1525,18 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
       <li><svg class="icon"><use href="#i-approve"/></svg><div><div class="t">What to do with the 7 orders whose items are out of stock.</div>
         <dl class="kv"><dt>Why you</dt><dd class="rich"><p>This changes what customers receive, so it is a business decision.</p></dd><dt>Decide by</dt><dd>tomorrow 12:00</dd></dl>
         
-        <form class="answer" data-akey="replay#a0" data-type="approval" data-question="What to do with the 7 orders whose items are out of stock.">
-          <div class="choices" role="radiogroup" aria-label="Your decision"><label class="choice"><input type="radio" name="replay#a0" value="Refund those 7"><span>Refund those 7</span></label><label class="choice"><input type="radio" name="replay#a0" value="Backorder and email customers"><span>Backorder and email customers <i class="rec">Recommended</i></span></label><label class="choice"><input type="radio" name="replay#a0" value="Substitute a similar item"><span>Substitute a similar item</span></label></div>
-          <textarea rows="1" placeholder="Comment (optional)" aria-label="Comment"></textarea>
-        </form>
+        
+        <dl class="kv"><dt>Options</dt><dd class="opts"><span>Refund those 7</span><span>Backorder and email customers <i class="rec">Recommended</i></span><span>Substitute a similar item</span></dd></dl>
       </div></li>
-    </ul></section>
+    </ul>
+    </section>
 
   <section class="sec" id="sec-actions" data-block="replay#actions"><h3><svg class="icon"><use href="#i-action"/></svg>Your actions</h3>
     <ul class="mine">
       <li><svg class="icon"><use href="#i-action"/></svg><div><div class="t">Run the replay in production after you decide.</div>
         <dl class="kv"><dt>Why you</dt><dd class="rich"><p>Production write access is limited to on-call leads.</p></dd><dt>Command</dt><dd class="cmd"><code>npm run replay-orders -- --from 2026-11-02 --to 2026-11-05 --out-of-stock=refund</code><button class="copy" data-copy="npm run replay-orders -- --from 2026-11-02 --to 2026-11-05 --out-of-stock=refund" title="Copy" aria-label="Copy command"><svg class="icon sm"><use href="#i-copy"/></svg></button></dd></dl>
         
-        <form class="answer" data-akey="replay#d0" data-type="action" data-question="Run the replay in production after you decide.">
-          <label class="donebox"><input type="checkbox"> Done</label>
-          <textarea rows="1" placeholder="Comment (optional)" aria-label="Comment"></textarea>
-        </form>
+
       </div></li>
     </ul></section>
 </article>
@@ -1969,11 +1962,6 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
 
 </div>
 
-<div class="sendbar" id="sendbar" role="region" aria-label="Answers for the agent">
-  <span class="msg" id="send-count"></span>
-  <textarea id="send-message" placeholder="Message to the agent (optional)" aria-label="Message to the agent"></textarea>
-  <button type="button" id="send-btn">Send to agent</button>
-</div>
 <script type="application/json" id="sr-index">[{"k": "latency", "n": null, "t": "Find why checkout p95 doubled after 2.14", "p": "", "s": "card", "l": "Title", "x": "Find why checkout p95 doubled after 2.14"}, {"k": "latency", "n": null, "t": "Find why checkout p95 doubled after 2.14", "p": "", "s": "card", "l": "Brief", "x": "Cause: client 4.0 dropped the connection limit · Proven by: load test"}, {"k": "latency", "n": null, "t": "Find why checkout p95 doubled after 2.14", "p": "", "s": "problem", "l": "Problem", "x": "Since: release 2.14, Nov 2 14:05 · Latency: checkout p95 820 ms → 1.7 s · Timeouts: 0.9% of payment attempts · Customers: charged without an order (support reports)"}, {"k": "latency", "n": null, "t": "Find why checkout p95 doubled after 2.14", "p": "", "s": "goal", "l": "Task", "x": "Find the root cause with evidence · Say what to change to get p95 back to the pre-2.14 level"}, {"k": "latency", "n": null, "t": "Find why checkout p95 doubled after 2.14", "p": "", "s": "context", "l": "Context C1", "x": "Checkout latency dashboard, Oct 26 – Nov 4 · p95 jumps at 14:05 on Nov 2, the deploy time of 2.14."}, {"k": "latency", "n": null, "t": "Find why checkout p95 doubled after 2.14", "p": "", "s": "context", "l": "Context C2", "x": "2.14 diff: payments client upgraded 3.2 → 4.0"}, {"k": "latency", "n": null, "t": "Find why checkout p95 doubled after 2.14", "p": "", "s": "context", "l": "Context C3", "x": "payments-client 4.0 changelog · \"maxConnections now defaults to unlimited\"."}, {"k": "latency", "n": null, "t": "Find why checkout p95 doubled after 2.14", "p": "", "s": "context", "l": "Context C4", "x": "Pod logs during the peak, 2026-11-03 19:00–19:30 · 3,140 × EMFILE: too many open files, all from the payments client."}, {"k": "latency", "n": null, "t": "Find why checkout p95 doubled after 2.14", "p": "", "s": "context", "l": "Context C5", "x": "Support thread about double charges"}, {"k": "latency", "n": null, "t": "Find why checkout p95 doubled after 2.14", "p": "", "s": "context", "l": "Context C6", "x": "src/payments/client.ts"}, {"k": "latency", "n": null, "t": "Find why checkout p95 doubled after 2.14", "p": "", "s": "inferences", "l": "Conclusion", "x": "The regression starts exactly with the 2.14 deploy, so it is caused by a change inside 2.14, not by traffic."}, {"k": "latency", "n": null, "t": "Find why checkout p95 doubled after 2.14", "p": "", "s": "inferences", "l": "Conclusion", "x": "The payments client opens a new socket per retry and never caps them; under retries the pod runs out of file descriptors."}, {"k": "latency", "n": null, "t": "Find why checkout p95 doubled after 2.14", "p": "", "s": "inferences", "l": "Conclusion", "x": "Double charges happen when the provider accepts a payment but our side times out before writing the order."}, {"k": "latency", "n": null, "t": "Find why checkout p95 doubled after 2.14", "p": "", "s": "assumptions", "l": "Assumption", "x": "The provider itself was healthy during the incident. · Ask the provider for request logs for Nov 3, 19:00–19:30."}, {"k": "latency", "n": null, "t": "Find why checkout p95 doubled after 2.14", "p": "", "s": "result", "l": "Result", "x": "Root cause: unbounded connections in payments client 4.0 · Confirmed by: load test at 3× peak · Cap the pool at 50 connections per pod and add jittered backoff. · Load test with the cap: no EMFILE errors at 3× peak traffic. · p95 in the load test with the cap (was 1.7 s) · Incident timeline written up."}, {"k": "latency", "n": null, "t": "Find why checkout p95 doubled after 2.14", "p": "", "s": "unchecked", "l": "Not checked", "x": "Provider-side metrics during the incident · No access — requested in Your actions"}, {"k": "latency", "n": null, "t": "Find why checkout p95 doubled after 2.14", "p": "", "s": "actions", "l": "Your action", "x": "Request provider-side logs for Nov 3, 19:00–19:30."}, {"k": "latency/s1", "n": "1", "t": "Confirm the regression", "p": "Find why checkout p95 doubled after 2.14", "s": "card", "l": "Title", "x": "Confirm the regression"}, {"k": "latency/s1", "n": "1", "t": "Confirm the regression", "p": "Find why checkout p95 doubled after 2.14", "s": "goal", "l": "Task", "x": "Compared p95 per hour for two weeks around the release."}, {"k": "latency/s1", "n": "1", "t": "Confirm the regression", "p": "Find why checkout p95 doubled after 2.14", "s": "context", "l": "Context C1", "x": "Checkout latency dashboard, Oct 26 – Nov 4 · p95 jumps at 14:05 on Nov 2, the deploy time of 2.14."}, {"k": "latency/s1", "n": "1", "t": "Confirm the regression", "p": "Find why checkout p95 doubled after 2.14", "s": "result", "l": "Result", "x": "Step change at the 2.14 deploy."}, {"k": "latency/s2", "n": "2", "t": "Diff the release", "p": "Find why checkout p95 doubled after 2.14", "s": "card", "l": "Title", "x": "Diff the release"}, {"k": "latency/s2", "n": "2", "t": "Diff the release", "p": "Find why checkout p95 doubled after 2.14", "s": "goal", "l": "Task", "x": "Listed every dependency and config change in 2.14."}, {"k": "latency/s2", "n": "2", "t": "Diff the release", "p": "Find why checkout p95 doubled after 2.14", "s": "context", "l": "Context C2", "x": "2.14 diff: payments client upgraded 3.2 → 4.0"}, {"k": "latency/s2", "n": "2", "t": "Diff the release", "p": "Find why checkout p95 doubled after 2.14", "s": "result", "l": "Result", "x": "One risky change: payments client 3.2 → 4.0."}, {"k": "latency/s3", "n": "3", "t": "Read the error logs", "p": "Find why checkout p95 doubled after 2.14", "s": "card", "l": "Title", "x": "Read the error logs"}, {"k": "latency/s3", "n": "3", "t": "Read the error logs", "p": "Find why checkout p95 doubled after 2.14", "s": "goal", "l": "Task", "x": "Grouped errors during the evening peak by message and source."}, {"k": "latency/s3", "n": "3", "t": "Read the error logs", "p": "Find why checkout p95 doubled after 2.14", "s": "context", "l": "Context C4", "x": "Pod logs during the peak, 2026-11-03 19:00–19:30 · 3,140 × EMFILE: too many open files, all from the payments client."}, {"k": "latency/s3", "n": "3", "t": "Read the error logs", "p": "Find why checkout p95 doubled after 2.14", "s": "result", "l": "Result", "x": "EMFILE from the payments client dominates."}, {"k": "latency/s3/q", "n": "3.1", "t": "Export peak logs", "p": "Find why checkout p95 doubled after 2.14 › 3 Read the error logs", "s": "card", "l": "Title", "x": "Export peak logs"}, {"k": "latency/s3/q", "n": "3.1", "t": "Export peak logs", "p": "Find why checkout p95 doubled after 2.14 › 3 Read the error logs", "s": "goal", "l": "Task", "x": "Log store query for 19:00–19:30"}, {"k": "latency/s3/q", "n": "3.1", "t": "Export peak logs", "p": "Find why checkout p95 doubled after 2.14 › 3 Read the error logs", "s": "context", "l": "Context C4", "x": "Pod logs during the peak, 2026-11-03 19:00–19:30 · 3,140 × EMFILE: too many open files, all from the payments client."}, {"k": "latency/s3/q", "n": "3.1", "t": "Export peak logs", "p": "Find why checkout p95 doubled after 2.14 › 3 Read the error logs", "s": "result", "l": "Result", "x": "41,200 lines"}, {"k": "latency/s3/g", "n": "3.2", "t": "Group the errors", "p": "Find why checkout p95 doubled after 2.14 › 3 Read the error logs", "s": "card", "l": "Title", "x": "Group the errors"}, {"k": "latency/s3/g", "n": "3.2", "t": "Group the errors", "p": "Find why checkout p95 doubled after 2.14 › 3 Read the error logs", "s": "goal", "l": "Task", "x": "By message and source service"}, {"k": "latency/s3/g", "n": "3.2", "t": "Group the errors", "p": "Find why checkout p95 doubled after 2.14 › 3 Read the error logs", "s": "result", "l": "Result", "x": "Top: EMFILE — 76%"}, {"k": "latency/s3/g/g1", "n": "3.2.1", "t": "Normalise messages", "p": "Find why checkout p95 doubled after 2.14 › 3 Read the error logs › 3.2 Group the errors", "s": "card", "l": "Title", "x": "Normalise messages"}, {"k": "latency/s3/g/g1", "n": "3.2.1", "t": "Normalise messages", "p": "Find why checkout p95 doubled after 2.14 › 3 Read the error logs › 3.2 Group the errors", "s": "goal", "l": "Task", "x": "Stripped ids and timestamps"}, {"k": "latency/s3/g/g2", "n": "3.2.2", "t": "Count by source", "p": "Find why checkout p95 doubled after 2.14 › 3 Read the error logs › 3.2 Group the errors", "s": "card", "l": "Title", "x": "Count by source"}, {"k": "latency/s3/g/g2", "n": "3.2.2", "t": "Count by source", "p": "Find why checkout p95 doubled after 2.14 › 3 Read the error logs › 3.2 Group the errors", "s": "result", "l": "Result", "x": "Payments client produces every EMFILE"}, {"k": "latency/s3/g/g3", "n": "3.2.3", "t": "Check other pods", "p": "Find why checkout p95 doubled after 2.14 › 3 Read the error logs › 3.2 Group the errors", "s": "card", "l": "Title", "x": "Check other pods"}, {"k": "latency/s3/g/g3", "n": "3.2.3", "t": "Check other pods", "p": "Find why checkout p95 doubled after 2.14 › 3 Read the error logs › 3.2 Group the errors", "s": "goal", "l": "Task", "x": "Errors only in checkout — skipped"}, {"k": "latency/s3/c", "n": "3.3", "t": "Match socket metrics", "p": "Find why checkout p95 doubled after 2.14 › 3 Read the error logs", "s": "card", "l": "Title", "x": "Match socket metrics"}, {"k": "latency/s3/c", "n": "3.3", "t": "Match socket metrics", "p": "Find why checkout p95 doubled after 2.14 › 3 Read the error logs", "s": "goal", "l": "Task", "x": "Open-files metric is not collected"}, {"k": "latency/s3/c", "n": "3.3", "t": "Match socket metrics", "p": "Find why checkout p95 doubled after 2.14 › 3 Read the error logs", "s": "result", "l": "Result", "x": "Dead end — moved to the changelog"}, {"k": "latency/s4", "n": "4", "t": "Check the client changelog", "p": "Find why checkout p95 doubled after 2.14", "s": "card", "l": "Title", "x": "Check the client changelog"}, {"k": "latency/s4", "n": "4", "t": "Check the client changelog", "p": "Find why checkout p95 doubled after 2.14", "s": "goal", "l": "Task", "x": "Looked for behaviour changes in 4.0."}, {"k": "latency/s4", "n": "4", "t": "Check the client changelog", "p": "Find why checkout p95 doubled after 2.14", "s": "context", "l": "Context C3", "x": "payments-client 4.0 changelog · \"maxConnections now defaults to unlimited\"."}, {"k": "latency/s4", "n": "4", "t": "Check the client changelog", "p": "Find why checkout p95 doubled after 2.14", "s": "context", "l": "Context C6", "x": "src/payments/client.ts"}, {"k": "latency/s4", "n": "4", "t": "Check the client changelog", "p": "Find why checkout p95 doubled after 2.14", "s": "result", "l": "Result", "x": "Pool limit default changed to unlimited."}, {"k": "latency/s5", "n": "5", "t": "Reproduce under load", "p": "Find why checkout p95 doubled after 2.14", "s": "card", "l": "Title", "x": "Reproduce under load"}, {"k": "latency/s5", "n": "5", "t": "Reproduce under load", "p": "Find why checkout p95 doubled after 2.14", "s": "goal", "l": "Task", "x": "Ran the checkout load test with and without a pool cap."}, {"k": "latency/s5", "n": "5", "t": "Reproduce under load", "p": "Find why checkout p95 doubled after 2.14", "s": "result", "l": "Result", "x": "Cap removes the errors and restores latency."}, {"k": "latency/s6", "n": "6", "t": "Write it up", "p": "Find why checkout p95 doubled after 2.14", "s": "card", "l": "Title", "x": "Write it up"}, {"k": "latency/s6", "n": "6", "t": "Write it up", "p": "Find why checkout p95 doubled after 2.14", "s": "goal", "l": "Task", "x": "Root cause, evidence and the proposed fix in the issue."}, {"k": "latency/s6", "n": "6", "t": "Write it up", "p": "Find why checkout p95 doubled after 2.14", "s": "result", "l": "Result", "x": "Handed over to the fix task."}, {"k": "pool", "n": null, "t": "Cap connections in the payments client", "p": "", "s": "card", "l": "Title", "x": "Cap connections in the payments client"}, {"k": "pool", "n": null, "t": "Cap connections in the payments client", "p": "", "s": "card", "l": "Brief", "x": "Limit: 50 connections per pod · Status: PR #1290 in review"}, {"k": "pool", "n": null, "t": "Cap connections in the payments client", "p": "", "s": "problem", "l": "Problem", "x": "Payments client opens unlimited sockets → file descriptors run out under retries."}, {"k": "pool", "n": null, "t": "Cap connections in the payments client", "p": "", "s": "goal", "l": "Task", "x": "Limit the connection pool · Add backoff to retries · Keep payment semantics unchanged"}, {"k": "pool", "n": null, "t": "Cap connections in the payments client", "p": "", "s": "context", "l": "Context C1", "x": "src/payments/client.ts"}, {"k": "pool", "n": null, "t": "Cap connections in the payments client", "p": "", "s": "context", "l": "Context C2", "x": "payments-client pool options"}, {"k": "pool", "n": null, "t": "Cap connections in the payments client", "p": "", "s": "context", "l": "Context C3", "x": "Root cause analysis (ACME-412)"}, {"k": "pool", "n": null, "t": "Cap connections in the payments client", "p": "", "s": "inferences", "l": "Conclusion", "x": "50 connections per pod covers peak with 2× headroom: peak is ~22 concurrent payment calls per pod."}, {"k": "pool", "n": null, "t": "Cap connections in the payments client", "p": "", "s": "assumptions", "l": "Assumption", "x": "Idempotency keys are already sent on every retry, so backoff cannot create duplicate charges. · Check one retried request in the provider dashboard for the same idempotency key."}, {"k": "pool", "n": null, "t": "Cap connections in the payments client", "p": "", "s": "result", "l": "Result", "x": "PR #1290 ready: · - pool cap · - jittered exponential backoff · - pool saturation metric · maxConnections: 50, queueTimeout: 2s in the client factory. · Backoff 100 ms → 1.6 s with full jitter, 4 attempts max. · Metric payments_pool_in_use. · Unit tests pass; the load test from ACME-412 passes with this branch."}, {"k": "pool", "n": null, "t": "Cap connections in the payments client", "p": "", "s": "unchecked", "l": "Not checked", "x": "Pool behaviour when DNS fails · No environment to simulate it"}, {"k": "pool", "n": null, "t": "Cap connections in the payments client", "p": "", "s": "approvals", "l": "Needs approval", "x": "Merge PR #1290 and ship it as 2.14.1 today. · Ship today · Ship with Monday's release"}, {"k": "pool/a", "n": "1", "t": "Pick limits", "p": "Cap connections in the payments client", "s": "card", "l": "Title", "x": "Pick limits"}, {"k": "pool/a", "n": "1", "t": "Pick limits", "p": "Cap connections in the payments client", "s": "goal", "l": "Task", "x": "Derived the pool size from peak concurrency."}, {"k": "pool/a", "n": "1", "t": "Pick limits", "p": "Cap connections in the payments client", "s": "context", "l": "Context C3", "x": "Root cause analysis (ACME-412)"}, {"k": "pool/a", "n": "1", "t": "Pick limits", "p": "Cap connections in the payments client", "s": "result", "l": "Result", "x": "50 per pod, 2 s queue timeout."}, {"k": "pool/b", "n": "2", "t": "Implement cap and backoff", "p": "Cap connections in the payments client", "s": "card", "l": "Title", "x": "Implement cap and backoff"}, {"k": "pool/b", "n": "2", "t": "Implement cap and backoff", "p": "Cap connections in the payments client", "s": "goal", "l": "Task", "x": "Configured the pool; wrapped retries in a backoff helper."}, {"k": "pool/b", "n": "2", "t": "Implement cap and backoff", "p": "Cap connections in the payments client", "s": "context", "l": "Context C1", "x": "src/payments/client.ts"}, {"k": "pool/b", "n": "2", "t": "Implement cap and backoff", "p": "Cap connections in the payments client", "s": "context", "l": "Context C2", "x": "payments-client pool options"}, {"k": "pool/c", "n": "3", "t": "Add saturation metric", "p": "Cap connections in the payments client", "s": "card", "l": "Title", "x": "Add saturation metric"}, {"k": "pool/c", "n": "3", "t": "Add saturation metric", "p": "Cap connections in the payments client", "s": "goal", "l": "Task", "x": "Exported in-use connections per pod."}, {"k": "pool/d", "n": "4", "t": "Test", "p": "Cap connections in the payments client", "s": "card", "l": "Title", "x": "Test"}, {"k": "pool/d", "n": "4", "t": "Test", "p": "Cap connections in the payments client", "s": "goal", "l": "Task", "x": "Unit tests and the incident load test."}, {"k": "pool/d", "n": "4", "t": "Test", "p": "Cap connections in the payments client", "s": "result", "l": "Result", "x": "Green."}, {"k": "pool/e", "n": "5", "t": "Ship 2.14.1", "p": "Cap connections in the payments client", "s": "card", "l": "Title", "x": "Ship 2.14.1"}, {"k": "pool/e", "n": "5", "t": "Ship 2.14.1", "p": "Cap connections in the payments client", "s": "goal", "l": "Task", "x": "Merge, release, watch p95 for a day"}, {"k": "replay", "n": null, "t": "Replay orders that failed during the incident", "p": "", "s": "card", "l": "Title", "x": "Replay orders that failed during the incident"}, {"k": "replay", "n": null, "t": "Replay orders that failed during the incident", "p": "", "s": "card", "l": "Brief", "x": "Affected: 212 customers, $18,406 · Script: ready, waits for a decision"}, {"k": "replay", "n": null, "t": "Replay orders that failed during the incident", "p": "", "s": "problem", "l": "Problem", "x": "Affected: 212 customers, $18,406 · State: charged by the provider, no order on our side · Cause: our timeout fired after the provider accepted the payment"}, {"k": "replay", "n": null, "t": "Replay orders that failed during the incident", "p": "", "s": "goal", "l": "Task", "x": "Create the missing orders from provider records · Charge nobody twice"}, {"k": "replay", "n": null, "t": "Replay orders that failed during the incident", "p": "", "s": "context", "l": "Context C1", "x": "Provider payments without a matching order, Nov 2–5 · 212 rows, total $18,406."}, {"k": "replay", "n": null, "t": "Replay orders that failed during the incident", "p": "", "s": "context", "l": "Context C2", "x": "Order creation service"}, {"k": "replay", "n": null, "t": "Replay orders that failed during the incident", "p": "", "s": "context", "l": "Context C3", "x": "Support thread about double charges"}, {"k": "replay", "n": null, "t": "Replay orders that failed during the incident", "p": "", "s": "inferences", "l": "Conclusion", "x": "All 212 payments are captured and none was refunded, so creating orders is safe; no new charges are needed."}, {"k": "replay", "n": null, "t": "Replay orders that failed during the incident", "p": "", "s": "assumptions", "l": "Assumption", "x": "Stock for the affected items is still available. · Dry run of the replay script reports stock per order."}, {"k": "replay", "n": null, "t": "Replay orders that failed during the incident", "p": "", "s": "result", "l": "Result", "x": "Script: written, dry-run on staging · Production run: waits for your decision · scripts/replay-orders.ts with --dry-run and an idempotent order key. · Staging dry run: 212 orders, 0 duplicates, 7 items out of stock."}, {"k": "replay", "n": null, "t": "Replay orders that failed during the incident", "p": "", "s": "approvals", "l": "Needs approval", "x": "What to do with the 7 orders whose items are out of stock. · Refund those 7 · Backorder and email customers · Substitute a similar item"}, {"k": "replay", "n": null, "t": "Replay orders that failed during the incident", "p": "", "s": "actions", "l": "Your action", "x": "Run the replay in production after you decide. · npm run replay-orders -- --from 2026-11-02 --to 2026-11-05 --out-of-stockrefund"}, {"k": "replay/r1", "n": "1", "t": "Find affected payments", "p": "Replay orders that failed during the incident", "s": "card", "l": "Title", "x": "Find affected payments"}, {"k": "replay/r1", "n": "1", "t": "Find affected payments", "p": "Replay orders that failed during the incident", "s": "goal", "l": "Task", "x": "Joined provider captures with orders by payment id."}, {"k": "replay/r1", "n": "1", "t": "Find affected payments", "p": "Replay orders that failed during the incident", "s": "context", "l": "Context C1", "x": "Provider payments without a matching order, Nov 2–5 · 212 rows, total $18,406."}, {"k": "replay/r1", "n": "1", "t": "Find affected payments", "p": "Replay orders that failed during the incident", "s": "result", "l": "Result", "x": "212 payments without orders."}, {"k": "replay/r2", "n": "2", "t": "Write replay script", "p": "Replay orders that failed during the incident", "s": "card", "l": "Title", "x": "Write replay script"}, {"k": "replay/r2", "n": "2", "t": "Write replay script", "p": "Replay orders that failed during the incident", "s": "goal", "l": "Task", "x": "Creates orders through the normal service with an idempotent key."}, {"k": "replay/r2", "n": "2", "t": "Write replay script", "p": "Replay orders that failed during the incident", "s": "context", "l": "Context C2", "x": "Order creation service"}, {"k": "replay/r3", "n": "3", "t": "Dry run on staging", "p": "Replay orders that failed during the incident", "s": "card", "l": "Title", "x": "Dry run on staging"}, {"k": "replay/r3", "n": "3", "t": "Dry run on staging", "p": "Replay orders that failed during the incident", "s": "result", "l": "Result", "x": "7 orders hit out-of-stock items."}, {"k": "replay/r4", "n": "4", "t": "Run in production", "p": "Replay orders that failed during the incident", "s": "card", "l": "Title", "x": "Run in production"}, {"k": "replay/r4", "n": "4", "t": "Run in production", "p": "Replay orders that failed during the incident", "s": "goal", "l": "Task", "x": "Waiting for the out-of-stock decision."}, {"k": "alerts", "n": null, "t": "Alert on provider timeouts and pool saturation", "p": "", "s": "card", "l": "Title", "x": "Alert on provider timeouts and pool saturation"}, {"k": "alerts", "n": null, "t": "Alert on provider timeouts and pool saturation", "p": "", "s": "card", "l": "Brief", "x": "Timeouts: alert drafted · Pool: waits for the metric"}, {"k": "alerts", "n": null, "t": "Alert on provider timeouts and pool saturation", "p": "", "s": "problem", "l": "Problem", "x": "Detected by: support, 2 hours after start · Alerts fired: none"}, {"k": "alerts", "n": null, "t": "Alert on provider timeouts and pool saturation", "p": "", "s": "goal", "l": "Task", "x": "Page on-call within 5 minutes when payment timeouts or pool saturation rise."}, {"k": "alerts", "n": null, "t": "Alert on provider timeouts and pool saturation", "p": "", "s": "context", "l": "Context C1", "x": "Alerting guidelines"}, {"k": "alerts", "n": null, "t": "Alert on provider timeouts and pool saturation", "p": "", "s": "context", "l": "Context C2", "x": "Timeout rate, last 30 days"}, {"k": "alerts", "n": null, "t": "Alert on provider timeouts and pool saturation", "p": "", "s": "inferences", "l": "Conclusion", "x": "A threshold of 0.3% timeouts over 5 minutes would have fired 9 minutes into the incident and never in the previous 30 days."}, {"k": "alerts", "n": null, "t": "Alert on provider timeouts and pool saturation", "p": "", "s": "result", "l": "Result", "x": "Timeout alert: drafted · Saturation alert: waits for the metric from the pool fix · Alert rule PaymentsTimeoutRate > 0.3% for 5m (not deployed)."}, {"k": "alerts/x1", "n": "1", "t": "Backtest thresholds", "p": "Alert on provider timeouts and pool saturation", "s": "card", "l": "Title", "x": "Backtest thresholds"}, {"k": "alerts/x1", "n": "1", "t": "Backtest thresholds", "p": "Alert on provider timeouts and pool saturation", "s": "context", "l": "Context C2", "x": "Timeout rate, last 30 days"}, {"k": "alerts/x1", "n": "1", "t": "Backtest thresholds", "p": "Alert on provider timeouts and pool saturation", "s": "result", "l": "Result", "x": "0.3% / 5 min."}, {"k": "alerts/x2", "n": "2", "t": "Timeout alert", "p": "Alert on provider timeouts and pool saturation", "s": "card", "l": "Title", "x": "Timeout alert"}, {"k": "alerts/x2", "n": "2", "t": "Timeout alert", "p": "Alert on provider timeouts and pool saturation", "s": "goal", "l": "Task", "x": "Rule written, routing to on-call not set."}, {"k": "alerts/x3", "n": "3", "t": "Saturation alert", "p": "Alert on provider timeouts and pool saturation", "s": "card", "l": "Title", "x": "Saturation alert"}, {"k": "alerts/x3", "n": "3", "t": "Saturation alert", "p": "Alert on provider timeouts and pool saturation", "s": "goal", "l": "Task", "x": "Needs payments_pool_in_use in production."}, {"k": "runbook", "n": null, "t": "Update the payments incident runbook", "p": "", "s": "card", "l": "Title", "x": "Update the payments incident runbook"}, {"k": "runbook", "n": null, "t": "Update the payments incident runbook", "p": "", "s": "card", "l": "Brief", "x": "Not started"}, {"k": "runbook", "n": null, "t": "Update the payments incident runbook", "p": "", "s": "problem", "l": "Problem", "x": "The runbook lacks: · - connection exhaustion · - how to replay orders"}, {"k": "runbook", "n": null, "t": "Update the payments incident runbook", "p": "", "s": "goal", "l": "Task", "x": "Add both, so the next on-call can act without this week's investigation."}, {"k": "runbook", "n": null, "t": "Update the payments incident runbook", "p": "", "s": "context", "l": "Context C1", "x": "Payments runbook"}, {"k": "runbook", "n": null, "t": "Update the payments incident runbook", "p": "", "s": "result", "l": "Result", "x": "Not started."}, {"k": "runbook/w", "n": "1", "t": "Write the runbook sections", "p": "Update the payments incident runbook", "s": "card", "l": "Title", "x": "Write the runbook sections"}, {"k": "runbook/w", "n": "1", "t": "Write the runbook sections", "p": "Update the payments incident runbook", "s": "goal", "l": "Task", "x": "Connection exhaustion; order replay"}]</script>
 <script type="application/json" id="sr-track">{"prompts": [], "blocks": {}, "answer_to": null}</script>
 <script>
@@ -2394,84 +2382,68 @@ function toggleRail(byKeyboard) {
 const _open = open;
 open = function (key, o) { _open(key, o); const a = art(key); if (a) { stamps(a); paint(a); } };
 
-// ── answers: decide in the report; "Send to agent" goes straight to the session ──
-const ANSWER = TRACK.answer_to;          // {url, token} — the local answer service, if this report has one
-let reachable = false;
+// ── answers: only from a report's "Needs approval" section, straight to the session ──
+const ANSWER = TRACK.answer_to;          // {url, token} — the local answer service of this report
+let online = false;
 const store = "sr-answers:" + document.title;
 const draft = JSON.parse(localStorage.getItem(store) || "{}");
-const forms = () => $$("form.answer");
 function readForm(f) {
   const a = f.closest(".report"), t = $("textarea", f).value.trim();
-  const radio = $("input[type=radio]:checked", f), hasRadios = !!$("input[type=radio]", f), box = $("input[type=checkbox]", f);
-  const item = {akey: f.dataset.akey, type: f.dataset.type, question: f.dataset.question, num: a.dataset.num || null, title: a.dataset.title,
-                choice: null, done: null, comment: null};
-  if (f.dataset.type === "approval") { item.choice = hasRadios ? (radio ? radio.value : null) : (t || null); item.comment = hasRadios ? (t || null) : null; }
-  else { item.done = box.checked; item.comment = t || null; }
-  return (item.choice || item.done || item.comment) ? item : null;
+  const radio = $("input[type=radio]:checked", f), hasRadios = !!$("input[type=radio]", f);
+  const item = {akey: f.dataset.akey, type: "approval", question: f.dataset.question, num: a.dataset.num || null, title: a.dataset.title,
+                choice: hasRadios ? (radio ? radio.value : null) : (t || null), done: null, comment: hasRadios ? (t || null) : null};
+  return (item.choice || item.comment) ? item : null;
 }
-function collect() { return forms().map(readForm).filter(Boolean); }
 function restore() {
-  for (const f of forms()) {
+  for (const f of $$("form.answer")) {
     const v = draft[f.dataset.akey]; if (!v) continue;
     if (v.choice) { const r = $$("input[type=radio]", f).find(x => x.value === v.choice); if (r) r.checked = true; }
-    if (v.done) { const d = $("input[type=checkbox]", f); if (d) d.checked = true; }
     if (v.text) $("textarea", f).value = v.text;
   }
 }
-const bar = $("#sendbar"), btn = $("#send-btn"), cnt = $("#send-count"), msg = $("#send-message");
-function refresh() {
-  if (btn.dataset.sent) return;
-  const n = collect().length + (msg.value.trim() ? 1 : 0);
-  bar.classList.toggle("show", n > 0);
-  cnt.textContent = (n === 1 ? "1 answer ready" : n + " answers ready") + (reachable ? "" : " · the agent is not connected");
-  btn.textContent = reachable ? "Send to agent" : "Copy answers";
+function refreshSend(sec) {
+  const send = $(".send", sec); if (!send || send.dataset.sent) return;
+  const items = $$("form.answer", sec).map(readForm).filter(Boolean), m = $(".send textarea", sec).value.trim();
+  const btn = $(".send button", sec), note = $(".send .note", sec);
+  const n = items.length + (m ? 1 : 0);
+  btn.disabled = !online || n === 0;
+  btn.textContent = online ? "Send to agent" : "Agent offline";
+  note.textContent = !online ? "The agent's answer service is not running — your answers are kept here until it is."
+                   : n === 0 ? "Choose an option or write an answer." : (n === 1 ? "1 answer ready" : n + " answers ready");
 }
+const refreshAll = () => $$(".sec.asks").forEach(refreshSend);
 async function ping() {
-  if (!ANSWER) return false;
-  try { const r = await fetch(ANSWER.url + "/ping", {headers: {"X-Report-Token": ANSWER.token}}); return r.ok; } catch (e) { return false; }
+  try { const r = await fetch(ANSWER.url + "/ping", {headers: {"X-Report-Token": ANSWER.token}}); online = r.ok; } catch (e) { online = false; }
+  refreshAll();
 }
 document.addEventListener("input", e => {
   const f = e.target.closest("form.answer");
-  if (f) { const c = $("input[type=radio]:checked", f), d = $("input[type=checkbox]", f);
-    draft[f.dataset.akey] = {choice: c && c.value, done: d && d.checked, text: $("textarea", f).value}; localStorage.setItem(store, JSON.stringify(draft)); }
-  if (f || e.target === msg) refresh();
+  if (f) { const c = $("input[type=radio]:checked", f);
+    draft[f.dataset.akey] = {choice: c && c.value, text: $("textarea", f).value}; localStorage.setItem(store, JSON.stringify(draft)); }
+  const sec = e.target.closest(".sec.asks"); if (sec) refreshSend(sec);
 });
-document.addEventListener("change", e => { if (e.target.closest("form.answer")) refresh(); });
+document.addEventListener("change", e => { const sec = e.target.closest(".sec.asks"); if (sec) refreshSend(sec); });
 document.addEventListener("submit", e => e.preventDefault());
-function asText(items, m) {
-  const lines = ["Answers from the report «" + document.title + "»:"];
-  for (const it of items) lines.push("- [" + (it.num ? it.num + " " : "") + it.title + "] " + it.question + ": " +
-    (it.type === "approval" ? (it.choice || "—") : (it.done ? "done" : "not done")) + (it.comment ? " — " + it.comment : ""));
-  if (m) lines.push("Message: " + m);
-  return lines.join("\n");
-}
-btn.addEventListener("click", async () => {
-  const items = collect(), m = msg.value.trim();
-  if (!items.length && !m) return;
-  if (!reachable) reachable = await ping();
-  if (!reachable) {
-    if (navigator.clipboard) await navigator.clipboard.writeText(asText(items, m));
-    cnt.textContent = ANSWER ? "The agent's answer service is not running — copied, paste into the chat"
-                             : "This report has no agent connection — copied, paste into the chat";
-    return;
-  }
-  btn.disabled = true; cnt.textContent = "Sending…";
+document.addEventListener("click", async e => {
+  const btn = e.target.closest(".send button"); if (!btn) return;
+  const sec = btn.closest(".sec.asks"), send = $(".send", sec), note = $(".note", send), box = $("textarea", send);
+  const items = $$("form.answer", sec).map(readForm).filter(Boolean), m = box.value.trim();
+  if (!online || (!items.length && !m)) return;
+  btn.disabled = true; note.textContent = "Sending…";
   try {
     const r = await fetch(ANSWER.url + "/answers", {method: "POST", headers: {"Content-Type": "application/json", "X-Report-Token": ANSWER.token}, body: JSON.stringify({items, message: m})});
     if (!r.ok) throw new Error(String(r.status));
     const j = await r.json();
-    localStorage.removeItem(store);
-    btn.dataset.sent = "1"; btn.textContent = "Sent"; msg.value = ""; msg.disabled = true;
-    cnt.textContent = j.waiting ? "Delivered as prompt #" + j.prompt + " — the agent continues"
-                                : "Saved as prompt #" + j.prompt + " — the agent gets it as soon as it is free or with your next message";
-    forms().forEach(f => f.querySelectorAll("input,textarea").forEach(x => x.disabled = true));
+    items.forEach(it => delete draft[it.akey]); localStorage.setItem(store, JSON.stringify(draft));
+    send.dataset.sent = "1"; btn.textContent = "Sent"; box.disabled = true;
+    $$("form.answer", sec).forEach(f => f.querySelectorAll("input,textarea").forEach(x => x.disabled = true));
+    note.textContent = j.waiting ? "Delivered as prompt #" + j.prompt + " — the agent continues"
+                                 : "Saved as prompt #" + j.prompt + " — the agent picks it up as soon as it is free";
   } catch (err) {
-    btn.disabled = false; reachable = false; refresh();
-    cnt.textContent = "Could not reach the agent — press again to copy instead";
+    online = false; refreshSend(sec);
   }
 });
-ping().then(ok => { reachable = ok; refresh(); });
-restore(); refresh();
+if (ANSWER) { restore(); ping(); setInterval(() => { if (!online) ping(); }, 5000); }
 
 // ── copy as Markdown: a button wherever there is something worth taking away ──
 // Markdown is produced from the rendered structure (headings, lists, key/value rows, emphasis, code, links).

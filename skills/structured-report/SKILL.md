@@ -50,8 +50,10 @@ and stamps new or changed blocks with the current prompt. Never write stamps you
 shows a Prompts rail; picking a prompt highlights what appeared (green) or changed (blue) there.
 
 **Questions for the reader.** Put decisions in `approvals` (with `options`, your `recommend`,
-`why`, `due`) and manual steps in `actions`. The reader answers inside the report — even when it is
-opened as a plain file — and presses **Send to agent**: the answers go to a local answer service
+`why`, `due`) and manual steps in `actions`. The reader answers in the report's **Needs approval** section —
+that is the only place that sends anything to you; `actions` are steps the reader takes, not
+answers — and presses that section's **Send to agent** (even when the report is opened as a plain
+file): the answers go to a local answer service
 (`127.0.0.1:47319`, started by the build) and are stored in the journal as the next prompt. While
 the report has open questions, keep a waiter running as a **background** command:
 
@@ -64,7 +66,7 @@ When the reader sends, `wait` prints the answers and exits — that output comes
 If no waiter is running, the Stop hook hands queued answers over before your turn ends, and the
 UserPromptSubmit hook attaches them to the user's next message — answers are never lost. Answered
 questions show as answered after the next build. `--static` builds a report without the answer
-channel (for sharing outside this machine); then the report offers copying instead.
+channel (for sharing outside this machine): questions are shown read-only, with no inputs.
 
 Every block of the report has a **copy as Markdown** button (the whole report, a task card, a
 report, a section, a single item, a step, a prompt) — point the reader to it when they want to

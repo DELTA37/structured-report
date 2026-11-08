@@ -182,20 +182,21 @@ body.at-prompt #map .node:not(.p-new):not(.p-changed),body.at-prompt .stage:not(
 .answered .pn{font:600 11px/18px var(--display);padding:0 7px;border-radius:9px;background:var(--ink);color:var(--panel)}
 .mine li.is-answered{border-left-color:var(--ok)}
 .waiting li.ans{background:var(--panel-2);border-left-color:var(--ok);text-decoration:line-through;text-decoration-color:var(--ink-3)}
-.sendbar{position:fixed;left:50%;bottom:18px;z-index:70;transform:translate(-50%,140%);transition:transform .3s cubic-bezier(.2,.7,.2,1);
-  display:flex;align-items:center;gap:12px;padding:10px 10px 10px 18px;border-radius:14px;background:var(--ink);color:var(--panel);box-shadow:0 18px 40px -18px rgba(23,38,43,.8);max-width:calc(100vw - 32px)}
-.sendbar.show{transform:translate(-50%,0)}
-.sendbar textarea{font:14px var(--text);width:min(360px,40vw);height:36px;min-height:36px;resize:none;border-radius:8px;border:0;padding:8px 10px;background:rgba(255,255,255,.1);color:var(--panel)}
-.sendbar textarea::placeholder{color:rgba(248,249,246,.55)}
-.sendbar button{all:unset;cursor:pointer;font:600 14px var(--text);padding:9px 14px;border-radius:9px;background:var(--marker);color:var(--ink);white-space:nowrap}
-.sendbar button:focus-visible{outline:2px solid #fff}
-.sendbar .msg{font-size:13.5px;white-space:nowrap}
-
 .unchecked{list-style:none;margin:0 0 12px;padding:0;display:grid;gap:8px}
 .unchecked li{padding:8px 12px;border-radius:var(--r-s);border:1px dashed var(--ink-3)}
 .unchecked .kv{margin-top:4px;font-size:14px}
 .results .how,.stage .when{font-size:13px;color:var(--ink-2);margin-top:4px}
 .stage .when{display:grid;grid-template-columns:auto 1fr;gap:6px;margin-top:8px;padding:6px 8px;border-radius:6px;background:var(--panel-2)}
+
+.send{margin:4px 0 14px;padding:12px;border-radius:var(--r-s);background:var(--panel);border:1px solid var(--rule);display:grid;gap:10px}
+.send textarea{font:14px/1.45 var(--text);color:var(--ink);background:#fff;border:1px solid var(--rule);border-radius:8px;padding:8px 10px;resize:vertical;min-height:38px}
+.send textarea:focus{outline:none;border-color:var(--ink);box-shadow:0 0 0 3px rgba(45,79,214,.12)}
+.send-row{display:flex;align-items:center;gap:12px;justify-content:flex-end}
+.send .note{flex:1;font-size:13px;color:var(--ink-2)}
+.send button{all:unset;cursor:pointer;font:600 14px var(--text);padding:9px 16px;border-radius:9px;background:var(--ink);color:var(--panel);white-space:nowrap}
+.send button:disabled{cursor:default;background:var(--rule);color:var(--ink-2)}
+.send button:focus-visible{outline:2px solid var(--cobalt);outline-offset:2px}
+.opts .rec{font:600 11px var(--display);padding:0 6px;border-radius:8px;background:var(--marker);color:var(--ink);font-style:normal}
 
 /* ── copy as Markdown ─────────────────────────────────── */
 .copybtn{all:unset;box-sizing:border-box;cursor:pointer;display:inline-flex;align-items:center;gap:5px;color:var(--ink-3);border-radius:6px;
@@ -227,9 +228,9 @@ body.at-prompt #map .node:not(.p-new):not(.p-changed),body.at-prompt .stage:not(
 .drawer{position:fixed;top:var(--bar-h,66px);right:0;height:calc(100% - var(--bar-h,66px));z-index:40;width:min(920px,100%);background:var(--paper);border-left:1px solid var(--rule);
   transform:translateX(102%);transition:transform .28s cubic-bezier(.2,.7,.2,1);overflow:auto;box-shadow:-20px 0 40px -30px rgba(23,38,43,.6)}
 .drawer.open{transform:none} .drawer:focus{outline:none}
-.d-nav{position:sticky;top:0;z-index:3;display:flex;justify-content:flex-end;gap:6px;padding:12px 20px 0;height:0;overflow:visible}
+.d-nav{position:sticky;top:0;z-index:7;display:flex;justify-content:flex-end;gap:6px;padding:12px 20px 0;height:0;overflow:visible}
 .report{padding:0 28px 64px}
-.r-head{position:sticky;top:0;z-index:2;background:var(--paper);border-bottom:1px solid var(--rule);padding:14px 140px 14px 0;display:grid;grid-template-columns:26px 1fr;gap:4px 10px;align-items:start}
+.r-head{position:sticky;top:0;z-index:6;background:var(--paper);border-bottom:1px solid var(--rule);padding:14px 140px 14px 0;display:grid;grid-template-columns:26px 1fr;gap:4px 10px;align-items:start}
 .r-head .icon{width:24px;height:24px;margin-top:3px}
 .r-head h2{font:600 28px/1.1 var(--display);margin:0}
 .r-head h2 .num,.flow-title .num{font:600 14px/1 var(--display);display:inline-grid;place-items:center;min-width:28px;height:26px;padding:0 7px;border-radius:13px;background:var(--ink);color:var(--panel);vertical-align:4px;margin-right:10px}
@@ -332,7 +333,7 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 @media print{
   body.map-page{height:auto;overflow:visible;display:block;background:#fff}
-  #map,.drawer,.scrim,#print-btn,.zoom,.minimap,.search,.rail,.sendbar,.answer{display:none!important}
+  #map,.drawer,.scrim,#print-btn,.zoom,.minimap,.search,.rail,.send,.answer{display:none!important}
   .reports{display:block!important}
   .reports .report{break-before:page;padding:0}
   .reports .r-head{position:static;padding-right:0}
@@ -530,38 +531,35 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
     <ol class="stages-print">{{#children}}<li><strong>{{num}} {{title}}</strong> — {{status_label}}<div class="rich">{{detail|rich}}</div>{{#outcome?}}<div class="rich">→ {{outcome|rich}}</div>{{/outcome?}}</li>{{/children}}</ol>
   </section>{{/children?}}
 
-  {{#approvals?}}<section class="sec" id="sec-approvals" data-block="{{key}}#approvals"><h3><svg class="icon"><use href="#i-approve"/></svg>Needs approval</h3>
+  {{#approvals?}}<section class="sec{{#answerable}} asks{{/answerable}}" id="sec-approvals" data-block="{{key}}#approvals"><h3><svg class="icon"><use href="#i-approve"/></svg>Needs approval</h3>
     <ul class="mine">{{#approvals}}
       <li{{#answered}} class="is-answered"{{/answered}}><svg class="icon"><use href="#i-approve"/></svg><div><div class="t">{{text|md}}</div>
         <dl class="kv">{{#why?}}<dt>Why you</dt><dd class="rich">{{why|rich}}</dd>{{/why?}}{{#due?}}<dt>Decide by</dt><dd>{{due}}</dd>{{/due?}}</dl>
         {{#answered}}<div class="answered"><span class="pn">#{{n}}</span><span><strong>{{choice}}</strong>{{#comment?}} — {{comment}}{{/comment?}}</span></div>{{/answered}}
-        {{^answered}}<form class="answer" data-akey="{{akey}}" data-type="approval" data-question="{{text}}">
+        {{#answerable}}{{^answered}}<form class="answer" data-akey="{{akey}}" data-type="approval" data-question="{{text}}">
           {{#opts?}}<div class="choices" role="radiogroup" aria-label="Your decision">{{#opts}}<label class="choice"><input type="radio" name="{{akey}}" value="{{text}}"><span>{{text}}{{#rec}} <i class="rec">Recommended</i>{{/rec}}</span></label>{{/opts}}</div>{{/opts?}}
           <textarea rows="1" placeholder="{{#opts?}}Comment (optional){{/opts?}}{{^opts}}Your answer{{/opts}}" aria-label="Comment"></textarea>
-        </form>{{/answered}}
+        </form>{{/answered}}{{/answerable}}
+        {{^answerable}}{{#opts?}}<dl class="kv"><dt>Options</dt><dd class="opts">{{#opts}}<span>{{text}}{{#rec}} <i class="rec">Recommended</i>{{/rec}}</span>{{/opts}}</dd></dl>{{/opts?}}{{/answerable}}
       </div></li>{{/approvals}}
-    </ul></section>{{/approvals?}}
+    </ul>
+    {{#answerable}}<div class="send">
+      <textarea rows="1" placeholder="Message to the agent (optional)" aria-label="Message to the agent"></textarea>
+      <div class="send-row"><span class="note" aria-live="polite"></span><button type="button" disabled>Send to agent</button></div>
+    </div>{{/answerable}}</section>{{/approvals?}}
 
   {{#actions?}}<section class="sec" id="sec-actions" data-block="{{key}}#actions"><h3><svg class="icon"><use href="#i-action"/></svg>Your actions</h3>
     <ul class="mine">{{#actions}}
       <li{{#answered}} class="is-answered"{{/answered}}><svg class="icon"><use href="#i-action"/></svg><div><div class="t">{{text|md}}</div>
         <dl class="kv">{{#why?}}<dt>Why you</dt><dd class="rich">{{why|rich}}</dd>{{/why?}}{{#due?}}<dt>By</dt><dd>{{due}}</dd>{{/due?}}{{#command}}<dt>Command</dt><dd class="cmd"><code>{{command}}</code><button class="copy" data-copy="{{command}}" title="Copy" aria-label="Copy command"><svg class="icon sm"><use href="#i-copy"/></svg></button></dd>{{/command}}</dl>
         {{#answered}}<div class="answered"><span class="pn">#{{n}}</span><span><strong>{{#done}}Done{{/done}}{{^done}}Not done{{/done}}</strong>{{#comment?}} — {{comment}}{{/comment?}}</span></div>{{/answered}}
-        {{^answered}}<form class="answer" data-akey="{{akey}}" data-type="action" data-question="{{text}}">
-          <label class="donebox"><input type="checkbox"> Done</label>
-          <textarea rows="1" placeholder="Comment (optional)" aria-label="Comment"></textarea>
-        </form>{{/answered}}
+
       </div></li>{{/actions}}
     </ul></section>{{/actions?}}
 </article>
 {{/reports}}
 </div>
 
-<div class="sendbar" id="sendbar" role="region" aria-label="Answers for the agent">
-  <span class="msg" id="send-count"></span>
-  <textarea id="send-message" placeholder="Message to the agent (optional)" aria-label="Message to the agent"></textarea>
-  <button type="button" id="send-btn">Send to agent</button>
-</div>
 <script type="application/json" id="sr-index">{{index|script}}</script>
 <script type="application/json" id="sr-track">{{track|script}}</script>
 <script>
@@ -982,84 +980,68 @@ function toggleRail(byKeyboard) {
 const _open = open;
 open = function (key, o) { _open(key, o); const a = art(key); if (a) { stamps(a); paint(a); } };
 
-// ── answers: decide in the report; "Send to agent" goes straight to the session ──
-const ANSWER = TRACK.answer_to;          // {url, token} — the local answer service, if this report has one
-let reachable = false;
+// ── answers: only from a report's "Needs approval" section, straight to the session ──
+const ANSWER = TRACK.answer_to;          // {url, token} — the local answer service of this report
+let online = false;
 const store = "sr-answers:" + document.title;
 const draft = JSON.parse(localStorage.getItem(store) || "{}");
-const forms = () => $$("form.answer");
 function readForm(f) {
   const a = f.closest(".report"), t = $("textarea", f).value.trim();
-  const radio = $("input[type=radio]:checked", f), hasRadios = !!$("input[type=radio]", f), box = $("input[type=checkbox]", f);
-  const item = {akey: f.dataset.akey, type: f.dataset.type, question: f.dataset.question, num: a.dataset.num || null, title: a.dataset.title,
-                choice: null, done: null, comment: null};
-  if (f.dataset.type === "approval") { item.choice = hasRadios ? (radio ? radio.value : null) : (t || null); item.comment = hasRadios ? (t || null) : null; }
-  else { item.done = box.checked; item.comment = t || null; }
-  return (item.choice || item.done || item.comment) ? item : null;
+  const radio = $("input[type=radio]:checked", f), hasRadios = !!$("input[type=radio]", f);
+  const item = {akey: f.dataset.akey, type: "approval", question: f.dataset.question, num: a.dataset.num || null, title: a.dataset.title,
+                choice: hasRadios ? (radio ? radio.value : null) : (t || null), done: null, comment: hasRadios ? (t || null) : null};
+  return (item.choice || item.comment) ? item : null;
 }
-function collect() { return forms().map(readForm).filter(Boolean); }
 function restore() {
-  for (const f of forms()) {
+  for (const f of $$("form.answer")) {
     const v = draft[f.dataset.akey]; if (!v) continue;
     if (v.choice) { const r = $$("input[type=radio]", f).find(x => x.value === v.choice); if (r) r.checked = true; }
-    if (v.done) { const d = $("input[type=checkbox]", f); if (d) d.checked = true; }
     if (v.text) $("textarea", f).value = v.text;
   }
 }
-const bar = $("#sendbar"), btn = $("#send-btn"), cnt = $("#send-count"), msg = $("#send-message");
-function refresh() {
-  if (btn.dataset.sent) return;
-  const n = collect().length + (msg.value.trim() ? 1 : 0);
-  bar.classList.toggle("show", n > 0);
-  cnt.textContent = (n === 1 ? "1 answer ready" : n + " answers ready") + (reachable ? "" : " · the agent is not connected");
-  btn.textContent = reachable ? "Send to agent" : "Copy answers";
+function refreshSend(sec) {
+  const send = $(".send", sec); if (!send || send.dataset.sent) return;
+  const items = $$("form.answer", sec).map(readForm).filter(Boolean), m = $(".send textarea", sec).value.trim();
+  const btn = $(".send button", sec), note = $(".send .note", sec);
+  const n = items.length + (m ? 1 : 0);
+  btn.disabled = !online || n === 0;
+  btn.textContent = online ? "Send to agent" : "Agent offline";
+  note.textContent = !online ? "The agent's answer service is not running — your answers are kept here until it is."
+                   : n === 0 ? "Choose an option or write an answer." : (n === 1 ? "1 answer ready" : n + " answers ready");
 }
+const refreshAll = () => $$(".sec.asks").forEach(refreshSend);
 async function ping() {
-  if (!ANSWER) return false;
-  try { const r = await fetch(ANSWER.url + "/ping", {headers: {"X-Report-Token": ANSWER.token}}); return r.ok; } catch (e) { return false; }
+  try { const r = await fetch(ANSWER.url + "/ping", {headers: {"X-Report-Token": ANSWER.token}}); online = r.ok; } catch (e) { online = false; }
+  refreshAll();
 }
 document.addEventListener("input", e => {
   const f = e.target.closest("form.answer");
-  if (f) { const c = $("input[type=radio]:checked", f), d = $("input[type=checkbox]", f);
-    draft[f.dataset.akey] = {choice: c && c.value, done: d && d.checked, text: $("textarea", f).value}; localStorage.setItem(store, JSON.stringify(draft)); }
-  if (f || e.target === msg) refresh();
+  if (f) { const c = $("input[type=radio]:checked", f);
+    draft[f.dataset.akey] = {choice: c && c.value, text: $("textarea", f).value}; localStorage.setItem(store, JSON.stringify(draft)); }
+  const sec = e.target.closest(".sec.asks"); if (sec) refreshSend(sec);
 });
-document.addEventListener("change", e => { if (e.target.closest("form.answer")) refresh(); });
+document.addEventListener("change", e => { const sec = e.target.closest(".sec.asks"); if (sec) refreshSend(sec); });
 document.addEventListener("submit", e => e.preventDefault());
-function asText(items, m) {
-  const lines = ["Answers from the report «" + document.title + "»:"];
-  for (const it of items) lines.push("- [" + (it.num ? it.num + " " : "") + it.title + "] " + it.question + ": " +
-    (it.type === "approval" ? (it.choice || "—") : (it.done ? "done" : "not done")) + (it.comment ? " — " + it.comment : ""));
-  if (m) lines.push("Message: " + m);
-  return lines.join("\n");
-}
-btn.addEventListener("click", async () => {
-  const items = collect(), m = msg.value.trim();
-  if (!items.length && !m) return;
-  if (!reachable) reachable = await ping();
-  if (!reachable) {
-    if (navigator.clipboard) await navigator.clipboard.writeText(asText(items, m));
-    cnt.textContent = ANSWER ? "The agent's answer service is not running — copied, paste into the chat"
-                             : "This report has no agent connection — copied, paste into the chat";
-    return;
-  }
-  btn.disabled = true; cnt.textContent = "Sending…";
+document.addEventListener("click", async e => {
+  const btn = e.target.closest(".send button"); if (!btn) return;
+  const sec = btn.closest(".sec.asks"), send = $(".send", sec), note = $(".note", send), box = $("textarea", send);
+  const items = $$("form.answer", sec).map(readForm).filter(Boolean), m = box.value.trim();
+  if (!online || (!items.length && !m)) return;
+  btn.disabled = true; note.textContent = "Sending…";
   try {
     const r = await fetch(ANSWER.url + "/answers", {method: "POST", headers: {"Content-Type": "application/json", "X-Report-Token": ANSWER.token}, body: JSON.stringify({items, message: m})});
     if (!r.ok) throw new Error(String(r.status));
     const j = await r.json();
-    localStorage.removeItem(store);
-    btn.dataset.sent = "1"; btn.textContent = "Sent"; msg.value = ""; msg.disabled = true;
-    cnt.textContent = j.waiting ? "Delivered as prompt #" + j.prompt + " — the agent continues"
-                                : "Saved as prompt #" + j.prompt + " — the agent gets it as soon as it is free or with your next message";
-    forms().forEach(f => f.querySelectorAll("input,textarea").forEach(x => x.disabled = true));
+    items.forEach(it => delete draft[it.akey]); localStorage.setItem(store, JSON.stringify(draft));
+    send.dataset.sent = "1"; btn.textContent = "Sent"; box.disabled = true;
+    $$("form.answer", sec).forEach(f => f.querySelectorAll("input,textarea").forEach(x => x.disabled = true));
+    note.textContent = j.waiting ? "Delivered as prompt #" + j.prompt + " — the agent continues"
+                                 : "Saved as prompt #" + j.prompt + " — the agent picks it up as soon as it is free";
   } catch (err) {
-    btn.disabled = false; reachable = false; refresh();
-    cnt.textContent = "Could not reach the agent — press again to copy instead";
+    online = false; refreshSend(sec);
   }
 });
-ping().then(ok => { reachable = ok; refresh(); });
-restore(); refresh();
+if (ANSWER) { restore(); ping(); setInterval(() => { if (!online) ping(); }, 5000); }
 
 // ── copy as Markdown: a button wherever there is something worth taking away ──
 // Markdown is produced from the rendered structure (headings, lists, key/value rows, emphasis, code, links).

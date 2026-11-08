@@ -676,6 +676,7 @@ def main():
     with open(a.template, encoding="utf-8") as f:
         v = view(data, journal)
         v["track"]["answer_to"] = answer_to
+        v["answerable"] = bool(answer_to)
         out_html = render(f.read(), v)
     out = a.out or os.path.splitext(a.data)[0] + ".html"
     with open(out, "w", encoding="utf-8") as f:
