@@ -56,7 +56,8 @@ Everything is HTML-escaped.
         "kind": "added | changed | removed | fixed | verified | metric | doc | decision",
         "text": "what",
         "value": "for metric: the number with unit, shown large",
-        "ref": {"label": "PR #12", "url": "https://…"}
+        "ref": {"label": "PR #12", "url": "https://…"},
+        "how": "required for verified: the command, test or link that proves it"
       }]
     },
 
@@ -67,14 +68,18 @@ Everything is HTML-escaped.
       "detail": "what was done — shown on the card; Task in its report when goal is absent",
       "outcome": "what it produced — shown on the card; Result in its report when result is absent",
       "uses": ["C2"],                                          // context ids from this level or any above
+      "when": "for planned stages: the condition or time — \"after your approval\", \"Monday\"",
       // optional, exactly as for a task: problem, goal, context, inferences, assumptions,
       // result, approvals, actions, and nested "stages" + "flow" — to any depth
     }],
     "flow": [{"from": "stage id", "to": "stage id", "label": "optional"}],
     // flow omitted → stages are chained in order
 
-    "approvals": [{"text": "required", "why": "…", "options": ["A", "B"]}],
-    "actions":   [{"text": "required", "why": "…", "command": "exact command"}]
+    "unchecked": [{"text": "what was not checked or done", "why": "why not"}],   // [] = checked everything
+
+    "approvals": [{"text": "required — the question", "why": "why it is the reader's call",
+                   "options": ["A", "B"], "recommend": "A — one of the options", "due": "decide by"}],
+    "actions":   [{"text": "required", "why": "…", "command": "exact command", "due": "by when"}]
   }],
 
   "links": [{
@@ -89,9 +94,12 @@ Everything is HTML-escaped.
 ## Validation (`build.py`)
 
 Errors (build fails): missing required fields, duplicate ids, unknown statuses or levels,
-inference `basis` / stage `uses` / `flow` / `links` pointing at ids that do not exist.
+inference `basis` / stage `uses` / `flow` / `links` pointing at ids that do not exist,
+`verified` without `how`, a planned stage without `detail`, `recommend` not among `options`,
+a `file://` link to a missing file, anything that looks like a secret.
 
-Warnings: task without context or stages, inference without basis, assumption without
+Warnings: finished task without `unchecked`, unfinished task without a planned / in-progress
+stage, local `file://` links, task without context or stages, inference without basis, assumption without
 `verify`, link-like context without `url`, unknown context or result kind, empty result.
 
 ## Viewer behaviour
@@ -124,3 +132,24 @@ See the docstring of `scripts/build.py`. The template receives the JSON plus der
 inherited items it references, flagged `inherited`), `children` (stage cards: `key`, `num`, `deep`,
 `waiting`), `edges`, and `waiting_all` (its own and nested approvals/actions with `where`).
 Top-level `edges` and `has_blocks` describe the map.
+
+## Journal (`<report>.journal.json`)
+
+Written by `scripts/track.py` (prompts, answers) and `build.py` (block stamps) — never by hand.
+
+```jsonc
+{
+  "prompts": [{"id": "p3", "n": 3, "at": "2026-11-05 17:05", "kind": "prompt | answer", "text": "…"}],
+  "blocks":  {"replay#problem": {"hash": "…", "since": "p3", "changed": ["p5"]}},   // node key # section
+  "answers": {"replay#a0": {"choice": "B", "done": null, "comment": "…", "prompt": "p6"}}
+}
+```
+
+Block sections: `card`, `problem`, `goal`, `context`, `inferences`, `assumptions`, `result`,
+`unchecked`, `workflow`, `approvals`, `actions`. Answer keys: `<node key>#a<i>` for approvals,
+`#d<i>` for actions.
+
+## Search
+
+The build indexes every node's title, brief and sections; the search box (`/` or ⌘K) matches all
+words (case- and accent-insensitive, ё = е), groups hits by task and opens the exact section.

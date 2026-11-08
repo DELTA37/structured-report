@@ -74,12 +74,13 @@ code{font:12.5px/1.4 ui-monospace,"SF Mono",Menlo,monospace;background:var(--pan
 
 /* ── page 1: map only; the page never scrolls ─────────── */
 body.map-page{height:100vh;overflow:hidden;display:flex;flex-direction:column}
+.bar{position:relative;z-index:20}
 .bar{display:flex;align-items:center;gap:24px;padding:14px clamp(16px,3vw,36px);border-bottom:1px solid var(--rule)}
-.bar h1{font:600 22px/1.15 var(--display);margin:0;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bar h1{font:600 22px/1.15 var(--display);margin:0;flex:1 1 0;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .legend{display:flex;gap:16px;color:var(--ink-2);font-size:13px;align-items:center}
 .legend span{display:inline-flex;align-items:center;gap:7px}
 .legend svg.line{width:30px;height:10px}
-#map{flex:1}
+#map{flex:1;min-width:0}
 
 .node{position:absolute;width:300px;text-align:left;font:inherit;color:inherit;cursor:pointer;
   background:var(--panel);border:1px solid var(--rule);border-radius:var(--r);padding:14px 16px;
@@ -95,10 +96,97 @@ body.map-page{height:100vh;overflow:hidden;display:flex;flex-direction:column}
 .waiting li{display:grid;grid-template-columns:16px 1fr;gap:8px;font-size:13px;line-height:1.4;padding:6px 8px;border-radius:var(--r-s);background:var(--marker-soft);border-left:4px solid var(--marker)}
 .waiting .icon{width:15px;height:15px;margin-top:1px}
 
+/* ── search ───────────────────────────────────────────── */
+.search{position:relative;flex:0 1 380px;transition:flex-basis .3s cubic-bezier(.2,.7,.2,1)}
+.search:focus-within{flex-basis:560px}
+.search input{all:unset;box-sizing:border-box;width:100%;height:38px;padding:0 64px 0 38px;border-radius:19px;background:var(--panel);
+  border:1px solid var(--rule);font:14px var(--text);color:var(--ink);transition:border-color .2s,box-shadow .25s,background .2s}
+.search input::placeholder{color:var(--ink-3)}
+.search input:focus{border-color:var(--ink);background:#fff;box-shadow:0 0 0 4px rgba(45,79,214,.12),0 12px 28px -18px rgba(23,38,43,.55)}
+.search > .icon{position:absolute;left:13px;top:10px;color:var(--ink-3);transition:color .2s,transform .3s}
+.search:focus-within > .icon{color:var(--ink);transform:scale(1.08)}
+.search kbd{position:absolute;right:10px;top:8px;font:12px/20px var(--text);color:var(--ink-3);border:1px solid var(--rule);border-radius:5px;padding:0 6px;background:var(--paper)}
+.search:focus-within kbd{opacity:0}
+.results{position:absolute;left:0;right:0;top:46px;z-index:60;max-height:min(70vh,560px);overflow:auto;background:#fff;border:1px solid var(--rule);border-radius:12px;
+  box-shadow:0 22px 50px -24px rgba(23,38,43,.55);padding:6px;opacity:0;transform:translateY(-6px);pointer-events:none;transition:opacity .18s,transform .18s}
+.results.open{opacity:1;transform:none;pointer-events:auto}
+.results .grp{font:600 12.5px var(--display);color:var(--ink-2);padding:10px 10px 4px}
+.results button{all:unset;box-sizing:border-box;cursor:pointer;display:grid;grid-template-columns:92px 1fr;gap:10px;width:100%;padding:8px 10px;border-radius:8px}
+.results button[aria-selected="true"],.results button:hover{background:var(--panel-2)}
+.results .lab{font:600 12px/20px var(--display);color:var(--ink-2)}
+.results .where{font-size:12px;color:var(--ink-3);margin-bottom:2px}
+.results .snip{font-size:13.5px;line-height:1.45;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.results mark{background:var(--marker);color:inherit;border-radius:2px;padding:0 1px}
+.results .empty{padding:14px 10px;color:var(--ink-2);font-size:14px}
+.results .foot{display:flex;gap:14px;justify-content:flex-end;padding:8px 10px 4px;font-size:12px;color:var(--ink-3);border-top:1px solid var(--rule);margin-top:6px}
+.found{animation:found 1.6s ease}
+@keyframes found{0%,40%{background:var(--marker-soft);box-shadow:0 0 0 6px var(--marker-soft)}100%{background:transparent;box-shadow:0 0 0 0 transparent}}
+
+/* ── prompts rail: the conversation that produced the report ── */
+.page{flex:1;display:flex;min-height:0}
+.rail{width:300px;flex:none;border-right:1px solid var(--rule);display:flex;flex-direction:column;background:var(--panel);transition:margin-left .25s cubic-bezier(.2,.7,.2,1)}
+.rail.closed{margin-left:-300px}
+.rail h2{font:600 16px var(--display);margin:0;padding:14px 16px 10px;display:flex;align-items:center;gap:8px}
+.rail ol{list-style:none;margin:0;padding:0 8px 16px;overflow:auto;flex:1}
+.rail li button{all:unset;box-sizing:border-box;cursor:pointer;display:grid;grid-template-columns:30px 1fr;gap:8px;width:100%;padding:9px 8px;border-radius:8px}
+.rail li button:hover{background:var(--panel-2)}
+.rail li button[aria-pressed="true"]{background:var(--ink);color:var(--panel)}
+.rail .pn{font:600 12px/22px var(--display);height:22px;border-radius:11px;text-align:center;border:1px solid currentColor}
+.rail .pt{font-size:13px;line-height:1.4;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.rail .pa{font-size:11.5px;opacity:.7;margin-top:2px;display:flex;gap:6px;align-items:center}
+.rail .pa .icon{width:13px;height:13px}
+.rail .clear{margin:0 16px 12px;font-size:12.5px;color:var(--cobalt);background:none;border:0;cursor:pointer;text-align:left;padding:0}
+.rail .clear[hidden]{display:none}
+/* prompt focus: what appeared / changed at the selected prompt */
+body.at-prompt #map .node:not(.p-new):not(.p-changed),body.at-prompt .stage:not(.p-new):not(.p-changed){opacity:.32}
+.p-new,.p-changed{position:relative}
+.p-new{box-shadow:0 0 0 3px var(--ok)!important} .p-changed{box-shadow:0 0 0 3px var(--cobalt)!important}
+.sec.p-new,.sec.p-changed{box-shadow:none!important;border-left:4px solid var(--ok);padding-left:12px;margin-left:-16px}
+.sec.p-changed{border-left-color:var(--cobalt)}
+.pbadge{position:absolute;top:-10px;right:12px;font:600 11px/18px var(--display);padding:0 7px;border-radius:9px;color:#fff;background:var(--ok);z-index:1}
+.p-changed > .pbadge{background:var(--cobalt)}
+.stamps{margin-left:auto;display:flex;gap:4px}
+.stamp{all:unset;cursor:pointer;font:600 11px/18px var(--display);padding:0 7px;border-radius:9px;border:1px solid var(--rule);color:var(--ink-3);background:var(--panel)}
+.stamp.chg{color:var(--cobalt);border-color:rgba(45,79,214,.35)}
+.stamp:hover{border-color:var(--ink-3);color:var(--ink)}
+
+/* ── answering the agent ─────────────────────────────────── */
+.answer{margin-top:10px;display:grid;gap:8px}
+.choices{display:flex;flex-wrap:wrap;gap:6px}
+.choice{position:relative}
+.choice input{position:absolute;opacity:0;pointer-events:none}
+.choice span{display:inline-flex;align-items:center;gap:6px;cursor:pointer;font-size:13.5px;border:1px solid var(--rule);border-radius:999px;padding:4px 12px;background:var(--paper);transition:background .15s,border-color .15s}
+.choice span:hover{border-color:var(--ink-3)}
+.choice input:checked + span{background:var(--ink);color:var(--panel);border-color:var(--ink)}
+.choice input:focus-visible + span{outline:2px solid var(--cobalt);outline-offset:2px}
+.choice .rec{font:600 11px var(--display);padding:0 6px;border-radius:8px;background:var(--marker);color:var(--ink)}
+.answer textarea{font:14px/1.45 var(--text);color:var(--ink);background:#fff;border:1px solid var(--rule);border-radius:8px;padding:8px 10px;resize:vertical;min-height:38px}
+.answer textarea:focus{outline:none;border-color:var(--ink);box-shadow:0 0 0 3px rgba(45,79,214,.12)}
+.donebox{display:inline-flex;align-items:center;gap:8px;font-size:14px;cursor:pointer}
+.donebox input{width:18px;height:18px;accent-color:var(--ink)}
+.answered{display:flex;gap:8px;align-items:baseline;font-size:14px;padding:6px 10px;border-radius:6px;background:var(--panel-2)}
+.answered .pn{font:600 11px/18px var(--display);padding:0 7px;border-radius:9px;background:var(--ink);color:var(--panel)}
+.mine li.is-answered{border-left-color:var(--ok)}
+.waiting li.ans{background:var(--panel-2);border-left-color:var(--ok);text-decoration:line-through;text-decoration-color:var(--ink-3)}
+.sendbar{position:fixed;left:50%;bottom:18px;z-index:70;transform:translate(-50%,140%);transition:transform .3s cubic-bezier(.2,.7,.2,1);
+  display:flex;align-items:center;gap:12px;padding:10px 10px 10px 18px;border-radius:14px;background:var(--ink);color:var(--panel);box-shadow:0 18px 40px -18px rgba(23,38,43,.8);max-width:calc(100vw - 32px)}
+.sendbar.show{transform:translate(-50%,0)}
+.sendbar textarea{font:14px var(--text);width:min(360px,40vw);height:36px;min-height:36px;resize:none;border-radius:8px;border:0;padding:8px 10px;background:rgba(255,255,255,.1);color:var(--panel)}
+.sendbar textarea::placeholder{color:rgba(248,249,246,.55)}
+.sendbar button{all:unset;cursor:pointer;font:600 14px var(--text);padding:9px 14px;border-radius:9px;background:var(--marker);color:var(--ink);white-space:nowrap}
+.sendbar button:focus-visible{outline:2px solid #fff}
+.sendbar .msg{font-size:13.5px;white-space:nowrap}
+
+.unchecked{list-style:none;margin:0 0 12px;padding:0;display:grid;gap:8px}
+.unchecked li{padding:8px 12px;border-radius:var(--r-s);border:1px dashed var(--ink-3)}
+.unchecked .kv{margin-top:4px;font-size:14px}
+.results .how,.stage .when{font-size:13px;color:var(--ink-2);margin-top:4px}
+.stage .when{display:grid;grid-template-columns:auto 1fr;gap:6px;margin-top:8px;padding:6px 8px;border-radius:6px;background:var(--panel-2)}
+
 /* ── task report (drawer) ─────────────────────────────── */
-.scrim{position:fixed;inset:0;background:rgba(23,38,43,.28);opacity:0;pointer-events:none;transition:opacity .2s}
+.scrim{position:fixed;inset:var(--bar-h,66px) 0 0 0;z-index:35;background:rgba(23,38,43,.28);opacity:0;pointer-events:none;transition:opacity .2s}
 .scrim.open{opacity:1;pointer-events:auto}
-.drawer{position:fixed;top:0;right:0;height:100%;width:min(920px,100%);background:var(--paper);border-left:1px solid var(--rule);
+.drawer{position:fixed;top:var(--bar-h,66px);right:0;height:calc(100% - var(--bar-h,66px));z-index:40;width:min(920px,100%);background:var(--paper);border-left:1px solid var(--rule);
   transform:translateX(102%);transition:transform .28s cubic-bezier(.2,.7,.2,1);overflow:auto;box-shadow:-20px 0 40px -30px rgba(23,38,43,.6)}
 .drawer.open{transform:none} .drawer:focus{outline:none}
 .d-nav{position:sticky;top:0;z-index:3;display:flex;justify-content:flex-end;gap:6px;padding:12px 20px 0;height:0;overflow:visible}
@@ -165,7 +253,7 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
 .crumbs .num{font:600 12px var(--display);margin-right:4px;color:var(--ink-2)}
 .flow-bar .iconbtn{width:32px;height:32px}
 .flow .canvas{height:460px}
-.flow.full{position:fixed;inset:0;z-index:50;margin:0;border:0;border-radius:0}
+.flow.full{position:fixed;inset:0;z-index:80;margin:0;border:0;border-radius:0}
 .flow.full .canvas{height:auto;flex:1}
 .flow.full .flow-bar{padding:12px 16px 12px 20px}
 .flow-title{display:none;font:600 18px var(--display);margin-right:12px;white-space:nowrap}
@@ -202,11 +290,11 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
 .copy:focus-visible{outline:2px solid var(--cobalt)}
 
 .reports{display:none}
-@media (max-width:760px){.legend span{display:none} .report{padding:0 16px 48px} .r-head{padding-right:120px} .flow .canvas{height:380px}}
+@media (max-width:760px){.rail{position:absolute;z-index:30;height:calc(100% - 66px)} .search{flex-basis:200px} .search:focus-within{flex-basis:100%} .legend span{display:none} .report{padding:0 16px 48px} .r-head{padding-right:120px} .flow .canvas{height:380px}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 @media print{
   body.map-page{height:auto;overflow:visible;display:block;background:#fff}
-  #map,.legend,.drawer,.scrim,#print-btn,.zoom,.minimap{display:none!important}
+  #map,.legend,.drawer,.scrim,#print-btn,.zoom,.minimap,.search,.rail,.sendbar,.answer,#rail-btn{display:none!important}
   .reports{display:block!important}
   .reports .report{break-before:page;padding:0}
   .reports .r-head{position:static;padding-right:0}
@@ -250,6 +338,10 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
   <symbol id="i-link" viewBox="0 0 24 24"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></symbol>
   <symbol id="i-print" viewBox="0 0 24 24"><path d="M7 9V3.5h10V9M7 17H4.5V9h15v8H17"/><rect x="7" y="14" width="10" height="6.5"/></symbol>
   <symbol id="i-copy" viewBox="0 0 24 24"><rect x="8" y="8" width="12" height="12" rx="1.5"/><path d="M16 8V4H4v12h4"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4.5 4.5"/></symbol>
+  <symbol id="i-prompts" viewBox="0 0 24 24"><path d="M4 5h16v10H9l-5 4z"/><path d="M8 9h8M8 12h5"/></symbol>
+  <symbol id="i-answer" viewBox="0 0 24 24"><path d="M10 9V5l-7 7 7 7v-4.1c5 0 8.5 1.6 11 5.1-1-5-4-10-11-11z"/></symbol>
+  <symbol id="i-unchecked" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2" stroke-dasharray="3 2.4"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.6 2.2c-.7.4-1.1.9-1.1 1.6M12 16v.1"/></symbol>
   <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
   <symbol id="i-minus" viewBox="0 0 24 24"><path d="M5 12h14"/></symbol>
   <symbol id="i-fit" viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></symbol>
@@ -259,7 +351,14 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
 
 <!-- ═══ Page 1 — Work map ═══════════════════════════════════════════════════ -->
 <header class="bar">
+  <button class="iconbtn" id="rail-btn" title="Prompts of the session" aria-label="Prompts of the session" aria-expanded="true"><svg class="icon"><use href="#i-prompts"/></svg></button>
   <h1>Надёжность оформления заказа: 45-я неделя</h1>
+  <div class="search" role="search">
+    <svg class="icon"><use href="#i-search"/></svg>
+    <input id="q" type="search" autocomplete="off" spellcheck="false" placeholder="Search tasks, steps, sources…" aria-label="Search the report" aria-controls="results" aria-expanded="false">
+    <kbd>/</kbd>
+    <div class="results" id="results" role="listbox" aria-label="Search results"></div>
+  </div>
   <div class="legend">
     <span><svg class="line" viewBox="0 0 30 10"><path d="M1 5h26" stroke="#4A5A60" stroke-width="1.5" marker-end="url(#arrow)"/></svg>Depends on</span>
     <span><svg class="line" viewBox="0 0 30 10"><path d="M1 5h28" stroke="#77878C" stroke-width="1.5" stroke-dasharray="5 5"/></svg>Related</span>
@@ -268,10 +367,22 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
   <button class="iconbtn" id="print-btn" title="Print all tasks" aria-label="Print all tasks"><svg class="icon"><use href="#i-print"/></svg></button>
 </header>
 
+<div class="page">
+<aside class="rail" id="rail" aria-label="Prompts of the session">
+  <h2><svg class="icon"><use href="#i-prompts"/></svg>Prompts</h2>
+  <button class="clear" id="rail-clear" hidden>Show everything</button>
+  <ol>
+    <li><button type="button" data-prompt="p1" aria-pressed="false"><span class="pn">1</span><span><span class="pt">Почему после релиза 2.14 оформление заказа стало таким медленным? Разберись по логам и метрикам</span><span class="pa">2026-11-05 10:12</span></span></button></li>
+    <li><button type="button" data-prompt="p2" aria-pressed="false"><span class="pn">2</span><span><span class="pt">Ок, причина понятна. Сделай фикс пула и прогони нагрузку</span><span class="pa">2026-11-05 13:40</span></span></button></li>
+    <li><button type="button" data-prompt="p3" aria-pressed="false"><span class="pn">3</span><span><span class="pt">Поддержка пишет про списания без заказа — посчитай, сколько таких и как их восстановить</span><span class="pa">2026-11-05 17:05</span></span></button></li>
+    <li><button type="button" data-prompt="p4" aria-pressed="false"><span class="pn">4</span><span><span class="pt">Добавь алерты, чтобы такое ловить сразу, и обнови ранбук</span><span class="pa">2026-11-06 09:30</span></span></button></li>
+    <li><button type="button" data-prompt="p5" aria-pressed="false"><span class="pn">5</span><span><span class="pt">Перепроверь выводы по двойным списаниям и поправь отчёт</span><span class="pa">2026-11-06 15:20</span></span></button></li>
+  </ol>
+</aside>
 <main class="canvas" id="map" aria-label="Work map" data-dir="LR">
   <div class="graph" data-key="map" data-edges="[{&quot;from&quot;: &quot;latency&quot;, &quot;to&quot;: &quot;pool&quot;, &quot;kind&quot;: &quot;depends&quot;, &quot;label&quot;: null}, {&quot;from&quot;: &quot;latency&quot;, &quot;to&quot;: &quot;replay&quot;, &quot;kind&quot;: &quot;depends&quot;, &quot;label&quot;: null}, {&quot;from&quot;: &quot;pool&quot;, &quot;to&quot;: &quot;alerts&quot;, &quot;kind&quot;: &quot;depends&quot;, &quot;label&quot;: &quot;нужна метрика&quot;}, {&quot;from&quot;: &quot;runbook&quot;, &quot;to&quot;: &quot;replay&quot;, &quot;kind&quot;: &quot;related&quot;, &quot;label&quot;: null}, {&quot;from&quot;: &quot;runbook&quot;, &quot;to&quot;: &quot;alerts&quot;, &quot;kind&quot;: &quot;related&quot;, &quot;label&quot;: null}]">
     
-    <button class="node" type="button" data-id="latency" data-task="latency" aria-label="Почему p95 оформления удвоился после 2.14 — Done">
+    <button class="node" type="button" data-id="latency" data-task="latency" data-block="latency" aria-label="Почему p95 оформления удвоился после 2.14 — Done">
       <div class="nh"><span class="st-done" title="Done"><svg class="icon"><use href="#i-done"/></svg></span><h2>Почему p95 оформления удвоился после 2.14</h2></div>
       <div class="brief rich"><dl class="kv"><dt>Причина</dt><dd>лимит соединений снят в клиенте 4.0</dd><dt>Доказано</dt><dd>нагрузочным тестом</dd></dl></div>
       <ul class="waiting">
@@ -279,7 +390,7 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
       </ul>
     </button>
     
-    <button class="node" type="button" data-id="pool" data-task="pool" aria-label="Ограничить соединения платёжного клиента — Needs review">
+    <button class="node" type="button" data-id="pool" data-task="pool" data-block="pool" aria-label="Ограничить соединения платёжного клиента — Needs review">
       <div class="nh"><span class="st-needs_review" title="Needs review"><svg class="icon"><use href="#i-needs_review"/></svg></span><h2>Ограничить соединения платёжного клиента</h2></div>
       <div class="brief rich"><dl class="kv"><dt>Лимит</dt><dd>50 соединений на под</dd><dt>Статус</dt><dd>PR #1290 на ревью</dd></dl></div>
       <ul class="waiting">
@@ -287,7 +398,7 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
       </ul>
     </button>
     
-    <button class="node" type="button" data-id="replay" data-task="replay" aria-label="Восстановить заказы, упавшие во время инцидента — Blocked">
+    <button class="node" type="button" data-id="replay" data-task="replay" data-block="replay" aria-label="Восстановить заказы, упавшие во время инцидента — Blocked">
       <div class="nh"><span class="st-blocked" title="Blocked"><svg class="icon"><use href="#i-blocked"/></svg></span><h2>Восстановить заказы, упавшие во время инцидента</h2></div>
       <div class="brief rich"><dl class="kv"><dt>Затронуто</dt><dd><strong>212</strong> клиентов, $18 406</dd><dt>Скрипт</dt><dd>готов, ждёт решения</dd></dl></div>
       <ul class="waiting">
@@ -296,13 +407,13 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
       </ul>
     </button>
     
-    <button class="node" type="button" data-id="alerts" data-task="alerts" aria-label="Алерты на таймауты провайдера и заполненность пула — In progress">
+    <button class="node" type="button" data-id="alerts" data-task="alerts" data-block="alerts" aria-label="Алерты на таймауты провайдера и заполненность пула — In progress">
       <div class="nh"><span class="st-in_progress" title="In progress"><svg class="icon"><use href="#i-in_progress"/></svg></span><h2>Алерты на таймауты провайдера и заполненность пула</h2></div>
       <div class="brief rich"><dl class="kv"><dt>Таймауты</dt><dd>черновик алерта</dd><dt>Пул</dt><dd>ждёт метрику</dd></dl></div>
       
     </button>
     
-    <button class="node" type="button" data-id="runbook" data-task="runbook" aria-label="Обновить ранбук платёжных инцидентов — Planned">
+    <button class="node" type="button" data-id="runbook" data-task="runbook" data-block="runbook" aria-label="Обновить ранбук платёжных инцидентов — Planned">
       <div class="nh"><span class="st-planned" title="Planned"><svg class="icon"><use href="#i-planned"/></svg></span><h2>Обновить ранбук платёжных инцидентов</h2></div>
       <div class="brief rich"><p>Не начато</p></div>
       
@@ -317,6 +428,7 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
   </div>
   <svg class="minimap" hidden aria-hidden="true"></svg>
 </main>
+</div>
 
 <!-- ═══ Task reports — one per task, shown in the drawer ═══════════════════ -->
 <div class="scrim" id="scrim"></div>
@@ -331,7 +443,7 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
 
 <div class="reports" id="reports">
 
-<article class="report" id="report-latency" data-key="latency" data-prev="" data-next="pool">
+<article class="report" id="report-latency" data-key="latency" data-prev="" data-next="pool" data-num="" data-title="Почему p95 оформления удвоился после 2.14" data-block="latency#card">
   <header class="r-head">
     <nav class="trail" aria-label="Where you are"><button type="button" data-close>Work map</button><span class="sep">›</span></nav>
     <span class="st-done" title="Done"><svg class="icon"><use href="#i-done"/></svg></span>
@@ -339,14 +451,13 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
     <a class="ref" href="https://example.com/issues/ACME-412" target="_blank" rel="noopener"><svg class="icon sm"><use href="#i-link"/></svg>ACME-412</a>
   </header>
 
-  <section class="sec"><h3><svg class="icon"><use href="#i-problem"/></svg>Problem</h3>
+  <section class="sec" id="sec-problem" data-block="latency#problem"><h3><svg class="icon"><use href="#i-problem"/></svg>Problem</h3>
     <div class="body rich lead"><dl class="kv"><dt>С какого момента</dt><dd>релиз 2.14, 2 ноября 14:05</dd><dt>Задержка</dt><dd>p95 оформления <strong>820 мс → 1,7 с</strong></dd><dt>Таймауты</dt><dd><strong>0,9%</strong> попыток оплаты</dd><dt>Клиенты</dt><dd>деньги списаны, заказа нет (жалобы в поддержку)</dd></dl></div></section>
 
-  <section class="sec"><h3><svg class="icon"><use href="#i-goal"/></svg>Task</h3>
-    <div class="body rich"><ul><li>Найти причину <strong>с доказательствами</strong></li><li>Сказать, что поменять, чтобы p95 вернулся к уровню до 2.14</li></ul></div></section><section class="sec"><h3><svg class="icon"><use href="#i-goal"/></svg>Task</h3>
+  <section class="sec" id="sec-goal" data-block="latency#goal"><h3><svg class="icon"><use href="#i-goal"/></svg>Task</h3>
     <div class="body rich"><ul><li>Найти причину <strong>с доказательствами</strong></li><li>Сказать, что поменять, чтобы p95 вернулся к уровню до 2.14</li></ul></div></section>
 
-  <section class="sec"><h3><svg class="icon"><use href="#i-context"/></svg>Context</h3>
+  <section class="sec" id="sec-context" data-block="latency#context"><h3><svg class="icon"><use href="#i-context"/></svg>Context</h3>
     <ul class="items">
       <li class="item" id="ctx-C1"><span class="tag">C1</span><div>
         <a class="t" href="https://example.com/dash/checkout" target="_blank" rel="noopener">Дашборд задержки оформления, 26 окт – 4 ноя</a>
@@ -374,7 +485,7 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
       </div></li>
     </ul></section>
 
-  <section class="sec"><h3><svg class="icon"><use href="#i-inference"/></svg>Conclusions</h3>
+  <section class="sec" id="sec-inferences" data-block="latency#inferences"><h3><svg class="icon"><use href="#i-inference"/></svg>Conclusions</h3>
     <ul class="claims">
       <li class="claim inference"><div class="rich"><p>Рост начался ровно с выкладкой 2.14 → причина в изменении внутри 2.14, а не в трафике</p></div>
         <dl class="kv">
@@ -386,14 +497,14 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
           <dt>Based on</dt><dd><a class="ref-chip" href="#ctx-C3" data-ctx="C3">C3</a><a class="ref-chip" href="#ctx-C4" data-ctx="C4">C4</a><a class="ref-chip" href="#ctx-C6" data-ctx="C6">C6</a></dd>
           <dt>Confidence</dt><dd><span class="dots" data-n="3"><i></i><i></i><i></i></span>high</dd>
         </dl></li>
-      <li class="claim inference"><div class="rich"><p><strong>Двойные списания:</strong> провайдер принял платёж, а у нас сработал таймаут до записи заказа</p></div>
+      <li class="claim inference"><div class="rich"><p><strong>Двойные списания:</strong> провайдер принял платёж, а наш таймаут (<strong>10 с</strong>) сработал до записи заказа</p></div>
         <dl class="kv">
           <dt>Based on</dt><dd><a class="ref-chip" href="#ctx-C4" data-ctx="C4">C4</a><a class="ref-chip" href="#ctx-C5" data-ctx="C5">C5</a></dd>
-          <dt>Confidence</dt><dd><span class="dots" data-n="2"><i></i><i></i><i></i></span>medium</dd>
+          <dt>Confidence</dt><dd><span class="dots" data-n="3"><i></i><i></i><i></i></span>high</dd>
         </dl></li>
     </ul></section>
 
-  <section class="sec"><h3><svg class="icon"><use href="#i-assumption"/></svg>Assumptions</h3>
+  <section class="sec" id="sec-assumptions" data-block="latency#assumptions"><h3><svg class="icon"><use href="#i-assumption"/></svg>Assumptions</h3>
     <ul class="claims">
       <li class="claim assumption"><div class="rich"><p>Сам провайдер во время инцидента работал нормально</p></div>
         <dl class="kv">
@@ -403,16 +514,19 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
         </dl></li>
     </ul></section>
 
-  <section class="sec"><h3><svg class="icon"><use href="#i-result"/></svg>Result</h3>
+  <section class="sec" id="sec-result" data-block="latency#result"><h3><svg class="icon"><use href="#i-result"/></svg>Result</h3>
     <div class="body rich lead"><dl class="kv"><dt>Причина</dt><dd>соединения без лимита в платёжном клиенте 4.0</dd><dt>Подтверждено</dt><dd>нагрузочным тестом при 3× пиковой нагрузке</dd></dl></div>
     <ul class="results">
       <li><span class="k">decision</span><div class="v">Лимит пула <strong>50 соединений</strong> на под + backoff с джиттером</div></li>
-      <li><span class="k">verified</span><div class="v">Нагрузочный тест с лимитом: ни одной ошибки <code>EMFILE</code> при 3× пике <a class="ref-chip" href="https://example.com/ci/load/77" target="_blank" rel="noopener">тест #77</a></div></li>
+      <li><span class="k">verified</span><div class="v">Нагрузочный тест с лимитом: ни одной ошибки <code>EMFILE</code> при 3× пике <a class="ref-chip" href="https://example.com/ci/load/77" target="_blank" rel="noopener">тест #77</a><div class="how rich"><strong>How:</strong> <code>k6 run load/checkout.js --vus 300</code> — <a href="https://example.com/ci/load/77" target="_blank" rel="noopener">прогон #77</a></div></div></li>
       <li><span class="k">metric</span><div class="v"><b>780 мс</b>p95 в тесте с лимитом (было 1,7 с)</div></li>
       <li><span class="k">doc</span><div class="v">Хронология инцидента описана <a class="ref-chip" href="https://example.com/wiki/incidents/2026-11-03" target="_blank" rel="noopener">хронология</a></div></li>
     </ul></section>
 
-  <section class="sec"><h3><svg class="icon"><use href="#i-flow"/></svg>Workflow</h3>
+  <section class="sec" id="sec-unchecked" data-block="latency#unchecked"><h3><svg class="icon"><use href="#i-unchecked"/></svg>Not checked</h3>
+    <ul class="unchecked"><li><div class="rich"><p>Метрики провайдера за время инцидента</p></div><dl class="kv"><dt>Why not</dt><dd class="rich"><p>Доступа нет — запрос в «Сделать вам»</p></dd></dl></li></ul></section>
+
+  <section class="sec" id="sec-workflow" data-block="latency#workflow"><h3><svg class="icon"><use href="#i-flow"/></svg>Workflow</h3>
     <div class="flow">
       <div class="flow-bar">
         <span class="flow-title"><nav class="trail" aria-label="Where you are"><button type="button" data-close>Work map</button><span class="sep">›</span></nav>Почему p95 оформления удвоился после 2.14</span>
@@ -421,35 +535,41 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
       </div>
       <div class="canvas" data-dir="TB" data-embedded>
         <div class="graph" data-key="latency" data-edges="[{&quot;from&quot;: &quot;s1&quot;, &quot;to&quot;: &quot;s2&quot;}, {&quot;from&quot;: &quot;s1&quot;, &quot;to&quot;: &quot;s3&quot;}, {&quot;from&quot;: &quot;s2&quot;, &quot;to&quot;: &quot;s4&quot;}, {&quot;from&quot;: &quot;s3&quot;, &quot;to&quot;: &quot;s4&quot;}, {&quot;from&quot;: &quot;s4&quot;, &quot;to&quot;: &quot;s5&quot;}, {&quot;from&quot;: &quot;s5&quot;, &quot;to&quot;: &quot;s6&quot;}]">
-          <div class="stage s-done" data-id="s1" data-open="latency/s1" tabindex="0" role="button" aria-label="Open 1 Подтвердить регрессию">
+          <div class="stage s-done" data-id="s1" data-open="latency/s1" data-block="latency/s1" tabindex="0" role="button" aria-label="Open 1 Подтвердить регрессию">
             <div class="h"><span class="num">1</span><h4>Подтвердить регрессию</h4><span class="st-done" title="Done"><svg class="icon sm"><use href="#i-done"/></svg></span></div>
             <div class="d rich"><p>Сравнил p95 по часам за две недели вокруг релиза</p></div>
             <div class="o"><svg class="icon sm"><use href="#i-outcome"/></svg><div class="rich"><p>Ступенька в момент выкладки 2.14</p></div></div>
+            
             <div class="refs"><a class="ref-chip" href="#ctx-C1" data-ctx="C1">C1</a></div>
-          </div><div class="stage s-done" data-id="s2" data-open="latency/s2" tabindex="0" role="button" aria-label="Open 2 Разобрать diff релиза">
+          </div><div class="stage s-done" data-id="s2" data-open="latency/s2" data-block="latency/s2" tabindex="0" role="button" aria-label="Open 2 Разобрать diff релиза">
             <div class="h"><span class="num">2</span><h4>Разобрать diff релиза</h4><span class="st-done" title="Done"><svg class="icon sm"><use href="#i-done"/></svg></span></div>
             <div class="d rich"><p>Выписал все изменения зависимостей и конфигов в 2.14</p></div>
             <div class="o"><svg class="icon sm"><use href="#i-outcome"/></svg><div class="rich"><p><strong>Одно рискованное:</strong> клиент 3.2 → 4.0</p></div></div>
+            
             <div class="refs"><a class="ref-chip" href="#ctx-C2" data-ctx="C2">C2</a></div>
-          </div><div class="stage s-done deep" data-id="s3" data-open="latency/s3" tabindex="0" role="button" aria-label="Open 3 Прочитать логи ошибок">
+          </div><div class="stage s-done deep" data-id="s3" data-open="latency/s3" data-block="latency/s3" tabindex="0" role="button" aria-label="Open 3 Прочитать логи ошибок">
             <div class="h"><span class="num">3</span><h4>Прочитать логи ошибок</h4><span class="st-done" title="Done"><svg class="icon sm"><use href="#i-done"/></svg></span></div>
             <div class="d rich"><p>Сгруппировал ошибки вечернего пика по тексту и источнику</p></div>
             <div class="o"><svg class="icon sm"><use href="#i-outcome"/></svg><div class="rich"><p>Доминирует <code>EMFILE</code> из платёжного клиента</p></div></div>
+            
             <div class="refs"><a class="ref-chip" href="#ctx-C4" data-ctx="C4">C4</a></div>
-          </div><div class="stage s-done" data-id="s4" data-open="latency/s4" tabindex="0" role="button" aria-label="Open 4 Проверить changelog клиента">
+          </div><div class="stage s-done" data-id="s4" data-open="latency/s4" data-block="latency/s4" tabindex="0" role="button" aria-label="Open 4 Проверить changelog клиента">
             <div class="h"><span class="num">4</span><h4>Проверить changelog клиента</h4><span class="st-done" title="Done"><svg class="icon sm"><use href="#i-done"/></svg></span></div>
             <div class="d rich"><p>Искал изменения поведения в 4.0</p></div>
             <div class="o"><svg class="icon sm"><use href="#i-outcome"/></svg><div class="rich"><p>Лимит пула по умолчанию стал «без ограничений»</p></div></div>
+            
             <div class="refs"><a class="ref-chip" href="#ctx-C3" data-ctx="C3">C3</a><a class="ref-chip" href="#ctx-C6" data-ctx="C6">C6</a></div>
-          </div><div class="stage s-done" data-id="s5" data-open="latency/s5" tabindex="0" role="button" aria-label="Open 5 Воспроизвести под нагрузкой">
+          </div><div class="stage s-done" data-id="s5" data-open="latency/s5" data-block="latency/s5" tabindex="0" role="button" aria-label="Open 5 Воспроизвести под нагрузкой">
             <div class="h"><span class="num">5</span><h4>Воспроизвести под нагрузкой</h4><span class="st-done" title="Done"><svg class="icon sm"><use href="#i-done"/></svg></span></div>
             <div class="d rich"><p>Прогнал нагрузочный тест с лимитом пула и без</p></div>
             <div class="o"><svg class="icon sm"><use href="#i-outcome"/></svg><div class="rich"><p>С лимитом ошибки уходят, задержка возвращается</p></div></div>
             
-          </div><div class="stage s-done" data-id="s6" data-open="latency/s6" tabindex="0" role="button" aria-label="Open 6 Описать">
+            
+          </div><div class="stage s-done" data-id="s6" data-open="latency/s6" data-block="latency/s6" tabindex="0" role="button" aria-label="Open 6 Описать">
             <div class="h"><span class="num">6</span><h4>Описать</h4><span class="st-done" title="Done"><svg class="icon sm"><use href="#i-done"/></svg></span></div>
             <div class="d rich"><p>Причина, доказательства и предлагаемый фикс — в задаче</p></div>
             <div class="o"><svg class="icon sm"><use href="#i-outcome"/></svg><div class="rich"><p>Передано в задачу с исправлением</p></div></div>
+            
             
           </div>
         </div>
@@ -467,15 +587,20 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
 
   
 
-  <section class="sec"><h3><svg class="icon"><use href="#i-action"/></svg>Your actions</h3>
+  <section class="sec" id="sec-actions" data-block="latency#actions"><h3><svg class="icon"><use href="#i-action"/></svg>Your actions</h3>
     <ul class="mine">
       <li><svg class="icon"><use href="#i-action"/></svg><div><div class="t">Запросить у провайдера логи за 3 ноября 19:00–19:30</div>
         <dl class="kv"><dt>Why you</dt><dd class="rich"><p>Тикет провайдеру может открыть только владелец аккаунта; это закроет единственное непроверенное предположение</p></dd></dl>
+        
+        <form class="answer" data-akey="latency#d0" data-type="action" data-question="Запросить у провайдера логи за 3 ноября 19:00–19:30">
+          <label class="donebox"><input type="checkbox"> Done</label>
+          <textarea rows="1" placeholder="Comment (optional)" aria-label="Comment"></textarea>
+        </form>
       </div></li>
     </ul></section>
 </article>
 
-<article class="report" id="report-latency/s1" data-key="latency/s1" data-prev="" data-next="latency/s2">
+<article class="report" id="report-latency/s1" data-key="latency/s1" data-prev="" data-next="latency/s2" data-num="1" data-title="Подтвердить регрессию" data-block="latency/s1#card">
   <header class="r-head">
     <nav class="trail" aria-label="Where you are"><button type="button" data-close>Work map</button><span class="sep">›</span><button type="button" data-open="latency">Почему p95 оформления удвоился после 2.14</button><span class="sep">›</span></nav>
     <span class="st-done" title="Done"><svg class="icon"><use href="#i-done"/></svg></span>
@@ -485,10 +610,10 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
 
   
 
-  <section class="sec"><h3><svg class="icon"><use href="#i-goal"/></svg>Task</h3>
+  <section class="sec" id="sec-goal" data-block="latency/s1#goal"><h3><svg class="icon"><use href="#i-goal"/></svg>Task</h3>
     <div class="body rich"><p>Сравнил p95 по часам за две недели вокруг релиза</p></div></section>
 
-  <section class="sec"><h3><svg class="icon"><use href="#i-context"/></svg>Context</h3>
+  <section class="sec" id="sec-context" data-block="latency/s1#context"><h3><svg class="icon"><use href="#i-context"/></svg>Context</h3>
     <ul class="items">
       <li class="item" id="ctx-C1"><span class="tag ghost" title="From a level above">C1</span><div>
         <a class="t" href="https://example.com/dash/checkout" target="_blank" rel="noopener">Дашборд задержки оформления, 26 окт – 4 ноя</a>
@@ -500,7 +625,7 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
 
   
 
-  <section class="sec"><h3><svg class="icon"><use href="#i-result"/></svg>Result</h3>
+  <section class="sec" id="sec-result" data-block="latency/s1#result"><h3><svg class="icon"><use href="#i-result"/></svg>Result</h3>
     <div class="body rich lead"><p>Ступенька в момент выкладки 2.14</p></div>
     </section>
 
@@ -509,9 +634,11 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
   
 
   
+
+  
 </article>
 
-<article class="report" id="report-latency/s2" data-key="latency/s2" data-prev="latency/s1" data-next="latency/s3">
+<article class="report" id="report-latency/s2" data-key="latency/s2" data-prev="latency/s1" data-next="latency/s3" data-num="2" data-title="Разобрать diff релиза" data-block="latency/s2#card">
   <header class="r-head">
     <nav class="trail" aria-label="Where you are"><button type="button" data-close>Work map</button><span class="sep">›</span><button type="button" data-open="latency">Почему p95 оформления удвоился после 2.14</button><span class="sep">›</span></nav>
     <span class="st-done" title="Done"><svg class="icon"><use href="#i-done"/></svg></span>
@@ -521,10 +648,10 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
 
   
 
-  <section class="sec"><h3><svg class="icon"><use href="#i-goal"/></svg>Task</h3>
+  <section class="sec" id="sec-goal" data-block="latency/s2#goal"><h3><svg class="icon"><use href="#i-goal"/></svg>Task</h3>
     <div class="body rich"><p>Выписал все изменения зависимостей и конфигов в 2.14</p></div></section>
 
-  <section class="sec"><h3><svg class="icon"><use href="#i-context"/></svg>Context</h3>
+  <section class="sec" id="sec-context" data-block="latency/s2#context"><h3><svg class="icon"><use href="#i-context"/></svg>Context</h3>
     <ul class="items">
       <li class="item" id="ctx-C2"><span class="tag ghost" title="From a level above">C2</span><div>
         <a class="t" href="https://example.com/acme/shop/compare/v2.13...v2.14" target="_blank" rel="noopener">Diff 2.14: платёжный клиент 3.2 → 4.0</a>
@@ -536,7 +663,7 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
 
   
 
-  <section class="sec"><h3><svg class="icon"><use href="#i-result"/></svg>Result</h3>
+  <section class="sec" id="sec-result" data-block="latency/s2#result"><h3><svg class="icon"><use href="#i-result"/></svg>Result</h3>
     <div class="body rich lead"><p><strong>Одно рискованное:</strong> клиент 3.2 → 4.0</p></div>
     </section>
 
@@ -545,9 +672,11 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
   
 
   
+
+  
 </article>
 
-<article class="report" id="report-latency/s3" data-key="latency/s3" data-prev="latency/s2" data-next="latency/s4">
+<article class="report" id="report-latency/s3" data-key="latency/s3" data-prev="latency/s2" data-next="latency/s4" data-num="3" data-title="Прочитать логи ошибок" data-block="latency/s3#card">
   <header class="r-head">
     <nav class="trail" aria-label="Where you are"><button type="button" data-close>Work map</button><span class="sep">›</span><button type="button" data-open="latency">Почему p95 оформления удвоился после 2.14</button><span class="sep">›</span></nav>
     <span class="st-done" title="Done"><svg class="icon"><use href="#i-done"/></svg></span>
@@ -557,10 +686,10 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
 
   
 
-  <section class="sec"><h3><svg class="icon"><use href="#i-goal"/></svg>Task</h3>
+  <section class="sec" id="sec-goal" data-block="latency/s3#goal"><h3><svg class="icon"><use href="#i-goal"/></svg>Task</h3>
     <div class="body rich"><p>Сгруппировал ошибки вечернего пика по тексту и источнику</p></div></section>
 
-  <section class="sec"><h3><svg class="icon"><use href="#i-context"/></svg>Context</h3>
+  <section class="sec" id="sec-context" data-block="latency/s3#context"><h3><svg class="icon"><use href="#i-context"/></svg>Context</h3>
     <ul class="items">
       <li class="item" id="ctx-C4"><span class="tag ghost" title="From a level above">C4</span><div>
         <a class="t" href="https://example.com/logs/q/8812" target="_blank" rel="noopener">Логи подов в пик, 3 ноября 19:00–19:30</a>
@@ -572,11 +701,13 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
 
   
 
-  <section class="sec"><h3><svg class="icon"><use href="#i-result"/></svg>Result</h3>
+  <section class="sec" id="sec-result" data-block="latency/s3#result"><h3><svg class="icon"><use href="#i-result"/></svg>Result</h3>
     <div class="body rich lead"><p>Доминирует <code>EMFILE</code> из платёжного клиента</p></div>
     </section>
 
-  <section class="sec"><h3><svg class="icon"><use href="#i-flow"/></svg>Workflow</h3>
+  
+
+  <section class="sec" id="sec-workflow" data-block="latency/s3#workflow"><h3><svg class="icon"><use href="#i-flow"/></svg>Workflow</h3>
     <div class="flow">
       <div class="flow-bar">
         <span class="flow-title"><nav class="trail" aria-label="Where you are"><button type="button" data-close>Work map</button><span class="sep">›</span><button type="button" data-open="latency">Почему p95 оформления удвоился после 2.14</button><span class="sep">›</span></nav><span class="num">3</span>Прочитать логи ошибок</span>
@@ -585,20 +716,23 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
       </div>
       <div class="canvas" data-dir="TB" data-embedded>
         <div class="graph" data-key="latency/s3" data-edges="[{&quot;from&quot;: &quot;q&quot;, &quot;to&quot;: &quot;g&quot;}, {&quot;from&quot;: &quot;q&quot;, &quot;to&quot;: &quot;c&quot;}]">
-          <div class="stage s-done" data-id="q" data-open="latency/s3/q" tabindex="0" role="button" aria-label="Open 3.1 Выгрузить логи пика">
+          <div class="stage s-done" data-id="q" data-open="latency/s3/q" data-block="latency/s3/q" tabindex="0" role="button" aria-label="Open 3.1 Выгрузить логи пика">
             <div class="h"><span class="num">3.1</span><h4>Выгрузить логи пика</h4><span class="st-done" title="Done"><svg class="icon sm"><use href="#i-done"/></svg></span></div>
             <div class="d rich"><p>Запрос в лог-хранилище за 19:00–19:30</p></div>
             <div class="o"><svg class="icon sm"><use href="#i-outcome"/></svg><div class="rich"><p><strong>41 200</strong> строк</p></div></div>
+            
             <div class="refs"><a class="ref-chip" href="#ctx-C4" data-ctx="C4">C4</a></div>
-          </div><div class="stage s-done deep" data-id="g" data-open="latency/s3/g" tabindex="0" role="button" aria-label="Open 3.2 Сгруппировать ошибки">
+          </div><div class="stage s-done deep" data-id="g" data-open="latency/s3/g" data-block="latency/s3/g" tabindex="0" role="button" aria-label="Open 3.2 Сгруппировать ошибки">
             <div class="h"><span class="num">3.2</span><h4>Сгруппировать ошибки</h4><span class="st-done" title="Done"><svg class="icon sm"><use href="#i-done"/></svg></span></div>
             <div class="d rich"><p>По тексту и сервису-источнику</p></div>
             <div class="o"><svg class="icon sm"><use href="#i-outcome"/></svg><div class="rich"><p><strong>Топ-1:</strong> <code>EMFILE</code> — 76%</p></div></div>
             
-          </div><div class="stage s-failed" data-id="c" data-open="latency/s3/c" tabindex="0" role="button" aria-label="Open 3.3 Сверить с метриками сокетов">
+            
+          </div><div class="stage s-failed" data-id="c" data-open="latency/s3/c" data-block="latency/s3/c" tabindex="0" role="button" aria-label="Open 3.3 Сверить с метриками сокетов">
             <div class="h"><span class="num">3.3</span><h4>Сверить с метриками сокетов</h4><span class="st-failed" title="Failed"><svg class="icon sm"><use href="#i-failed"/></svg></span></div>
             <div class="d rich"><p>Метрика открытых файлов не собирается</p></div>
             <div class="o"><svg class="icon sm"><use href="#i-outcome"/></svg><div class="rich"><p>Тупик — перешёл к changelog</p></div></div>
+            
             
           </div>
         </div>
@@ -619,7 +753,7 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
   
 </article>
 
-<article class="report" id="report-latency/s3/q" data-key="latency/s3/q" data-prev="" data-next="latency/s3/g">
+<article class="report" id="report-latency/s3/q" data-key="latency/s3/q" data-prev="" data-next="latency/s3/g" data-num="3.1" data-title="Выгрузить логи пика" data-block="latency/s3/q#card">
   <header class="r-head">
     <nav class="trail" aria-label="Where you are"><button type="button" data-close>Work map</button><span class="sep">›</span><button type="button" data-open="latency">Почему p95 оформления удвоился после 2.14</button><span class="sep">›</span><button type="button" data-open="latency/s3"><span class="num">3</span>Прочитать логи ошибок</button><span class="sep">›</span></nav>
     <span class="st-done" title="Done"><svg class="icon"><use href="#i-done"/></svg></span>
@@ -629,10 +763,10 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
 
   
 
-  <section class="sec"><h3><svg class="icon"><use href="#i-goal"/></svg>Task</h3>
+  <section class="sec" id="sec-goal" data-block="latency/s3/q#goal"><h3><svg class="icon"><use href="#i-goal"/></svg>Task</h3>
     <div class="body rich"><p>Запрос в лог-хранилище за 19:00–19:30</p></div></section>
 
-  <section class="sec"><h3><svg class="icon"><use href="#i-context"/></svg>Context</h3>
+  <section class="sec" id="sec-context" data-block="latency/s3/q#context"><h3><svg class="icon"><use href="#i-context"/></svg>Context</h3>
     <ul class="items">
       <li class="item" id="ctx-C4"><span class="tag ghost" title="From a level above">C4</span><div>
         <a class="t" href="https://example.com/logs/q/8812" target="_blank" rel="noopener">Логи подов в пик, 3 ноября 19:00–19:30</a>
@@ -644,7 +778,7 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
 
   
 
-  <section class="sec"><h3><svg class="icon"><use href="#i-result"/></svg>Result</h3>
+  <section class="sec" id="sec-result" data-block="latency/s3/q#result"><h3><svg class="icon"><use href="#i-result"/></svg>Result</h3>
     <div class="body rich lead"><p><strong>41 200</strong> строк</p></div>
     </section>
 
@@ -653,9 +787,11 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
   
 
   
+
+  
 </article>
 
-<article class="report" id="report-latency/s3/g" data-key="latency/s3/g" data-prev="latency/s3/q" data-next="latency/s3/c">
+<article class="report" id="report-latency/s3/g" data-key="latency/s3/g" data-prev="latency/s3/q" data-next="latency/s3/c" data-num="3.2" data-title="Сгруппировать ошибки" data-block="latency/s3/g#card">
   <header class="r-head">
     <nav class="trail" aria-label="Where you are"><button type="button" data-close>Work map</button><span class="sep">›</span><button type="button" data-open="latency">Почему p95 оформления удвоился после 2.14</button><span class="sep">›</span><button type="button" data-open="latency/s3"><span class="num">3</span>Прочитать логи ошибок</button><span class="sep">›</span></nav>
     <span class="st-done" title="Done"><svg class="icon"><use href="#i-done"/></svg></span>
@@ -665,7 +801,7 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
 
   
 
-  <section class="sec"><h3><svg class="icon"><use href="#i-goal"/></svg>Task</h3>
+  <section class="sec" id="sec-goal" data-block="latency/s3/g#goal"><h3><svg class="icon"><use href="#i-goal"/></svg>Task</h3>
     <div class="body rich"><p>По тексту и сервису-источнику</p></div></section>
 
   
@@ -674,11 +810,13 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
 
   
 
-  <section class="sec"><h3><svg class="icon"><use href="#i-result"/></svg>Result</h3>
+  <section class="sec" id="sec-result" data-block="latency/s3/g#result"><h3><svg class="icon"><use href="#i-result"/></svg>Result</h3>
     <div class="body rich lead"><p><strong>Топ-1:</strong> <code>EMFILE</code> — 76%</p></div>
     </section>
 
-  <section class="sec"><h3><svg class="icon"><use href="#i-flow"/></svg>Workflow</h3>
+  
+
+  <section class="sec" id="sec-workflow" data-block="latency/s3/g#workflow"><h3><svg class="icon"><use href="#i-flow"/></svg>Workflow</h3>
     <div class="flow">
       <div class="flow-bar">
         <span class="flow-title"><nav class="trail" aria-label="Where you are"><button type="button" data-close>Work map</button><span class="sep">›</span><button type="button" data-open="latency">Почему p95 оформления удвоился после 2.14</button><span class="sep">›</span><button type="button" data-open="latency/s3"><span class="num">3</span>Прочитать логи ошибок</button><span class="sep">›</span></nav><span class="num">3.2</span>Сгруппировать ошибки</span>
@@ -687,19 +825,22 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
       </div>
       <div class="canvas" data-dir="TB" data-embedded>
         <div class="graph" data-key="latency/s3/g" data-edges="[{&quot;from&quot;: &quot;g1&quot;, &quot;to&quot;: &quot;g2&quot;}, {&quot;from&quot;: &quot;g1&quot;, &quot;to&quot;: &quot;g3&quot;}]">
-          <div class="stage s-done" data-id="g1" data-open="latency/s3/g/g1" tabindex="0" role="button" aria-label="Open 3.2.1 Нормализовать тексты">
+          <div class="stage s-done" data-id="g1" data-open="latency/s3/g/g1" data-block="latency/s3/g/g1" tabindex="0" role="button" aria-label="Open 3.2.1 Нормализовать тексты">
             <div class="h"><span class="num">3.2.1</span><h4>Нормализовать тексты</h4><span class="st-done" title="Done"><svg class="icon sm"><use href="#i-done"/></svg></span></div>
             <div class="d rich"><p>Убрал id и таймстемпы</p></div>
             
             
-          </div><div class="stage s-done" data-id="g2" data-open="latency/s3/g/g2" tabindex="0" role="button" aria-label="Open 3.2.2 Посчитать по источнику">
+            
+          </div><div class="stage s-done" data-id="g2" data-open="latency/s3/g/g2" data-block="latency/s3/g/g2" tabindex="0" role="button" aria-label="Open 3.2.2 Посчитать по источнику">
             <div class="h"><span class="num">3.2.2</span><h4>Посчитать по источнику</h4><span class="st-done" title="Done"><svg class="icon sm"><use href="#i-done"/></svg></span></div>
             
             <div class="o"><svg class="icon sm"><use href="#i-outcome"/></svg><div class="rich"><p>Платёжный клиент — источник всех <code>EMFILE</code></p></div></div>
             
-          </div><div class="stage s-skipped" data-id="g3" data-open="latency/s3/g/g3" tabindex="0" role="button" aria-label="Open 3.2.3 Проверить другие поды">
+            
+          </div><div class="stage s-skipped" data-id="g3" data-open="latency/s3/g/g3" data-block="latency/s3/g/g3" tabindex="0" role="button" aria-label="Open 3.2.3 Проверить другие поды">
             <div class="h"><span class="num">3.2.3</span><h4>Проверить другие поды</h4><span class="st-skipped" title="Skipped"><svg class="icon sm"><use href="#i-skipped"/></svg></span></div>
             <div class="d rich"><p>Ошибка только в checkout — пропустил</p></div>
+            
             
             
           </div>
@@ -721,7 +862,7 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
   
 </article>
 
-<article class="report" id="report-latency/s3/g/g1" data-key="latency/s3/g/g1" data-prev="" data-next="latency/s3/g/g2">
+<article class="report" id="report-latency/s3/g/g1" data-key="latency/s3/g/g1" data-prev="" data-next="latency/s3/g/g2" data-num="3.2.1" data-title="Нормализовать тексты" data-block="latency/s3/g/g1#card">
   <header class="r-head">
     <nav class="trail" aria-label="Where you are"><button type="button" data-close>Work map</button><span class="sep">›</span><button type="button" data-open="latency">Почему p95 оформления удвоился после 2.14</button><span class="sep">›</span><button type="button" data-open="latency/s3"><span class="num">3</span>Прочитать логи ошибок</button><span class="sep">›</span><button type="button" data-open="latency/s3/g"><span class="num">3.2</span>Сгруппировать ошибки</button><span class="sep">›</span></nav>
     <span class="st-done" title="Done"><svg class="icon"><use href="#i-done"/></svg></span>
@@ -731,8 +872,10 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
 
   
 
-  <section class="sec"><h3><svg class="icon"><use href="#i-goal"/></svg>Task</h3>
+  <section class="sec" id="sec-goal" data-block="latency/s3/g/g1#goal"><h3><svg class="icon"><use href="#i-goal"/></svg>Task</h3>
     <div class="body rich"><p>Убрал id и таймстемпы</p></div></section>
+
+  
 
   
 
@@ -749,7 +892,7 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
   
 </article>
 
-<article class="report" id="report-latency/s3/g/g2" data-key="latency/s3/g/g2" data-prev="latency/s3/g/g1" data-next="latency/s3/g/g3">
+<article class="report" id="report-latency/s3/g/g2" data-key="latency/s3/g/g2" data-prev="latency/s3/g/g1" data-next="latency/s3/g/g3" data-num="3.2.2" data-title="Посчитать по источнику" data-block="latency/s3/g/g2#card">
   <header class="r-head">
     <nav class="trail" aria-label="Where you are"><button type="button" data-close>Work map</button><span class="sep">›</span><button type="button" data-open="latency">Почему p95 оформления удвоился после 2.14</button><span class="sep">›</span><button type="button" data-open="latency/s3"><span class="num">3</span>Прочитать логи ошибок</button><span class="sep">›</span><button type="button" data-open="latency/s3/g"><span class="num">3.2</span>Сгруппировать ошибки</button><span class="sep">›</span></nav>
     <span class="st-done" title="Done"><svg class="icon"><use href="#i-done"/></svg></span>
@@ -767,7 +910,7 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
 
   
 
-  <section class="sec"><h3><svg class="icon"><use href="#i-result"/></svg>Result</h3>
+  <section class="sec" id="sec-result" data-block="latency/s3/g/g2#result"><h3><svg class="icon"><use href="#i-result"/></svg>Result</h3>
     <div class="body rich lead"><p>Платёжный клиент — источник всех <code>EMFILE</code></p></div>
     </section>
 
@@ -776,9 +919,11 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
   
 
   
+
+  
 </article>
 
-<article class="report" id="report-latency/s3/g/g3" data-key="latency/s3/g/g3" data-prev="latency/s3/g/g2" data-next="">
+<article class="report" id="report-latency/s3/g/g3" data-key="latency/s3/g/g3" data-prev="latency/s3/g/g2" data-next="" data-num="3.2.3" data-title="Проверить другие поды" data-block="latency/s3/g/g3#card">
   <header class="r-head">
     <nav class="trail" aria-label="Where you are"><button type="button" data-close>Work map</button><span class="sep">›</span><button type="button" data-open="latency">Почему p95 оформления удвоился после 2.14</button><span class="sep">›</span><button type="button" data-open="latency/s3"><span class="num">3</span>Прочитать логи ошибок</button><span class="sep">›</span><button type="button" data-open="latency/s3/g"><span class="num">3.2</span>Сгруппировать ошибки</button><span class="sep">›</span></nav>
     <span class="st-skipped" title="Skipped"><svg class="icon"><use href="#i-skipped"/></svg></span>
@@ -788,7 +933,7 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
 
   
 
-  <section class="sec"><h3><svg class="icon"><use href="#i-goal"/></svg>Task</h3>
+  <section class="sec" id="sec-goal" data-block="latency/s3/g/g3#goal"><h3><svg class="icon"><use href="#i-goal"/></svg>Task</h3>
     <div class="body rich"><p>Ошибка только в checkout — пропустил</p></div></section>
 
   
@@ -804,9 +949,11 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
   
 
   
+
+  
 </article>
 
-<article class="report" id="report-latency/s3/c" data-key="latency/s3/c" data-prev="latency/s3/g" data-next="">
+<article class="report" id="report-latency/s3/c" data-key="latency/s3/c" data-prev="latency/s3/g" data-next="" data-num="3.3" data-title="Сверить с метриками сокетов" data-block="latency/s3/c#card">
   <header class="r-head">
     <nav class="trail" aria-label="Where you are"><button type="button" data-close>Work map</button><span class="sep">›</span><button type="button" data-open="latency">Почему p95 оформления удвоился после 2.14</button><span class="sep">›</span><button type="button" data-open="latency/s3"><span class="num">3</span>Прочитать логи ошибок</button><span class="sep">›</span></nav>
     <span class="st-failed" title="Failed"><svg class="icon"><use href="#i-failed"/></svg></span>
@@ -816,7 +963,7 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
 
   
 
-  <section class="sec"><h3><svg class="icon"><use href="#i-goal"/></svg>Task</h3>
+  <section class="sec" id="sec-goal" data-block="latency/s3/c#goal"><h3><svg class="icon"><use href="#i-goal"/></svg>Task</h3>
     <div class="body rich"><p>Метрика открытых файлов не собирается</p></div></section>
 
   
@@ -825,7 +972,7 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
 
   
 
-  <section class="sec"><h3><svg class="icon"><use href="#i-result"/></svg>Result</h3>
+  <section class="sec" id="sec-result" data-block="latency/s3/c#result"><h3><svg class="icon"><use href="#i-result"/></svg>Result</h3>
     <div class="body rich lead"><p>Тупик — перешёл к changelog</p></div>
     </section>
 
@@ -834,9 +981,11 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
   
 
   
+
+  
 </article>
 
-<article class="report" id="report-latency/s4" data-key="latency/s4" data-prev="latency/s3" data-next="latency/s5">
+<article class="report" id="report-latency/s4" data-key="latency/s4" data-prev="latency/s3" data-next="latency/s5" data-num="4" data-title="Проверить changelog клиента" data-block="latency/s4#card">
   <header class="r-head">
     <nav class="trail" aria-label="Where you are"><button type="button" data-close>Work map</button><span class="sep">›</span><button type="button" data-open="latency">Почему p95 оформления удвоился после 2.14</button><span class="sep">›</span></nav>
     <span class="st-done" title="Done"><svg class="icon"><use href="#i-done"/></svg></span>
@@ -846,10 +995,10 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
 
   
 
-  <section class="sec"><h3><svg class="icon"><use href="#i-goal"/></svg>Task</h3>
+  <section class="sec" id="sec-goal" data-block="latency/s4#goal"><h3><svg class="icon"><use href="#i-goal"/></svg>Task</h3>
     <div class="body rich"><p>Искал изменения поведения в 4.0</p></div></section>
 
-  <section class="sec"><h3><svg class="icon"><use href="#i-context"/></svg>Context</h3>
+  <section class="sec" id="sec-context" data-block="latency/s4#context"><h3><svg class="icon"><use href="#i-context"/></svg>Context</h3>
     <ul class="items">
       <li class="item" id="ctx-C3"><span class="tag ghost" title="From a level above">C3</span><div>
         <a class="t" href="https://example.com/payments-client/CHANGELOG.md#400" target="_blank" rel="noopener">Changelog платёжного клиента 4.0</a>
@@ -865,7 +1014,7 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
 
   
 
-  <section class="sec"><h3><svg class="icon"><use href="#i-result"/></svg>Result</h3>
+  <section class="sec" id="sec-result" data-block="latency/s4#result"><h3><svg class="icon"><use href="#i-result"/></svg>Result</h3>
     <div class="body rich lead"><p>Лимит пула по умолчанию стал «без ограничений»</p></div>
     </section>
 
@@ -874,9 +1023,11 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
   
 
   
+
+  
 </article>
 
-<article class="report" id="report-latency/s5" data-key="latency/s5" data-prev="latency/s4" data-next="latency/s6">
+<article class="report" id="report-latency/s5" data-key="latency/s5" data-prev="latency/s4" data-next="latency/s6" data-num="5" data-title="Воспроизвести под нагрузкой" data-block="latency/s5#card">
   <header class="r-head">
     <nav class="trail" aria-label="Where you are"><button type="button" data-close>Work map</button><span class="sep">›</span><button type="button" data-open="latency">Почему p95 оформления удвоился после 2.14</button><span class="sep">›</span></nav>
     <span class="st-done" title="Done"><svg class="icon"><use href="#i-done"/></svg></span>
@@ -886,7 +1037,7 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
 
   
 
-  <section class="sec"><h3><svg class="icon"><use href="#i-goal"/></svg>Task</h3>
+  <section class="sec" id="sec-goal" data-block="latency/s5#goal"><h3><svg class="icon"><use href="#i-goal"/></svg>Task</h3>
     <div class="body rich"><p>Прогнал нагрузочный тест с лимитом пула и без</p></div></section>
 
   
@@ -895,7 +1046,7 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
 
   
 
-  <section class="sec"><h3><svg class="icon"><use href="#i-result"/></svg>Result</h3>
+  <section class="sec" id="sec-result" data-block="latency/s5#result"><h3><svg class="icon"><use href="#i-result"/></svg>Result</h3>
     <div class="body rich lead"><p>С лимитом ошибки уходят, задержка возвращается</p></div>
     </section>
 
@@ -904,9 +1055,11 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
   
 
   
+
+  
 </article>
 
-<article class="report" id="report-latency/s6" data-key="latency/s6" data-prev="latency/s5" data-next="">
+<article class="report" id="report-latency/s6" data-key="latency/s6" data-prev="latency/s5" data-next="" data-num="6" data-title="Описать" data-block="latency/s6#card">
   <header class="r-head">
     <nav class="trail" aria-label="Where you are"><button type="button" data-close>Work map</button><span class="sep">›</span><button type="button" data-open="latency">Почему p95 оформления удвоился после 2.14</button><span class="sep">›</span></nav>
     <span class="st-done" title="Done"><svg class="icon"><use href="#i-done"/></svg></span>
@@ -916,7 +1069,7 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
 
   
 
-  <section class="sec"><h3><svg class="icon"><use href="#i-goal"/></svg>Task</h3>
+  <section class="sec" id="sec-goal" data-block="latency/s6#goal"><h3><svg class="icon"><use href="#i-goal"/></svg>Task</h3>
     <div class="body rich"><p>Причина, доказательства и предлагаемый фикс — в задаче</p></div></section>
 
   
@@ -925,7 +1078,7 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
 
   
 
-  <section class="sec"><h3><svg class="icon"><use href="#i-result"/></svg>Result</h3>
+  <section class="sec" id="sec-result" data-block="latency/s6#result"><h3><svg class="icon"><use href="#i-result"/></svg>Result</h3>
     <div class="body rich lead"><p>Передано в задачу с исправлением</p></div>
     </section>
 
@@ -934,9 +1087,11 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
   
 
   
+
+  
 </article>
 
-<article class="report" id="report-pool" data-key="pool" data-prev="latency" data-next="replay">
+<article class="report" id="report-pool" data-key="pool" data-prev="latency" data-next="replay" data-num="" data-title="Ограничить соединения платёжного клиента" data-block="pool#card">
   <header class="r-head">
     <nav class="trail" aria-label="Where you are"><button type="button" data-close>Work map</button><span class="sep">›</span></nav>
     <span class="st-needs_review" title="Needs review"><svg class="icon"><use href="#i-needs_review"/></svg></span>
@@ -944,15 +1099,13 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
     <a class="ref" href="https://example.com/acme/shop/pull/1290" target="_blank" rel="noopener"><svg class="icon sm"><use href="#i-link"/></svg>PR #1290</a>
   </header>
 
-  <section class="sec"><h3><svg class="icon"><use href="#i-problem"/></svg>Problem</h3>
+  <section class="sec" id="sec-problem" data-block="pool#problem"><h3><svg class="icon"><use href="#i-problem"/></svg>Problem</h3>
     <div class="body rich lead"><p>Клиент открывает <strong>сокеты без лимита</strong> → под ретраями кончаются файловые дескрипторы</p></div></section>
 
-  <section class="sec"><h3><svg class="icon"><use href="#i-goal"/></svg>Task</h3>
-    <div class="body rich"><ul><li>Ограничить пул соединений</li><li>Добавить backoff ретраям</li><li>Не менять семантику платежей</li></ul></div></section><section class="sec"><h3><svg class="icon"><use href="#i-goal"/></svg>Task</h3>
-    <div class="body rich"><ul><li>Ограничить пул соединений</li><li>Добавить backoff ретраям</li><li>Не менять семантику платежей</li></ul></div></section><section class="sec"><h3><svg class="icon"><use href="#i-goal"/></svg>Task</h3>
+  <section class="sec" id="sec-goal" data-block="pool#goal"><h3><svg class="icon"><use href="#i-goal"/></svg>Task</h3>
     <div class="body rich"><ul><li>Ограничить пул соединений</li><li>Добавить backoff ретраям</li><li>Не менять семантику платежей</li></ul></div></section>
 
-  <section class="sec"><h3><svg class="icon"><use href="#i-context"/></svg>Context</h3>
+  <section class="sec" id="sec-context" data-block="pool#context"><h3><svg class="icon"><use href="#i-context"/></svg>Context</h3>
     <ul class="items">
       <li class="item" id="ctx-C1"><span class="tag">C1</span><div>
         <a class="t" href="https://example.com/acme/shop/blob/main/src/payments/client.ts" target="_blank" rel="noopener">src/payments/client.ts</a>
@@ -968,7 +1121,7 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
       </div></li>
     </ul></section>
 
-  <section class="sec"><h3><svg class="icon"><use href="#i-inference"/></svg>Conclusions</h3>
+  <section class="sec" id="sec-inferences" data-block="pool#inferences"><h3><svg class="icon"><use href="#i-inference"/></svg>Conclusions</h3>
     <ul class="claims">
       <li class="claim inference"><div class="rich"><p><strong>50</strong> соединений на под — двукратный запас: в пик ~<strong>22</strong> одновременных платёжных запроса на под</p></div>
         <dl class="kv">
@@ -977,7 +1130,7 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
         </dl></li>
     </ul></section>
 
-  <section class="sec"><h3><svg class="icon"><use href="#i-assumption"/></svg>Assumptions</h3>
+  <section class="sec" id="sec-assumptions" data-block="pool#assumptions"><h3><svg class="icon"><use href="#i-assumption"/></svg>Assumptions</h3>
     <ul class="claims">
       <li class="claim assumption"><div class="rich"><p>Ключ идемпотентности уже передаётся при каждом ретрае → backoff не создаст двойных списаний</p></div>
         <dl class="kv">
@@ -987,16 +1140,19 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
         </dl></li>
     </ul></section>
 
-  <section class="sec"><h3><svg class="icon"><use href="#i-result"/></svg>Result</h3>
+  <section class="sec" id="sec-result" data-block="pool#result"><h3><svg class="icon"><use href="#i-result"/></svg>Result</h3>
     <div class="body rich lead"><p>PR <strong>#1290</strong> готов:</p><ul><li>лимит пула</li><li>экспоненциальный backoff с джиттером</li><li>метрика заполненности пула</li></ul></div>
     <ul class="results">
       <li><span class="k">changed</span><div class="v"><code>maxConnections: 50</code>, <code>queueTimeout: 2s</code> в фабрике клиента <a class="ref-chip" href="https://example.com/acme/shop/pull/1290/files" target="_blank" rel="noopener">client.ts</a></div></li>
       <li><span class="k">added</span><div class="v">Backoff 100 мс → 1,6 с с полным джиттером, максимум 4 попытки</div></li>
       <li><span class="k">added</span><div class="v">Метрика <code>payments_pool_in_use</code></div></li>
-      <li><span class="k">verified</span><div class="v">Юнит-тесты зелёные; нагрузочный тест из ACME-412 проходит на этой ветке</div></li>
+      <li><span class="k">verified</span><div class="v">Юнит-тесты зелёные; нагрузочный тест из ACME-412 проходит на этой ветке<div class="how rich"><strong>How:</strong> <code>npm test</code> + нагрузочный тест — <a href="https://example.com/ci/4120" target="_blank" rel="noopener">CI #4120</a></div></div></li>
     </ul></section>
 
-  <section class="sec"><h3><svg class="icon"><use href="#i-flow"/></svg>Workflow</h3>
+  <section class="sec" id="sec-unchecked" data-block="pool#unchecked"><h3><svg class="icon"><use href="#i-unchecked"/></svg>Not checked</h3>
+    <ul class="unchecked"><li><div class="rich"><p>Поведение пула при отказе DNS</p></div><dl class="kv"><dt>Why not</dt><dd class="rich"><p>Нет стенда для такого сбоя</p></dd></dl></li></ul></section>
+
+  <section class="sec" id="sec-workflow" data-block="pool#workflow"><h3><svg class="icon"><use href="#i-flow"/></svg>Workflow</h3>
     <div class="flow">
       <div class="flow-bar">
         <span class="flow-title"><nav class="trail" aria-label="Where you are"><button type="button" data-close>Work map</button><span class="sep">›</span></nav>Ограничить соединения платёжного клиента</span>
@@ -1004,26 +1160,36 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
         <button class="iconbtn" data-expand title="Expand to full page" aria-label="Expand workflow"><svg class="icon i-expand"><use href="#i-expand"/></svg><svg class="icon i-collapse"><use href="#i-collapse"/></svg></button>
       </div>
       <div class="canvas" data-dir="TB" data-embedded>
-        <div class="graph" data-key="pool" data-edges="[{&quot;from&quot;: &quot;a&quot;, &quot;to&quot;: &quot;b&quot;}, {&quot;from&quot;: &quot;b&quot;, &quot;to&quot;: &quot;c&quot;}, {&quot;from&quot;: &quot;b&quot;, &quot;to&quot;: &quot;d&quot;}, {&quot;from&quot;: &quot;c&quot;, &quot;to&quot;: &quot;d&quot;}]">
-          <div class="stage s-done" data-id="a" data-open="pool/a" tabindex="0" role="button" aria-label="Open 1 Подобрать лимиты">
+        <div class="graph" data-key="pool" data-edges="[{&quot;from&quot;: &quot;a&quot;, &quot;to&quot;: &quot;b&quot;}, {&quot;from&quot;: &quot;b&quot;, &quot;to&quot;: &quot;c&quot;}, {&quot;from&quot;: &quot;b&quot;, &quot;to&quot;: &quot;d&quot;}, {&quot;from&quot;: &quot;c&quot;, &quot;to&quot;: &quot;d&quot;}, {&quot;from&quot;: &quot;d&quot;, &quot;to&quot;: &quot;e&quot;}]">
+          <div class="stage s-done" data-id="a" data-open="pool/a" data-block="pool/a" tabindex="0" role="button" aria-label="Open 1 Подобрать лимиты">
             <div class="h"><span class="num">1</span><h4>Подобрать лимиты</h4><span class="st-done" title="Done"><svg class="icon sm"><use href="#i-done"/></svg></span></div>
             <div class="d rich"><p>Вывел размер пула из пиковой конкурентности</p></div>
             <div class="o"><svg class="icon sm"><use href="#i-outcome"/></svg><div class="rich"><p>50 на под, таймаут очереди 2 с</p></div></div>
+            
             <div class="refs"><a class="ref-chip" href="#ctx-C3" data-ctx="C3">C3</a></div>
-          </div><div class="stage s-done" data-id="b" data-open="pool/b" tabindex="0" role="button" aria-label="Open 2 Сделать лимит и backoff">
+          </div><div class="stage s-done" data-id="b" data-open="pool/b" data-block="pool/b" tabindex="0" role="button" aria-label="Open 2 Сделать лимит и backoff">
             <div class="h"><span class="num">2</span><h4>Сделать лимит и backoff</h4><span class="st-done" title="Done"><svg class="icon sm"><use href="#i-done"/></svg></span></div>
             <div class="d rich"><p>Настроил пул; обернул ретраи в хелпер backoff</p></div>
             
+            
             <div class="refs"><a class="ref-chip" href="#ctx-C1" data-ctx="C1">C1</a><a class="ref-chip" href="#ctx-C2" data-ctx="C2">C2</a></div>
-          </div><div class="stage s-done" data-id="c" data-open="pool/c" tabindex="0" role="button" aria-label="Open 3 Добавить метрику заполненности">
+          </div><div class="stage s-done" data-id="c" data-open="pool/c" data-block="pool/c" tabindex="0" role="button" aria-label="Open 3 Добавить метрику заполненности">
             <div class="h"><span class="num">3</span><h4>Добавить метрику заполненности</h4><span class="st-done" title="Done"><svg class="icon sm"><use href="#i-done"/></svg></span></div>
             <div class="d rich"><p>Экспорт занятых соединений по подам</p></div>
             
             
-          </div><div class="stage s-done" data-id="d" data-open="pool/d" tabindex="0" role="button" aria-label="Open 4 Проверить">
+            
+          </div><div class="stage s-done" data-id="d" data-open="pool/d" data-block="pool/d" tabindex="0" role="button" aria-label="Open 4 Проверить">
             <div class="h"><span class="num">4</span><h4>Проверить</h4><span class="st-done" title="Done"><svg class="icon sm"><use href="#i-done"/></svg></span></div>
             <div class="d rich"><p>Юнит-тесты и нагрузочный тест инцидента</p></div>
             <div class="o"><svg class="icon sm"><use href="#i-outcome"/></svg><div class="rich"><p>Зелёные</p></div></div>
+            
+            
+          </div><div class="stage s-planned" data-id="e" data-open="pool/e" data-block="pool/e" tabindex="0" role="button" aria-label="Open 5 Выкатить 2.14.1">
+            <div class="h"><span class="num">5</span><h4>Выкатить 2.14.1</h4><span class="st-planned" title="Planned"><svg class="icon sm"><use href="#i-planned"/></svg></span></div>
+            <div class="d rich"><p>Мерж, релиз, наблюдение p95 сутки</p></div>
+            
+            <div class="when"><strong>When</strong><span class="rich">после вашего согласования</span></div>
             
           </div>
         </div>
@@ -1036,20 +1202,25 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
         <svg class="minimap" hidden aria-hidden="true"></svg>
       </div>
     </div>
-    <ol class="stages-print"><li><strong>1 Подобрать лимиты</strong> — Done<div class="rich"><p>Вывел размер пула из пиковой конкурентности</p></div><div class="rich">→ <p>50 на под, таймаут очереди 2 с</p></div></li><li><strong>2 Сделать лимит и backoff</strong> — Done<div class="rich"><p>Настроил пул; обернул ретраи в хелпер backoff</p></div></li><li><strong>3 Добавить метрику заполненности</strong> — Done<div class="rich"><p>Экспорт занятых соединений по подам</p></div></li><li><strong>4 Проверить</strong> — Done<div class="rich"><p>Юнит-тесты и нагрузочный тест инцидента</p></div><div class="rich">→ <p>Зелёные</p></div></li></ol>
+    <ol class="stages-print"><li><strong>1 Подобрать лимиты</strong> — Done<div class="rich"><p>Вывел размер пула из пиковой конкурентности</p></div><div class="rich">→ <p>50 на под, таймаут очереди 2 с</p></div></li><li><strong>2 Сделать лимит и backoff</strong> — Done<div class="rich"><p>Настроил пул; обернул ретраи в хелпер backoff</p></div></li><li><strong>3 Добавить метрику заполненности</strong> — Done<div class="rich"><p>Экспорт занятых соединений по подам</p></div></li><li><strong>4 Проверить</strong> — Done<div class="rich"><p>Юнит-тесты и нагрузочный тест инцидента</p></div><div class="rich">→ <p>Зелёные</p></div></li><li><strong>5 Выкатить 2.14.1</strong> — Planned<div class="rich"><p>Мерж, релиз, наблюдение p95 сутки</p></div></li></ol>
   </section>
 
-  <section class="sec"><h3><svg class="icon"><use href="#i-approve"/></svg>Needs approval</h3>
+  <section class="sec" id="sec-approvals" data-block="pool#approvals"><h3><svg class="icon"><use href="#i-approve"/></svg>Needs approval</h3>
     <ul class="mine">
       <li><svg class="icon"><use href="#i-approve"/></svg><div><div class="t">Смержить PR #1290 и выпустить 2.14.1 сегодня</div>
-        <dl class="kv"><dt>Why you</dt><dd class="rich"><p>Каждый вечерний пик до выкладки повторяет инцидент</p></dd><dt>Options</dt><dd class="opts"><span>Выпустить сегодня</span><span>С релизом в понедельник</span></dd></dl>
+        <dl class="kv"><dt>Why you</dt><dd class="rich"><p>Каждый вечерний пик до выкладки повторяет инцидент</p></dd><dt>Decide by</dt><dd>сегодня 18:00</dd></dl>
+        
+        <form class="answer" data-akey="pool#a0" data-type="approval" data-question="Смержить PR #1290 и выпустить 2.14.1 сегодня">
+          <div class="choices" role="radiogroup" aria-label="Your decision"><label class="choice"><input type="radio" name="pool#a0" value="Выпустить сегодня"><span>Выпустить сегодня <i class="rec">Recommended</i></span></label><label class="choice"><input type="radio" name="pool#a0" value="С релизом в понедельник"><span>С релизом в понедельник</span></label></div>
+          <textarea rows="1" placeholder="Comment (optional)" aria-label="Comment"></textarea>
+        </form>
       </div></li>
     </ul></section>
 
   
 </article>
 
-<article class="report" id="report-pool/a" data-key="pool/a" data-prev="" data-next="pool/b">
+<article class="report" id="report-pool/a" data-key="pool/a" data-prev="" data-next="pool/b" data-num="1" data-title="Подобрать лимиты" data-block="pool/a#card">
   <header class="r-head">
     <nav class="trail" aria-label="Where you are"><button type="button" data-close>Work map</button><span class="sep">›</span><button type="button" data-open="pool">Ограничить соединения платёжного клиента</button><span class="sep">›</span></nav>
     <span class="st-done" title="Done"><svg class="icon"><use href="#i-done"/></svg></span>
@@ -1059,10 +1230,10 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
 
   
 
-  <section class="sec"><h3><svg class="icon"><use href="#i-goal"/></svg>Task</h3>
+  <section class="sec" id="sec-goal" data-block="pool/a#goal"><h3><svg class="icon"><use href="#i-goal"/></svg>Task</h3>
     <div class="body rich"><p>Вывел размер пула из пиковой конкурентности</p></div></section>
 
-  <section class="sec"><h3><svg class="icon"><use href="#i-context"/></svg>Context</h3>
+  <section class="sec" id="sec-context" data-block="pool/a#context"><h3><svg class="icon"><use href="#i-context"/></svg>Context</h3>
     <ul class="items">
       <li class="item" id="ctx-C3"><span class="tag ghost" title="From a level above">C3</span><div>
         <a class="t" href="https://example.com/issues/ACME-412" target="_blank" rel="noopener">Разбор причины (ACME-412)</a>
@@ -1074,7 +1245,7 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
 
   
 
-  <section class="sec"><h3><svg class="icon"><use href="#i-result"/></svg>Result</h3>
+  <section class="sec" id="sec-result" data-block="pool/a#result"><h3><svg class="icon"><use href="#i-result"/></svg>Result</h3>
     <div class="body rich lead"><p>50 на под, таймаут очереди 2 с</p></div>
     </section>
 
@@ -1083,9 +1254,11 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
   
 
   
+
+  
 </article>
 
-<article class="report" id="report-pool/b" data-key="pool/b" data-prev="pool/a" data-next="pool/c">
+<article class="report" id="report-pool/b" data-key="pool/b" data-prev="pool/a" data-next="pool/c" data-num="2" data-title="Сделать лимит и backoff" data-block="pool/b#card">
   <header class="r-head">
     <nav class="trail" aria-label="Where you are"><button type="button" data-close>Work map</button><span class="sep">›</span><button type="button" data-open="pool">Ограничить соединения платёжного клиента</button><span class="sep">›</span></nav>
     <span class="st-done" title="Done"><svg class="icon"><use href="#i-done"/></svg></span>
@@ -1095,10 +1268,10 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
 
   
 
-  <section class="sec"><h3><svg class="icon"><use href="#i-goal"/></svg>Task</h3>
+  <section class="sec" id="sec-goal" data-block="pool/b#goal"><h3><svg class="icon"><use href="#i-goal"/></svg>Task</h3>
     <div class="body rich"><p>Настроил пул; обернул ретраи в хелпер backoff</p></div></section>
 
-  <section class="sec"><h3><svg class="icon"><use href="#i-context"/></svg>Context</h3>
+  <section class="sec" id="sec-context" data-block="pool/b#context"><h3><svg class="icon"><use href="#i-context"/></svg>Context</h3>
     <ul class="items">
       <li class="item" id="ctx-C1"><span class="tag ghost" title="From a level above">C1</span><div>
         <a class="t" href="https://example.com/acme/shop/blob/main/src/payments/client.ts" target="_blank" rel="noopener">src/payments/client.ts</a>
@@ -1121,9 +1294,11 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
   
 
   
+
+  
 </article>
 
-<article class="report" id="report-pool/c" data-key="pool/c" data-prev="pool/b" data-next="pool/d">
+<article class="report" id="report-pool/c" data-key="pool/c" data-prev="pool/b" data-next="pool/d" data-num="3" data-title="Добавить метрику заполненности" data-block="pool/c#card">
   <header class="r-head">
     <nav class="trail" aria-label="Where you are"><button type="button" data-close>Work map</button><span class="sep">›</span><button type="button" data-open="pool">Ограничить соединения платёжного клиента</button><span class="sep">›</span></nav>
     <span class="st-done" title="Done"><svg class="icon"><use href="#i-done"/></svg></span>
@@ -1133,7 +1308,7 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
 
   
 
-  <section class="sec"><h3><svg class="icon"><use href="#i-goal"/></svg>Task</h3>
+  <section class="sec" id="sec-goal" data-block="pool/c#goal"><h3><svg class="icon"><use href="#i-goal"/></svg>Task</h3>
     <div class="body rich"><p>Экспорт занятых соединений по подам</p></div></section>
 
   
@@ -1149,9 +1324,11 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
   
 
   
+
+  
 </article>
 
-<article class="report" id="report-pool/d" data-key="pool/d" data-prev="pool/c" data-next="">
+<article class="report" id="report-pool/d" data-key="pool/d" data-prev="pool/c" data-next="pool/e" data-num="4" data-title="Проверить" data-block="pool/d#card">
   <header class="r-head">
     <nav class="trail" aria-label="Where you are"><button type="button" data-close>Work map</button><span class="sep">›</span><button type="button" data-open="pool">Ограничить соединения платёжного клиента</button><span class="sep">›</span></nav>
     <span class="st-done" title="Done"><svg class="icon"><use href="#i-done"/></svg></span>
@@ -1161,7 +1338,7 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
 
   
 
-  <section class="sec"><h3><svg class="icon"><use href="#i-goal"/></svg>Task</h3>
+  <section class="sec" id="sec-goal" data-block="pool/d#goal"><h3><svg class="icon"><use href="#i-goal"/></svg>Task</h3>
     <div class="body rich"><p>Юнит-тесты и нагрузочный тест инцидента</p></div></section>
 
   
@@ -1170,7 +1347,7 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
 
   
 
-  <section class="sec"><h3><svg class="icon"><use href="#i-result"/></svg>Result</h3>
+  <section class="sec" id="sec-result" data-block="pool/d#result"><h3><svg class="icon"><use href="#i-result"/></svg>Result</h3>
     <div class="body rich lead"><p>Зелёные</p></div>
     </section>
 
@@ -1179,9 +1356,41 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
   
 
   
+
+  
 </article>
 
-<article class="report" id="report-replay" data-key="replay" data-prev="pool" data-next="alerts">
+<article class="report" id="report-pool/e" data-key="pool/e" data-prev="pool/d" data-next="" data-num="5" data-title="Выкатить 2.14.1" data-block="pool/e#card">
+  <header class="r-head">
+    <nav class="trail" aria-label="Where you are"><button type="button" data-close>Work map</button><span class="sep">›</span><button type="button" data-open="pool">Ограничить соединения платёжного клиента</button><span class="sep">›</span></nav>
+    <span class="st-planned" title="Planned"><svg class="icon"><use href="#i-planned"/></svg></span>
+    <h2><span class="num">5</span>Выкатить 2.14.1</h2>
+    
+  </header>
+
+  
+
+  <section class="sec" id="sec-goal" data-block="pool/e#goal"><h3><svg class="icon"><use href="#i-goal"/></svg>Task</h3>
+    <div class="body rich"><p>Мерж, релиз, наблюдение p95 сутки</p></div></section>
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+</article>
+
+<article class="report" id="report-replay" data-key="replay" data-prev="pool" data-next="alerts" data-num="" data-title="Восстановить заказы, упавшие во время инцидента" data-block="replay#card">
   <header class="r-head">
     <nav class="trail" aria-label="Where you are"><button type="button" data-close>Work map</button><span class="sep">›</span></nav>
     <span class="st-blocked" title="Blocked"><svg class="icon"><use href="#i-blocked"/></svg></span>
@@ -1189,14 +1398,13 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
     
   </header>
 
-  <section class="sec"><h3><svg class="icon"><use href="#i-problem"/></svg>Problem</h3>
+  <section class="sec" id="sec-problem" data-block="replay#problem"><h3><svg class="icon"><use href="#i-problem"/></svg>Problem</h3>
     <div class="body rich lead"><dl class="kv"><dt>Затронуто</dt><dd><strong>212</strong> клиентов, <strong>$18 406</strong></dd><dt>Состояние</dt><dd>провайдер списал деньги, заказа у нас нет</dd><dt>Причина</dt><dd>наш таймаут сработал после того, как провайдер принял платёж</dd></dl></div></section>
 
-  <section class="sec"><h3><svg class="icon"><use href="#i-goal"/></svg>Task</h3>
-    <div class="body rich"><ul><li>Создать недостающие заказы по данным провайдера</li><li>Никого не списать дважды</li></ul></div></section><section class="sec"><h3><svg class="icon"><use href="#i-goal"/></svg>Task</h3>
+  <section class="sec" id="sec-goal" data-block="replay#goal"><h3><svg class="icon"><use href="#i-goal"/></svg>Task</h3>
     <div class="body rich"><ul><li>Создать недостающие заказы по данным провайдера</li><li>Никого не списать дважды</li></ul></div></section>
 
-  <section class="sec"><h3><svg class="icon"><use href="#i-context"/></svg>Context</h3>
+  <section class="sec" id="sec-context" data-block="replay#context"><h3><svg class="icon"><use href="#i-context"/></svg>Context</h3>
     <ul class="items">
       <li class="item" id="ctx-C1"><span class="tag">C1</span><div>
         <a class="t" href="https://example.com/sql/saved/931" target="_blank" rel="noopener">Платежи провайдера без заказа, 2–5 ноября</a>
@@ -1212,7 +1420,7 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
       </div></li>
     </ul></section>
 
-  <section class="sec"><h3><svg class="icon"><use href="#i-inference"/></svg>Conclusions</h3>
+  <section class="sec" id="sec-inferences" data-block="replay#inferences"><h3><svg class="icon"><use href="#i-inference"/></svg>Conclusions</h3>
     <ul class="claims">
       <li class="claim inference"><div class="rich"><p>Все 212 платежей проведены и ни один не возвращён → создавать заказы безопасно, новых списаний не нужно</p></div>
         <dl class="kv">
@@ -1221,7 +1429,7 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
         </dl></li>
     </ul></section>
 
-  <section class="sec"><h3><svg class="icon"><use href="#i-assumption"/></svg>Assumptions</h3>
+  <section class="sec" id="sec-assumptions" data-block="replay#assumptions"><h3><svg class="icon"><use href="#i-assumption"/></svg>Assumptions</h3>
     <ul class="claims">
       <li class="claim assumption"><div class="rich"><p>Товары из затронутых заказов ещё есть на складе</p></div>
         <dl class="kv">
@@ -1231,14 +1439,16 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
         </dl></li>
     </ul></section>
 
-  <section class="sec"><h3><svg class="icon"><use href="#i-result"/></svg>Result</h3>
+  <section class="sec" id="sec-result" data-block="replay#result"><h3><svg class="icon"><use href="#i-result"/></svg>Result</h3>
     <div class="body rich lead"><dl class="kv"><dt>Скрипт</dt><dd>написан, сухой прогон на стейдже</dd><dt>Запуск в проде</dt><dd>ждёт вашего решения</dd></dl></div>
     <ul class="results">
       <li><span class="k">added</span><div class="v"><code>scripts/replay-orders.ts</code> с <code>--dry-run</code> и идемпотентным ключом заказа</div></li>
-      <li><span class="k">verified</span><div class="v">Сухой прогон на стейдже: <strong>212</strong> заказов, <strong>0</strong> дублей, <strong>7</strong> позиций нет в наличии</div></li>
+      <li><span class="k">verified</span><div class="v">Сухой прогон на стейдже: <strong>212</strong> заказов, <strong>0</strong> дублей, <strong>7</strong> позиций нет в наличии<div class="how rich"><strong>How:</strong> <code>npm run replay-orders -- --dry-run</code> на стейдже</div></div></li>
     </ul></section>
 
-  <section class="sec"><h3><svg class="icon"><use href="#i-flow"/></svg>Workflow</h3>
+  
+
+  <section class="sec" id="sec-workflow" data-block="replay#workflow"><h3><svg class="icon"><use href="#i-flow"/></svg>Workflow</h3>
     <div class="flow">
       <div class="flow-bar">
         <span class="flow-title"><nav class="trail" aria-label="Where you are"><button type="button" data-close>Work map</button><span class="sep">›</span></nav>Восстановить заказы, упавшие во время инцидента</span>
@@ -1247,25 +1457,29 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
       </div>
       <div class="canvas" data-dir="TB" data-embedded>
         <div class="graph" data-key="replay" data-edges="[{&quot;from&quot;: &quot;r1&quot;, &quot;to&quot;: &quot;r2&quot;}, {&quot;from&quot;: &quot;r2&quot;, &quot;to&quot;: &quot;r3&quot;}, {&quot;from&quot;: &quot;r3&quot;, &quot;to&quot;: &quot;r4&quot;}]">
-          <div class="stage s-done" data-id="r1" data-open="replay/r1" tabindex="0" role="button" aria-label="Open 1 Найти затронутые платежи">
+          <div class="stage s-done" data-id="r1" data-open="replay/r1" data-block="replay/r1" tabindex="0" role="button" aria-label="Open 1 Найти затронутые платежи">
             <div class="h"><span class="num">1</span><h4>Найти затронутые платежи</h4><span class="st-done" title="Done"><svg class="icon sm"><use href="#i-done"/></svg></span></div>
             <div class="d rich"><p>Сопоставил списания провайдера с заказами по id платежа</p></div>
             <div class="o"><svg class="icon sm"><use href="#i-outcome"/></svg><div class="rich"><p>212 платежей без заказов</p></div></div>
+            
             <div class="refs"><a class="ref-chip" href="#ctx-C1" data-ctx="C1">C1</a></div>
-          </div><div class="stage s-done" data-id="r2" data-open="replay/r2" tabindex="0" role="button" aria-label="Open 2 Написать скрипт восстановления">
+          </div><div class="stage s-done" data-id="r2" data-open="replay/r2" data-block="replay/r2" tabindex="0" role="button" aria-label="Open 2 Написать скрипт восстановления">
             <div class="h"><span class="num">2</span><h4>Написать скрипт восстановления</h4><span class="st-done" title="Done"><svg class="icon sm"><use href="#i-done"/></svg></span></div>
             <div class="d rich"><p>Создаёт заказы через обычный сервис с идемпотентным ключом</p></div>
             
+            
             <div class="refs"><a class="ref-chip" href="#ctx-C2" data-ctx="C2">C2</a></div>
-          </div><div class="stage s-done" data-id="r3" data-open="replay/r3" tabindex="0" role="button" aria-label="Open 3 Сухой прогон на стейдже">
+          </div><div class="stage s-done" data-id="r3" data-open="replay/r3" data-block="replay/r3" tabindex="0" role="button" aria-label="Open 3 Сухой прогон на стейдже">
             <div class="h"><span class="num">3</span><h4>Сухой прогон на стейдже</h4><span class="st-done" title="Done"><svg class="icon sm"><use href="#i-done"/></svg></span></div>
             
             <div class="o"><svg class="icon sm"><use href="#i-outcome"/></svg><div class="rich"><p>7 заказов упираются в отсутствие товара</p></div></div>
             
-          </div><div class="stage s-planned" data-id="r4" data-open="replay/r4" tabindex="0" role="button" aria-label="Open 4 Запуск в проде">
+            
+          </div><div class="stage s-planned" data-id="r4" data-open="replay/r4" data-block="replay/r4" tabindex="0" role="button" aria-label="Open 4 Запуск в проде">
             <div class="h"><span class="num">4</span><h4>Запуск в проде</h4><span class="st-planned" title="Planned"><svg class="icon sm"><use href="#i-planned"/></svg></span></div>
             <div class="d rich"><p>Ждёт решения по товарам, которых нет</p></div>
             
+            <div class="when"><strong>When</strong><span class="rich">после решения по 7 заказам</span></div>
             
           </div>
         </div>
@@ -1281,22 +1495,32 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
     <ol class="stages-print"><li><strong>1 Найти затронутые платежи</strong> — Done<div class="rich"><p>Сопоставил списания провайдера с заказами по id платежа</p></div><div class="rich">→ <p>212 платежей без заказов</p></div></li><li><strong>2 Написать скрипт восстановления</strong> — Done<div class="rich"><p>Создаёт заказы через обычный сервис с идемпотентным ключом</p></div></li><li><strong>3 Сухой прогон на стейдже</strong> — Done<div class="rich"></div><div class="rich">→ <p>7 заказов упираются в отсутствие товара</p></div></li><li><strong>4 Запуск в проде</strong> — Planned<div class="rich"><p>Ждёт решения по товарам, которых нет</p></div></li></ol>
   </section>
 
-  <section class="sec"><h3><svg class="icon"><use href="#i-approve"/></svg>Needs approval</h3>
+  <section class="sec" id="sec-approvals" data-block="replay#approvals"><h3><svg class="icon"><use href="#i-approve"/></svg>Needs approval</h3>
     <ul class="mine">
       <li><svg class="icon"><use href="#i-approve"/></svg><div><div class="t">Что делать с 7 заказами, товара по которым нет</div>
-        <dl class="kv"><dt>Why you</dt><dd class="rich"><p>Это меняет то, что получит клиент, — бизнес-решение</p></dd><dt>Options</dt><dd class="opts"><span>Вернуть деньги за эти 7</span><span>Предзаказ и письмо клиентам</span><span>Заменить похожим товаром</span></dd></dl>
+        <dl class="kv"><dt>Why you</dt><dd class="rich"><p>Это меняет то, что получит клиент, — бизнес-решение</p></dd><dt>Decide by</dt><dd>завтра 12:00</dd></dl>
+        
+        <form class="answer" data-akey="replay#a0" data-type="approval" data-question="Что делать с 7 заказами, товара по которым нет">
+          <div class="choices" role="radiogroup" aria-label="Your decision"><label class="choice"><input type="radio" name="replay#a0" value="Вернуть деньги за эти 7"><span>Вернуть деньги за эти 7</span></label><label class="choice"><input type="radio" name="replay#a0" value="Предзаказ и письмо клиентам"><span>Предзаказ и письмо клиентам <i class="rec">Recommended</i></span></label><label class="choice"><input type="radio" name="replay#a0" value="Заменить похожим товаром"><span>Заменить похожим товаром</span></label></div>
+          <textarea rows="1" placeholder="Comment (optional)" aria-label="Comment"></textarea>
+        </form>
       </div></li>
     </ul></section>
 
-  <section class="sec"><h3><svg class="icon"><use href="#i-action"/></svg>Your actions</h3>
+  <section class="sec" id="sec-actions" data-block="replay#actions"><h3><svg class="icon"><use href="#i-action"/></svg>Your actions</h3>
     <ul class="mine">
       <li><svg class="icon"><use href="#i-action"/></svg><div><div class="t">Запустить восстановление в проде после решения</div>
         <dl class="kv"><dt>Why you</dt><dd class="rich"><p>Запись в прод есть только у дежурных лидов</p></dd><dt>Command</dt><dd class="cmd"><code>npm run replay-orders -- --from 2026-11-02 --to 2026-11-05 --out-of-stock=refund</code><button class="copy" data-copy="npm run replay-orders -- --from 2026-11-02 --to 2026-11-05 --out-of-stock=refund" title="Copy" aria-label="Copy command"><svg class="icon sm"><use href="#i-copy"/></svg></button></dd></dl>
+        
+        <form class="answer" data-akey="replay#d0" data-type="action" data-question="Запустить восстановление в проде после решения">
+          <label class="donebox"><input type="checkbox"> Done</label>
+          <textarea rows="1" placeholder="Comment (optional)" aria-label="Comment"></textarea>
+        </form>
       </div></li>
     </ul></section>
 </article>
 
-<article class="report" id="report-replay/r1" data-key="replay/r1" data-prev="" data-next="replay/r2">
+<article class="report" id="report-replay/r1" data-key="replay/r1" data-prev="" data-next="replay/r2" data-num="1" data-title="Найти затронутые платежи" data-block="replay/r1#card">
   <header class="r-head">
     <nav class="trail" aria-label="Where you are"><button type="button" data-close>Work map</button><span class="sep">›</span><button type="button" data-open="replay">Восстановить заказы, упавшие во время инцидента</button><span class="sep">›</span></nav>
     <span class="st-done" title="Done"><svg class="icon"><use href="#i-done"/></svg></span>
@@ -1306,10 +1530,10 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
 
   
 
-  <section class="sec"><h3><svg class="icon"><use href="#i-goal"/></svg>Task</h3>
+  <section class="sec" id="sec-goal" data-block="replay/r1#goal"><h3><svg class="icon"><use href="#i-goal"/></svg>Task</h3>
     <div class="body rich"><p>Сопоставил списания провайдера с заказами по id платежа</p></div></section>
 
-  <section class="sec"><h3><svg class="icon"><use href="#i-context"/></svg>Context</h3>
+  <section class="sec" id="sec-context" data-block="replay/r1#context"><h3><svg class="icon"><use href="#i-context"/></svg>Context</h3>
     <ul class="items">
       <li class="item" id="ctx-C1"><span class="tag ghost" title="From a level above">C1</span><div>
         <a class="t" href="https://example.com/sql/saved/931" target="_blank" rel="noopener">Платежи провайдера без заказа, 2–5 ноября</a>
@@ -1321,7 +1545,7 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
 
   
 
-  <section class="sec"><h3><svg class="icon"><use href="#i-result"/></svg>Result</h3>
+  <section class="sec" id="sec-result" data-block="replay/r1#result"><h3><svg class="icon"><use href="#i-result"/></svg>Result</h3>
     <div class="body rich lead"><p>212 платежей без заказов</p></div>
     </section>
 
@@ -1330,9 +1554,11 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
   
 
   
+
+  
 </article>
 
-<article class="report" id="report-replay/r2" data-key="replay/r2" data-prev="replay/r1" data-next="replay/r3">
+<article class="report" id="report-replay/r2" data-key="replay/r2" data-prev="replay/r1" data-next="replay/r3" data-num="2" data-title="Написать скрипт восстановления" data-block="replay/r2#card">
   <header class="r-head">
     <nav class="trail" aria-label="Where you are"><button type="button" data-close>Work map</button><span class="sep">›</span><button type="button" data-open="replay">Восстановить заказы, упавшие во время инцидента</button><span class="sep">›</span></nav>
     <span class="st-done" title="Done"><svg class="icon"><use href="#i-done"/></svg></span>
@@ -1342,10 +1568,10 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
 
   
 
-  <section class="sec"><h3><svg class="icon"><use href="#i-goal"/></svg>Task</h3>
+  <section class="sec" id="sec-goal" data-block="replay/r2#goal"><h3><svg class="icon"><use href="#i-goal"/></svg>Task</h3>
     <div class="body rich"><p>Создаёт заказы через обычный сервис с идемпотентным ключом</p></div></section>
 
-  <section class="sec"><h3><svg class="icon"><use href="#i-context"/></svg>Context</h3>
+  <section class="sec" id="sec-context" data-block="replay/r2#context"><h3><svg class="icon"><use href="#i-context"/></svg>Context</h3>
     <ul class="items">
       <li class="item" id="ctx-C2"><span class="tag ghost" title="From a level above">C2</span><div>
         <a class="t" href="https://example.com/acme/shop/blob/main/src/orders/create.ts" target="_blank" rel="noopener">Сервис создания заказов</a>
@@ -1364,9 +1590,11 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
   
 
   
+
+  
 </article>
 
-<article class="report" id="report-replay/r3" data-key="replay/r3" data-prev="replay/r2" data-next="replay/r4">
+<article class="report" id="report-replay/r3" data-key="replay/r3" data-prev="replay/r2" data-next="replay/r4" data-num="3" data-title="Сухой прогон на стейдже" data-block="replay/r3#card">
   <header class="r-head">
     <nav class="trail" aria-label="Where you are"><button type="button" data-close>Work map</button><span class="sep">›</span><button type="button" data-open="replay">Восстановить заказы, упавшие во время инцидента</button><span class="sep">›</span></nav>
     <span class="st-done" title="Done"><svg class="icon"><use href="#i-done"/></svg></span>
@@ -1384,7 +1612,7 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
 
   
 
-  <section class="sec"><h3><svg class="icon"><use href="#i-result"/></svg>Result</h3>
+  <section class="sec" id="sec-result" data-block="replay/r3#result"><h3><svg class="icon"><use href="#i-result"/></svg>Result</h3>
     <div class="body rich lead"><p>7 заказов упираются в отсутствие товара</p></div>
     </section>
 
@@ -1393,9 +1621,11 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
   
 
   
+
+  
 </article>
 
-<article class="report" id="report-replay/r4" data-key="replay/r4" data-prev="replay/r3" data-next="">
+<article class="report" id="report-replay/r4" data-key="replay/r4" data-prev="replay/r3" data-next="" data-num="4" data-title="Запуск в проде" data-block="replay/r4#card">
   <header class="r-head">
     <nav class="trail" aria-label="Where you are"><button type="button" data-close>Work map</button><span class="sep">›</span><button type="button" data-open="replay">Восстановить заказы, упавшие во время инцидента</button><span class="sep">›</span></nav>
     <span class="st-planned" title="Planned"><svg class="icon"><use href="#i-planned"/></svg></span>
@@ -1405,7 +1635,7 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
 
   
 
-  <section class="sec"><h3><svg class="icon"><use href="#i-goal"/></svg>Task</h3>
+  <section class="sec" id="sec-goal" data-block="replay/r4#goal"><h3><svg class="icon"><use href="#i-goal"/></svg>Task</h3>
     <div class="body rich"><p>Ждёт решения по товарам, которых нет</p></div></section>
 
   
@@ -1421,9 +1651,11 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
   
 
   
+
+  
 </article>
 
-<article class="report" id="report-alerts" data-key="alerts" data-prev="replay" data-next="runbook">
+<article class="report" id="report-alerts" data-key="alerts" data-prev="replay" data-next="runbook" data-num="" data-title="Алерты на таймауты провайдера и заполненность пула" data-block="alerts#card">
   <header class="r-head">
     <nav class="trail" aria-label="Where you are"><button type="button" data-close>Work map</button><span class="sep">›</span></nav>
     <span class="st-in_progress" title="In progress"><svg class="icon"><use href="#i-in_progress"/></svg></span>
@@ -1431,13 +1663,13 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
     
   </header>
 
-  <section class="sec"><h3><svg class="icon"><use href="#i-problem"/></svg>Problem</h3>
+  <section class="sec" id="sec-problem" data-block="alerts#problem"><h3><svg class="icon"><use href="#i-problem"/></svg>Problem</h3>
     <div class="body rich lead"><dl class="kv"><dt>Кто заметил</dt><dd>поддержка, через <strong>2 часа</strong> после начала</dd><dt>Сработало алертов</dt><dd>ни одного</dd></dl></div></section>
 
-  <section class="sec"><h3><svg class="icon"><use href="#i-goal"/></svg>Task</h3>
+  <section class="sec" id="sec-goal" data-block="alerts#goal"><h3><svg class="icon"><use href="#i-goal"/></svg>Task</h3>
     <div class="body rich"><p>Будить дежурного <strong>в течение 5 минут</strong>, когда растут таймауты оплаты или заполненность пула</p></div></section>
 
-  <section class="sec"><h3><svg class="icon"><use href="#i-context"/></svg>Context</h3>
+  <section class="sec" id="sec-context" data-block="alerts#context"><h3><svg class="icon"><use href="#i-context"/></svg>Context</h3>
     <ul class="items">
       <li class="item" id="ctx-C1"><span class="tag">C1</span><div>
         <a class="t" href="https://example.com/wiki/alerting" target="_blank" rel="noopener">Правила алертинга</a>
@@ -1449,7 +1681,7 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
       </div></li>
     </ul></section>
 
-  <section class="sec"><h3><svg class="icon"><use href="#i-inference"/></svg>Conclusions</h3>
+  <section class="sec" id="sec-inferences" data-block="alerts#inferences"><h3><svg class="icon"><use href="#i-inference"/></svg>Conclusions</h3>
     <ul class="claims">
       <li class="claim inference"><div class="rich"><p>Порог <strong>0,3%</strong> таймаутов за 5 минут сработал бы на <strong>9-й минуте</strong> инцидента и ни разу за прошлые 30 дней</p></div>
         <dl class="kv">
@@ -1460,13 +1692,15 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
 
   
 
-  <section class="sec"><h3><svg class="icon"><use href="#i-result"/></svg>Result</h3>
+  <section class="sec" id="sec-result" data-block="alerts#result"><h3><svg class="icon"><use href="#i-result"/></svg>Result</h3>
     <div class="body rich lead"><dl class="kv"><dt>Алерт на таймауты</dt><dd>черновик</dd><dt>Алерт на пул</dt><dd>ждёт метрику из фикса пула</dd></dl></div>
     <ul class="results">
       <li><span class="k">added</span><div class="v">Правило <code>PaymentsTimeoutRate &gt; 0.3% for 5m</code> (не выкачено)</div></li>
     </ul></section>
 
-  <section class="sec"><h3><svg class="icon"><use href="#i-flow"/></svg>Workflow</h3>
+  
+
+  <section class="sec" id="sec-workflow" data-block="alerts#workflow"><h3><svg class="icon"><use href="#i-flow"/></svg>Workflow</h3>
     <div class="flow">
       <div class="flow-bar">
         <span class="flow-title"><nav class="trail" aria-label="Where you are"><button type="button" data-close>Work map</button><span class="sep">›</span></nav>Алерты на таймауты провайдера и заполненность пула</span>
@@ -1475,20 +1709,23 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
       </div>
       <div class="canvas" data-dir="TB" data-embedded>
         <div class="graph" data-key="alerts" data-edges="[{&quot;from&quot;: &quot;x1&quot;, &quot;to&quot;: &quot;x2&quot;}, {&quot;from&quot;: &quot;x1&quot;, &quot;to&quot;: &quot;x3&quot;}]">
-          <div class="stage s-done" data-id="x1" data-open="alerts/x1" tabindex="0" role="button" aria-label="Open 1 Подобрать порог на истории">
+          <div class="stage s-done" data-id="x1" data-open="alerts/x1" data-block="alerts/x1" tabindex="0" role="button" aria-label="Open 1 Подобрать порог на истории">
             <div class="h"><span class="num">1</span><h4>Подобрать порог на истории</h4><span class="st-done" title="Done"><svg class="icon sm"><use href="#i-done"/></svg></span></div>
             
             <div class="o"><svg class="icon sm"><use href="#i-outcome"/></svg><div class="rich"><p>0,3% / 5 мин</p></div></div>
+            
             <div class="refs"><a class="ref-chip" href="#ctx-C2" data-ctx="C2">C2</a></div>
-          </div><div class="stage s-partial" data-id="x2" data-open="alerts/x2" tabindex="0" role="button" aria-label="Open 2 Алерт на таймауты">
+          </div><div class="stage s-partial" data-id="x2" data-open="alerts/x2" data-block="alerts/x2" tabindex="0" role="button" aria-label="Open 2 Алерт на таймауты">
             <div class="h"><span class="num">2</span><h4>Алерт на таймауты</h4><span class="st-partial" title="Partly done"><svg class="icon sm"><use href="#i-partial"/></svg></span></div>
             <div class="d rich"><p>Правило написано, маршрут на дежурного не настроен</p></div>
             
             
-          </div><div class="stage s-planned" data-id="x3" data-open="alerts/x3" tabindex="0" role="button" aria-label="Open 3 Алерт на заполненность пула">
+            
+          </div><div class="stage s-planned" data-id="x3" data-open="alerts/x3" data-block="alerts/x3" tabindex="0" role="button" aria-label="Open 3 Алерт на заполненность пула">
             <div class="h"><span class="num">3</span><h4>Алерт на заполненность пула</h4><span class="st-planned" title="Planned"><svg class="icon sm"><use href="#i-planned"/></svg></span></div>
             <div class="d rich"><p>Нужна <code>payments_pool_in_use</code> в проде</p></div>
             
+            <div class="when"><strong>When</strong><span class="rich">после выкладки 2.14.1</span></div>
             
           </div>
         </div>
@@ -1509,7 +1746,7 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
   
 </article>
 
-<article class="report" id="report-alerts/x1" data-key="alerts/x1" data-prev="" data-next="alerts/x2">
+<article class="report" id="report-alerts/x1" data-key="alerts/x1" data-prev="" data-next="alerts/x2" data-num="1" data-title="Подобрать порог на истории" data-block="alerts/x1#card">
   <header class="r-head">
     <nav class="trail" aria-label="Where you are"><button type="button" data-close>Work map</button><span class="sep">›</span><button type="button" data-open="alerts">Алерты на таймауты провайдера и заполненность пула</button><span class="sep">›</span></nav>
     <span class="st-done" title="Done"><svg class="icon"><use href="#i-done"/></svg></span>
@@ -1521,7 +1758,7 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
 
   
 
-  <section class="sec"><h3><svg class="icon"><use href="#i-context"/></svg>Context</h3>
+  <section class="sec" id="sec-context" data-block="alerts/x1#context"><h3><svg class="icon"><use href="#i-context"/></svg>Context</h3>
     <ul class="items">
       <li class="item" id="ctx-C2"><span class="tag ghost" title="From a level above">C2</span><div>
         <a class="t" href="https://example.com/dash/payments-timeouts" target="_blank" rel="noopener">Доля таймаутов за 30 дней</a>
@@ -1533,7 +1770,7 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
 
   
 
-  <section class="sec"><h3><svg class="icon"><use href="#i-result"/></svg>Result</h3>
+  <section class="sec" id="sec-result" data-block="alerts/x1#result"><h3><svg class="icon"><use href="#i-result"/></svg>Result</h3>
     <div class="body rich lead"><p>0,3% / 5 мин</p></div>
     </section>
 
@@ -1542,9 +1779,11 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
   
 
   
+
+  
 </article>
 
-<article class="report" id="report-alerts/x2" data-key="alerts/x2" data-prev="alerts/x1" data-next="alerts/x3">
+<article class="report" id="report-alerts/x2" data-key="alerts/x2" data-prev="alerts/x1" data-next="alerts/x3" data-num="2" data-title="Алерт на таймауты" data-block="alerts/x2#card">
   <header class="r-head">
     <nav class="trail" aria-label="Where you are"><button type="button" data-close>Work map</button><span class="sep">›</span><button type="button" data-open="alerts">Алерты на таймауты провайдера и заполненность пула</button><span class="sep">›</span></nav>
     <span class="st-partial" title="Partly done"><svg class="icon"><use href="#i-partial"/></svg></span>
@@ -1554,7 +1793,7 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
 
   
 
-  <section class="sec"><h3><svg class="icon"><use href="#i-goal"/></svg>Task</h3>
+  <section class="sec" id="sec-goal" data-block="alerts/x2#goal"><h3><svg class="icon"><use href="#i-goal"/></svg>Task</h3>
     <div class="body rich"><p>Правило написано, маршрут на дежурного не настроен</p></div></section>
 
   
@@ -1570,9 +1809,11 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
   
 
   
+
+  
 </article>
 
-<article class="report" id="report-alerts/x3" data-key="alerts/x3" data-prev="alerts/x2" data-next="">
+<article class="report" id="report-alerts/x3" data-key="alerts/x3" data-prev="alerts/x2" data-next="" data-num="3" data-title="Алерт на заполненность пула" data-block="alerts/x3#card">
   <header class="r-head">
     <nav class="trail" aria-label="Where you are"><button type="button" data-close>Work map</button><span class="sep">›</span><button type="button" data-open="alerts">Алерты на таймауты провайдера и заполненность пула</button><span class="sep">›</span></nav>
     <span class="st-planned" title="Planned"><svg class="icon"><use href="#i-planned"/></svg></span>
@@ -1582,7 +1823,7 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
 
   
 
-  <section class="sec"><h3><svg class="icon"><use href="#i-goal"/></svg>Task</h3>
+  <section class="sec" id="sec-goal" data-block="alerts/x3#goal"><h3><svg class="icon"><use href="#i-goal"/></svg>Task</h3>
     <div class="body rich"><p>Нужна <code>payments_pool_in_use</code> в проде</p></div></section>
 
   
@@ -1598,9 +1839,11 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
   
 
   
+
+  
 </article>
 
-<article class="report" id="report-runbook" data-key="runbook" data-prev="alerts" data-next="">
+<article class="report" id="report-runbook" data-key="runbook" data-prev="alerts" data-next="" data-num="" data-title="Обновить ранбук платёжных инцидентов" data-block="runbook#card">
   <header class="r-head">
     <nav class="trail" aria-label="Where you are"><button type="button" data-close>Work map</button><span class="sep">›</span></nav>
     <span class="st-planned" title="Planned"><svg class="icon"><use href="#i-planned"/></svg></span>
@@ -1608,13 +1851,13 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
     
   </header>
 
-  <section class="sec"><h3><svg class="icon"><use href="#i-problem"/></svg>Problem</h3>
+  <section class="sec" id="sec-problem" data-block="runbook#problem"><h3><svg class="icon"><use href="#i-problem"/></svg>Problem</h3>
     <div class="body rich lead"><p>В ранбуке нет:</p><ul><li>исчерпания соединений</li><li>восстановления заказов</li></ul></div></section>
 
-  <section class="sec"><h3><svg class="icon"><use href="#i-goal"/></svg>Task</h3>
+  <section class="sec" id="sec-goal" data-block="runbook#goal"><h3><svg class="icon"><use href="#i-goal"/></svg>Task</h3>
     <div class="body rich"><p>Добавить оба раздела, чтобы следующий дежурный справился без расследования этой недели</p></div></section>
 
-  <section class="sec"><h3><svg class="icon"><use href="#i-context"/></svg>Context</h3>
+  <section class="sec" id="sec-context" data-block="runbook#context"><h3><svg class="icon"><use href="#i-context"/></svg>Context</h3>
     <ul class="items">
       <li class="item" id="ctx-C1"><span class="tag">C1</span><div>
         <a class="t" href="https://example.com/wiki/runbooks/payments" target="_blank" rel="noopener">Ранбук платежей</a>
@@ -1626,9 +1869,68 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
 
   
 
-  <section class="sec"><h3><svg class="icon"><use href="#i-result"/></svg>Result</h3>
+  <section class="sec" id="sec-result" data-block="runbook#result"><h3><svg class="icon"><use href="#i-result"/></svg>Result</h3>
     <div class="body rich lead"><p>Не начато</p></div>
     </section>
+
+  
+
+  <section class="sec" id="sec-workflow" data-block="runbook#workflow"><h3><svg class="icon"><use href="#i-flow"/></svg>Workflow</h3>
+    <div class="flow">
+      <div class="flow-bar">
+        <span class="flow-title"><nav class="trail" aria-label="Where you are"><button type="button" data-close>Work map</button><span class="sep">›</span></nav>Обновить ранбук платёжных инцидентов</span>
+        <span class="flow-hint">Workflow</span>
+        <button class="iconbtn" data-expand title="Expand to full page" aria-label="Expand workflow"><svg class="icon i-expand"><use href="#i-expand"/></svg><svg class="icon i-collapse"><use href="#i-collapse"/></svg></button>
+      </div>
+      <div class="canvas" data-dir="TB" data-embedded>
+        <div class="graph" data-key="runbook" data-edges="[]">
+          <div class="stage s-planned" data-id="w" data-open="runbook/w" data-block="runbook/w" tabindex="0" role="button" aria-label="Open 1 Написать разделы ранбука">
+            <div class="h"><span class="num">1</span><h4>Написать разделы ранбука</h4><span class="st-planned" title="Planned"><svg class="icon sm"><use href="#i-planned"/></svg></span></div>
+            <div class="d rich"><p>Исчерпание соединений; восстановление заказов</p></div>
+            
+            <div class="when"><strong>When</strong><span class="rich">после закрытия инцидента</span></div>
+            
+          </div>
+        </div>
+        <div class="zoom">
+          <button class="iconbtn" data-zoom="out" title="Zoom out" aria-label="Zoom out"><svg class="icon"><use href="#i-minus"/></svg></button>
+          <output aria-live="polite">100%</output>
+          <button class="iconbtn" data-zoom="in" title="Zoom in" aria-label="Zoom in"><svg class="icon"><use href="#i-plus"/></svg></button>
+          <button class="iconbtn" data-zoom="fit" title="Show everything" aria-label="Show everything"><svg class="icon"><use href="#i-fit"/></svg></button>
+        </div>
+        <svg class="minimap" hidden aria-hidden="true"></svg>
+      </div>
+    </div>
+    <ol class="stages-print"><li><strong>1 Написать разделы ранбука</strong> — Planned<div class="rich"><p>Исчерпание соединений; восстановление заказов</p></div></li></ol>
+  </section>
+
+  
+
+  
+</article>
+
+<article class="report" id="report-runbook/w" data-key="runbook/w" data-prev="" data-next="" data-num="1" data-title="Написать разделы ранбука" data-block="runbook/w#card">
+  <header class="r-head">
+    <nav class="trail" aria-label="Where you are"><button type="button" data-close>Work map</button><span class="sep">›</span><button type="button" data-open="runbook">Обновить ранбук платёжных инцидентов</button><span class="sep">›</span></nav>
+    <span class="st-planned" title="Planned"><svg class="icon"><use href="#i-planned"/></svg></span>
+    <h2><span class="num">1</span>Написать разделы ранбука</h2>
+    
+  </header>
+
+  
+
+  <section class="sec" id="sec-goal" data-block="runbook/w#goal"><h3><svg class="icon"><use href="#i-goal"/></svg>Task</h3>
+    <div class="body rich"><p>Исчерпание соединений; восстановление заказов</p></div></section>
+
+  
+
+  
+
+  
+
+  
+
+  
 
   
 
@@ -1639,6 +1941,13 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
 
 </div>
 
+<div class="sendbar" id="sendbar" role="region" aria-label="Answers for the agent">
+  <span class="msg" id="send-count"></span>
+  <textarea id="send-message" placeholder="Message to the agent (optional)" aria-label="Message to the agent"></textarea>
+  <button type="button" id="send-btn">Send to agent</button>
+</div>
+<script type="application/json" id="sr-index">[{"k": "latency", "n": null, "t": "Почему p95 оформления удвоился после 2.14", "p": "", "s": "card", "l": "Title", "x": "Почему p95 оформления удвоился после 2.14"}, {"k": "latency", "n": null, "t": "Почему p95 оформления удвоился после 2.14", "p": "", "s": "card", "l": "Brief", "x": "Причина: лимит соединений снят в клиенте 4.0 · Доказано: нагрузочным тестом"}, {"k": "latency", "n": null, "t": "Почему p95 оформления удвоился после 2.14", "p": "", "s": "problem", "l": "Problem", "x": "С какого момента: релиз 2.14, 2 ноября 14:05 · Задержка: p95 оформления 820 мс → 1,7 с · Таймауты: 0,9% попыток оплаты · Клиенты: деньги списаны, заказа нет (жалобы в поддержку)"}, {"k": "latency", "n": null, "t": "Почему p95 оформления удвоился после 2.14", "p": "", "s": "goal", "l": "Task", "x": "Найти причину с доказательствами · Сказать, что поменять, чтобы p95 вернулся к уровню до 2.14"}, {"k": "latency", "n": null, "t": "Почему p95 оформления удвоился после 2.14", "p": "", "s": "context", "l": "Context C1", "x": "Дашборд задержки оформления, 26 окт – 4 ноя · Скачок p95 в 14:05 2 ноября — время выкладки 2.14"}, {"k": "latency", "n": null, "t": "Почему p95 оформления удвоился после 2.14", "p": "", "s": "context", "l": "Context C2", "x": "Diff 2.14: платёжный клиент 3.2 → 4.0"}, {"k": "latency", "n": null, "t": "Почему p95 оформления удвоился после 2.14", "p": "", "s": "context", "l": "Context C3", "x": "Changelog платёжного клиента 4.0 · «maxConnections now defaults to unlimited»"}, {"k": "latency", "n": null, "t": "Почему p95 оформления удвоился после 2.14", "p": "", "s": "context", "l": "Context C4", "x": "Логи подов в пик, 3 ноября 19:00–19:30 · 3 140 ошибок EMFILE: too many open files, все из платёжного клиента"}, {"k": "latency", "n": null, "t": "Почему p95 оформления удвоился после 2.14", "p": "", "s": "context", "l": "Context C5", "x": "Тред поддержки о двойных списаниях"}, {"k": "latency", "n": null, "t": "Почему p95 оформления удвоился после 2.14", "p": "", "s": "context", "l": "Context C6", "x": "src/payments/client.ts"}, {"k": "latency", "n": null, "t": "Почему p95 оформления удвоился после 2.14", "p": "", "s": "inferences", "l": "Conclusion", "x": "Рост начался ровно с выкладкой 2.14 → причина в изменении внутри 2.14, а не в трафике"}, {"k": "latency", "n": null, "t": "Почему p95 оформления удвоился после 2.14", "p": "", "s": "inferences", "l": "Conclusion", "x": "Клиент открывает новый сокет на каждый ретрай без лимита → под ретраями у пода кончаются файловые дескрипторы"}, {"k": "latency", "n": null, "t": "Почему p95 оформления удвоился после 2.14", "p": "", "s": "inferences", "l": "Conclusion", "x": "Двойные списания: провайдер принял платёж, а наш таймаут (10 с) сработал до записи заказа"}, {"k": "latency", "n": null, "t": "Почему p95 оформления удвоился после 2.14", "p": "", "s": "assumptions", "l": "Assumption", "x": "Сам провайдер во время инцидента работал нормально · Запросить у провайдера логи запросов за 3 ноября 19:00–19:30"}, {"k": "latency", "n": null, "t": "Почему p95 оформления удвоился после 2.14", "p": "", "s": "result", "l": "Result", "x": "Причина: соединения без лимита в платёжном клиенте 4.0 · Подтверждено: нагрузочным тестом при 3× пиковой нагрузке · Лимит пула 50 соединений на под + backoff с джиттером · Нагрузочный тест с лимитом: ни одной ошибки EMFILE при 3× пике · p95 в тесте с лимитом (было 1,7 с) · Хронология инцидента описана"}, {"k": "latency", "n": null, "t": "Почему p95 оформления удвоился после 2.14", "p": "", "s": "unchecked", "l": "Not checked", "x": "Метрики провайдера за время инцидента · Доступа нет — запрос в «Сделать вам»"}, {"k": "latency", "n": null, "t": "Почему p95 оформления удвоился после 2.14", "p": "", "s": "actions", "l": "Your action", "x": "Запросить у провайдера логи за 3 ноября 19:00–19:30"}, {"k": "latency/s1", "n": "1", "t": "Подтвердить регрессию", "p": "Почему p95 оформления удвоился после 2.14", "s": "card", "l": "Title", "x": "Подтвердить регрессию"}, {"k": "latency/s1", "n": "1", "t": "Подтвердить регрессию", "p": "Почему p95 оформления удвоился после 2.14", "s": "goal", "l": "Task", "x": "Сравнил p95 по часам за две недели вокруг релиза"}, {"k": "latency/s1", "n": "1", "t": "Подтвердить регрессию", "p": "Почему p95 оформления удвоился после 2.14", "s": "context", "l": "Context C1", "x": "Дашборд задержки оформления, 26 окт – 4 ноя · Скачок p95 в 14:05 2 ноября — время выкладки 2.14"}, {"k": "latency/s1", "n": "1", "t": "Подтвердить регрессию", "p": "Почему p95 оформления удвоился после 2.14", "s": "result", "l": "Result", "x": "Ступенька в момент выкладки 2.14"}, {"k": "latency/s2", "n": "2", "t": "Разобрать diff релиза", "p": "Почему p95 оформления удвоился после 2.14", "s": "card", "l": "Title", "x": "Разобрать diff релиза"}, {"k": "latency/s2", "n": "2", "t": "Разобрать diff релиза", "p": "Почему p95 оформления удвоился после 2.14", "s": "goal", "l": "Task", "x": "Выписал все изменения зависимостей и конфигов в 2.14"}, {"k": "latency/s2", "n": "2", "t": "Разобрать diff релиза", "p": "Почему p95 оформления удвоился после 2.14", "s": "context", "l": "Context C2", "x": "Diff 2.14: платёжный клиент 3.2 → 4.0"}, {"k": "latency/s2", "n": "2", "t": "Разобрать diff релиза", "p": "Почему p95 оформления удвоился после 2.14", "s": "result", "l": "Result", "x": "Одно рискованное: клиент 3.2 → 4.0"}, {"k": "latency/s3", "n": "3", "t": "Прочитать логи ошибок", "p": "Почему p95 оформления удвоился после 2.14", "s": "card", "l": "Title", "x": "Прочитать логи ошибок"}, {"k": "latency/s3", "n": "3", "t": "Прочитать логи ошибок", "p": "Почему p95 оформления удвоился после 2.14", "s": "goal", "l": "Task", "x": "Сгруппировал ошибки вечернего пика по тексту и источнику"}, {"k": "latency/s3", "n": "3", "t": "Прочитать логи ошибок", "p": "Почему p95 оформления удвоился после 2.14", "s": "context", "l": "Context C4", "x": "Логи подов в пик, 3 ноября 19:00–19:30 · 3 140 ошибок EMFILE: too many open files, все из платёжного клиента"}, {"k": "latency/s3", "n": "3", "t": "Прочитать логи ошибок", "p": "Почему p95 оформления удвоился после 2.14", "s": "result", "l": "Result", "x": "Доминирует EMFILE из платёжного клиента"}, {"k": "latency/s3/q", "n": "3.1", "t": "Выгрузить логи пика", "p": "Почему p95 оформления удвоился после 2.14 › 3 Прочитать логи ошибок", "s": "card", "l": "Title", "x": "Выгрузить логи пика"}, {"k": "latency/s3/q", "n": "3.1", "t": "Выгрузить логи пика", "p": "Почему p95 оформления удвоился после 2.14 › 3 Прочитать логи ошибок", "s": "goal", "l": "Task", "x": "Запрос в лог-хранилище за 19:00–19:30"}, {"k": "latency/s3/q", "n": "3.1", "t": "Выгрузить логи пика", "p": "Почему p95 оформления удвоился после 2.14 › 3 Прочитать логи ошибок", "s": "context", "l": "Context C4", "x": "Логи подов в пик, 3 ноября 19:00–19:30 · 3 140 ошибок EMFILE: too many open files, все из платёжного клиента"}, {"k": "latency/s3/q", "n": "3.1", "t": "Выгрузить логи пика", "p": "Почему p95 оформления удвоился после 2.14 › 3 Прочитать логи ошибок", "s": "result", "l": "Result", "x": "41 200 строк"}, {"k": "latency/s3/g", "n": "3.2", "t": "Сгруппировать ошибки", "p": "Почему p95 оформления удвоился после 2.14 › 3 Прочитать логи ошибок", "s": "card", "l": "Title", "x": "Сгруппировать ошибки"}, {"k": "latency/s3/g", "n": "3.2", "t": "Сгруппировать ошибки", "p": "Почему p95 оформления удвоился после 2.14 › 3 Прочитать логи ошибок", "s": "goal", "l": "Task", "x": "По тексту и сервису-источнику"}, {"k": "latency/s3/g", "n": "3.2", "t": "Сгруппировать ошибки", "p": "Почему p95 оформления удвоился после 2.14 › 3 Прочитать логи ошибок", "s": "result", "l": "Result", "x": "Топ-1: EMFILE — 76%"}, {"k": "latency/s3/g/g1", "n": "3.2.1", "t": "Нормализовать тексты", "p": "Почему p95 оформления удвоился после 2.14 › 3 Прочитать логи ошибок › 3.2 Сгруппировать ошибки", "s": "card", "l": "Title", "x": "Нормализовать тексты"}, {"k": "latency/s3/g/g1", "n": "3.2.1", "t": "Нормализовать тексты", "p": "Почему p95 оформления удвоился после 2.14 › 3 Прочитать логи ошибок › 3.2 Сгруппировать ошибки", "s": "goal", "l": "Task", "x": "Убрал id и таймстемпы"}, {"k": "latency/s3/g/g2", "n": "3.2.2", "t": "Посчитать по источнику", "p": "Почему p95 оформления удвоился после 2.14 › 3 Прочитать логи ошибок › 3.2 Сгруппировать ошибки", "s": "card", "l": "Title", "x": "Посчитать по источнику"}, {"k": "latency/s3/g/g2", "n": "3.2.2", "t": "Посчитать по источнику", "p": "Почему p95 оформления удвоился после 2.14 › 3 Прочитать логи ошибок › 3.2 Сгруппировать ошибки", "s": "result", "l": "Result", "x": "Платёжный клиент — источник всех EMFILE"}, {"k": "latency/s3/g/g3", "n": "3.2.3", "t": "Проверить другие поды", "p": "Почему p95 оформления удвоился после 2.14 › 3 Прочитать логи ошибок › 3.2 Сгруппировать ошибки", "s": "card", "l": "Title", "x": "Проверить другие поды"}, {"k": "latency/s3/g/g3", "n": "3.2.3", "t": "Проверить другие поды", "p": "Почему p95 оформления удвоился после 2.14 › 3 Прочитать логи ошибок › 3.2 Сгруппировать ошибки", "s": "goal", "l": "Task", "x": "Ошибка только в checkout — пропустил"}, {"k": "latency/s3/c", "n": "3.3", "t": "Сверить с метриками сокетов", "p": "Почему p95 оформления удвоился после 2.14 › 3 Прочитать логи ошибок", "s": "card", "l": "Title", "x": "Сверить с метриками сокетов"}, {"k": "latency/s3/c", "n": "3.3", "t": "Сверить с метриками сокетов", "p": "Почему p95 оформления удвоился после 2.14 › 3 Прочитать логи ошибок", "s": "goal", "l": "Task", "x": "Метрика открытых файлов не собирается"}, {"k": "latency/s3/c", "n": "3.3", "t": "Сверить с метриками сокетов", "p": "Почему p95 оформления удвоился после 2.14 › 3 Прочитать логи ошибок", "s": "result", "l": "Result", "x": "Тупик — перешёл к changelog"}, {"k": "latency/s4", "n": "4", "t": "Проверить changelog клиента", "p": "Почему p95 оформления удвоился после 2.14", "s": "card", "l": "Title", "x": "Проверить changelog клиента"}, {"k": "latency/s4", "n": "4", "t": "Проверить changelog клиента", "p": "Почему p95 оформления удвоился после 2.14", "s": "goal", "l": "Task", "x": "Искал изменения поведения в 4.0"}, {"k": "latency/s4", "n": "4", "t": "Проверить changelog клиента", "p": "Почему p95 оформления удвоился после 2.14", "s": "context", "l": "Context C3", "x": "Changelog платёжного клиента 4.0 · «maxConnections now defaults to unlimited»"}, {"k": "latency/s4", "n": "4", "t": "Проверить changelog клиента", "p": "Почему p95 оформления удвоился после 2.14", "s": "context", "l": "Context C6", "x": "src/payments/client.ts"}, {"k": "latency/s4", "n": "4", "t": "Проверить changelog клиента", "p": "Почему p95 оформления удвоился после 2.14", "s": "result", "l": "Result", "x": "Лимит пула по умолчанию стал «без ограничений»"}, {"k": "latency/s5", "n": "5", "t": "Воспроизвести под нагрузкой", "p": "Почему p95 оформления удвоился после 2.14", "s": "card", "l": "Title", "x": "Воспроизвести под нагрузкой"}, {"k": "latency/s5", "n": "5", "t": "Воспроизвести под нагрузкой", "p": "Почему p95 оформления удвоился после 2.14", "s": "goal", "l": "Task", "x": "Прогнал нагрузочный тест с лимитом пула и без"}, {"k": "latency/s5", "n": "5", "t": "Воспроизвести под нагрузкой", "p": "Почему p95 оформления удвоился после 2.14", "s": "result", "l": "Result", "x": "С лимитом ошибки уходят, задержка возвращается"}, {"k": "latency/s6", "n": "6", "t": "Описать", "p": "Почему p95 оформления удвоился после 2.14", "s": "card", "l": "Title", "x": "Описать"}, {"k": "latency/s6", "n": "6", "t": "Описать", "p": "Почему p95 оформления удвоился после 2.14", "s": "goal", "l": "Task", "x": "Причина, доказательства и предлагаемый фикс — в задаче"}, {"k": "latency/s6", "n": "6", "t": "Описать", "p": "Почему p95 оформления удвоился после 2.14", "s": "result", "l": "Result", "x": "Передано в задачу с исправлением"}, {"k": "pool", "n": null, "t": "Ограничить соединения платёжного клиента", "p": "", "s": "card", "l": "Title", "x": "Ограничить соединения платёжного клиента"}, {"k": "pool", "n": null, "t": "Ограничить соединения платёжного клиента", "p": "", "s": "card", "l": "Brief", "x": "Лимит: 50 соединений на под · Статус: PR #1290 на ревью"}, {"k": "pool", "n": null, "t": "Ограничить соединения платёжного клиента", "p": "", "s": "problem", "l": "Problem", "x": "Клиент открывает сокеты без лимита → под ретраями кончаются файловые дескрипторы"}, {"k": "pool", "n": null, "t": "Ограничить соединения платёжного клиента", "p": "", "s": "goal", "l": "Task", "x": "Ограничить пул соединений · Добавить backoff ретраям · Не менять семантику платежей"}, {"k": "pool", "n": null, "t": "Ограничить соединения платёжного клиента", "p": "", "s": "context", "l": "Context C1", "x": "src/payments/client.ts"}, {"k": "pool", "n": null, "t": "Ограничить соединения платёжного клиента", "p": "", "s": "context", "l": "Context C2", "x": "Опции пула платёжного клиента"}, {"k": "pool", "n": null, "t": "Ограничить соединения платёжного клиента", "p": "", "s": "context", "l": "Context C3", "x": "Разбор причины (ACME-412)"}, {"k": "pool", "n": null, "t": "Ограничить соединения платёжного клиента", "p": "", "s": "inferences", "l": "Conclusion", "x": "50 соединений на под — двукратный запас: в пик ~22 одновременных платёжных запроса на под"}, {"k": "pool", "n": null, "t": "Ограничить соединения платёжного клиента", "p": "", "s": "assumptions", "l": "Assumption", "x": "Ключ идемпотентности уже передаётся при каждом ретрае → backoff не создаст двойных списаний · Найти один ретрай в кабинете провайдера и сверить ключ"}, {"k": "pool", "n": null, "t": "Ограничить соединения платёжного клиента", "p": "", "s": "result", "l": "Result", "x": "PR #1290 готов: · - лимит пула · - экспоненциальный backoff с джиттером · - метрика заполненности пула · maxConnections: 50, queueTimeout: 2s в фабрике клиента · Backoff 100 мс → 1,6 с с полным джиттером, максимум 4 попытки · Метрика payments_pool_in_use · Юнит-тесты зелёные; нагрузочный тест из ACME-412 проходит на этой ветке"}, {"k": "pool", "n": null, "t": "Ограничить соединения платёжного клиента", "p": "", "s": "unchecked", "l": "Not checked", "x": "Поведение пула при отказе DNS · Нет стенда для такого сбоя"}, {"k": "pool", "n": null, "t": "Ограничить соединения платёжного клиента", "p": "", "s": "approvals", "l": "Needs approval", "x": "Смержить PR #1290 и выпустить 2.14.1 сегодня · Выпустить сегодня · С релизом в понедельник"}, {"k": "pool/a", "n": "1", "t": "Подобрать лимиты", "p": "Ограничить соединения платёжного клиента", "s": "card", "l": "Title", "x": "Подобрать лимиты"}, {"k": "pool/a", "n": "1", "t": "Подобрать лимиты", "p": "Ограничить соединения платёжного клиента", "s": "goal", "l": "Task", "x": "Вывел размер пула из пиковой конкурентности"}, {"k": "pool/a", "n": "1", "t": "Подобрать лимиты", "p": "Ограничить соединения платёжного клиента", "s": "context", "l": "Context C3", "x": "Разбор причины (ACME-412)"}, {"k": "pool/a", "n": "1", "t": "Подобрать лимиты", "p": "Ограничить соединения платёжного клиента", "s": "result", "l": "Result", "x": "50 на под, таймаут очереди 2 с"}, {"k": "pool/b", "n": "2", "t": "Сделать лимит и backoff", "p": "Ограничить соединения платёжного клиента", "s": "card", "l": "Title", "x": "Сделать лимит и backoff"}, {"k": "pool/b", "n": "2", "t": "Сделать лимит и backoff", "p": "Ограничить соединения платёжного клиента", "s": "goal", "l": "Task", "x": "Настроил пул; обернул ретраи в хелпер backoff"}, {"k": "pool/b", "n": "2", "t": "Сделать лимит и backoff", "p": "Ограничить соединения платёжного клиента", "s": "context", "l": "Context C1", "x": "src/payments/client.ts"}, {"k": "pool/b", "n": "2", "t": "Сделать лимит и backoff", "p": "Ограничить соединения платёжного клиента", "s": "context", "l": "Context C2", "x": "Опции пула платёжного клиента"}, {"k": "pool/c", "n": "3", "t": "Добавить метрику заполненности", "p": "Ограничить соединения платёжного клиента", "s": "card", "l": "Title", "x": "Добавить метрику заполненности"}, {"k": "pool/c", "n": "3", "t": "Добавить метрику заполненности", "p": "Ограничить соединения платёжного клиента", "s": "goal", "l": "Task", "x": "Экспорт занятых соединений по подам"}, {"k": "pool/d", "n": "4", "t": "Проверить", "p": "Ограничить соединения платёжного клиента", "s": "card", "l": "Title", "x": "Проверить"}, {"k": "pool/d", "n": "4", "t": "Проверить", "p": "Ограничить соединения платёжного клиента", "s": "goal", "l": "Task", "x": "Юнит-тесты и нагрузочный тест инцидента"}, {"k": "pool/d", "n": "4", "t": "Проверить", "p": "Ограничить соединения платёжного клиента", "s": "result", "l": "Result", "x": "Зелёные"}, {"k": "pool/e", "n": "5", "t": "Выкатить 2.14.1", "p": "Ограничить соединения платёжного клиента", "s": "card", "l": "Title", "x": "Выкатить 2.14.1"}, {"k": "pool/e", "n": "5", "t": "Выкатить 2.14.1", "p": "Ограничить соединения платёжного клиента", "s": "goal", "l": "Task", "x": "Мерж, релиз, наблюдение p95 сутки"}, {"k": "replay", "n": null, "t": "Восстановить заказы, упавшие во время инцидента", "p": "", "s": "card", "l": "Title", "x": "Восстановить заказы, упавшие во время инцидента"}, {"k": "replay", "n": null, "t": "Восстановить заказы, упавшие во время инцидента", "p": "", "s": "card", "l": "Brief", "x": "Затронуто: 212 клиентов, $18 406 · Скрипт: готов, ждёт решения"}, {"k": "replay", "n": null, "t": "Восстановить заказы, упавшие во время инцидента", "p": "", "s": "problem", "l": "Problem", "x": "Затронуто: 212 клиентов, $18 406 · Состояние: провайдер списал деньги, заказа у нас нет · Причина: наш таймаут сработал после того, как провайдер принял платёж"}, {"k": "replay", "n": null, "t": "Восстановить заказы, упавшие во время инцидента", "p": "", "s": "goal", "l": "Task", "x": "Создать недостающие заказы по данным провайдера · Никого не списать дважды"}, {"k": "replay", "n": null, "t": "Восстановить заказы, упавшие во время инцидента", "p": "", "s": "context", "l": "Context C1", "x": "Платежи провайдера без заказа, 2–5 ноября · 212 строк, сумма $18 406"}, {"k": "replay", "n": null, "t": "Восстановить заказы, упавшие во время инцидента", "p": "", "s": "context", "l": "Context C2", "x": "Сервис создания заказов"}, {"k": "replay", "n": null, "t": "Восстановить заказы, упавшие во время инцидента", "p": "", "s": "context", "l": "Context C3", "x": "Тред поддержки о двойных списаниях"}, {"k": "replay", "n": null, "t": "Восстановить заказы, упавшие во время инцидента", "p": "", "s": "inferences", "l": "Conclusion", "x": "Все 212 платежей проведены и ни один не возвращён → создавать заказы безопасно, новых списаний не нужно"}, {"k": "replay", "n": null, "t": "Восстановить заказы, упавшие во время инцидента", "p": "", "s": "assumptions", "l": "Assumption", "x": "Товары из затронутых заказов ещё есть на складе · Сухой прогон скрипта показывает остаток по каждому заказу"}, {"k": "replay", "n": null, "t": "Восстановить заказы, упавшие во время инцидента", "p": "", "s": "result", "l": "Result", "x": "Скрипт: написан, сухой прогон на стейдже · Запуск в проде: ждёт вашего решения · scripts/replay-orders.ts с --dry-run и идемпотентным ключом заказа · Сухой прогон на стейдже: 212 заказов, 0 дублей, 7 позиций нет в наличии"}, {"k": "replay", "n": null, "t": "Восстановить заказы, упавшие во время инцидента", "p": "", "s": "approvals", "l": "Needs approval", "x": "Что делать с 7 заказами, товара по которым нет · Вернуть деньги за эти 7 · Предзаказ и письмо клиентам · Заменить похожим товаром"}, {"k": "replay", "n": null, "t": "Восстановить заказы, упавшие во время инцидента", "p": "", "s": "actions", "l": "Your action", "x": "Запустить восстановление в проде после решения · npm run replay-orders -- --from 2026-11-02 --to 2026-11-05 --out-of-stockrefund"}, {"k": "replay/r1", "n": "1", "t": "Найти затронутые платежи", "p": "Восстановить заказы, упавшие во время инцидента", "s": "card", "l": "Title", "x": "Найти затронутые платежи"}, {"k": "replay/r1", "n": "1", "t": "Найти затронутые платежи", "p": "Восстановить заказы, упавшие во время инцидента", "s": "goal", "l": "Task", "x": "Сопоставил списания провайдера с заказами по id платежа"}, {"k": "replay/r1", "n": "1", "t": "Найти затронутые платежи", "p": "Восстановить заказы, упавшие во время инцидента", "s": "context", "l": "Context C1", "x": "Платежи провайдера без заказа, 2–5 ноября · 212 строк, сумма $18 406"}, {"k": "replay/r1", "n": "1", "t": "Найти затронутые платежи", "p": "Восстановить заказы, упавшие во время инцидента", "s": "result", "l": "Result", "x": "212 платежей без заказов"}, {"k": "replay/r2", "n": "2", "t": "Написать скрипт восстановления", "p": "Восстановить заказы, упавшие во время инцидента", "s": "card", "l": "Title", "x": "Написать скрипт восстановления"}, {"k": "replay/r2", "n": "2", "t": "Написать скрипт восстановления", "p": "Восстановить заказы, упавшие во время инцидента", "s": "goal", "l": "Task", "x": "Создаёт заказы через обычный сервис с идемпотентным ключом"}, {"k": "replay/r2", "n": "2", "t": "Написать скрипт восстановления", "p": "Восстановить заказы, упавшие во время инцидента", "s": "context", "l": "Context C2", "x": "Сервис создания заказов"}, {"k": "replay/r3", "n": "3", "t": "Сухой прогон на стейдже", "p": "Восстановить заказы, упавшие во время инцидента", "s": "card", "l": "Title", "x": "Сухой прогон на стейдже"}, {"k": "replay/r3", "n": "3", "t": "Сухой прогон на стейдже", "p": "Восстановить заказы, упавшие во время инцидента", "s": "result", "l": "Result", "x": "7 заказов упираются в отсутствие товара"}, {"k": "replay/r4", "n": "4", "t": "Запуск в проде", "p": "Восстановить заказы, упавшие во время инцидента", "s": "card", "l": "Title", "x": "Запуск в проде"}, {"k": "replay/r4", "n": "4", "t": "Запуск в проде", "p": "Восстановить заказы, упавшие во время инцидента", "s": "goal", "l": "Task", "x": "Ждёт решения по товарам, которых нет"}, {"k": "alerts", "n": null, "t": "Алерты на таймауты провайдера и заполненность пула", "p": "", "s": "card", "l": "Title", "x": "Алерты на таймауты провайдера и заполненность пула"}, {"k": "alerts", "n": null, "t": "Алерты на таймауты провайдера и заполненность пула", "p": "", "s": "card", "l": "Brief", "x": "Таймауты: черновик алерта · Пул: ждёт метрику"}, {"k": "alerts", "n": null, "t": "Алерты на таймауты провайдера и заполненность пула", "p": "", "s": "problem", "l": "Problem", "x": "Кто заметил: поддержка, через 2 часа после начала · Сработало алертов: ни одного"}, {"k": "alerts", "n": null, "t": "Алерты на таймауты провайдера и заполненность пула", "p": "", "s": "goal", "l": "Task", "x": "Будить дежурного в течение 5 минут, когда растут таймауты оплаты или заполненность пула"}, {"k": "alerts", "n": null, "t": "Алерты на таймауты провайдера и заполненность пула", "p": "", "s": "context", "l": "Context C1", "x": "Правила алертинга"}, {"k": "alerts", "n": null, "t": "Алерты на таймауты провайдера и заполненность пула", "p": "", "s": "context", "l": "Context C2", "x": "Доля таймаутов за 30 дней"}, {"k": "alerts", "n": null, "t": "Алерты на таймауты провайдера и заполненность пула", "p": "", "s": "inferences", "l": "Conclusion", "x": "Порог 0,3% таймаутов за 5 минут сработал бы на 9-й минуте инцидента и ни разу за прошлые 30 дней"}, {"k": "alerts", "n": null, "t": "Алерты на таймауты провайдера и заполненность пула", "p": "", "s": "result", "l": "Result", "x": "Алерт на таймауты: черновик · Алерт на пул: ждёт метрику из фикса пула · Правило PaymentsTimeoutRate > 0.3% for 5m (не выкачено)"}, {"k": "alerts/x1", "n": "1", "t": "Подобрать порог на истории", "p": "Алерты на таймауты провайдера и заполненность пула", "s": "card", "l": "Title", "x": "Подобрать порог на истории"}, {"k": "alerts/x1", "n": "1", "t": "Подобрать порог на истории", "p": "Алерты на таймауты провайдера и заполненность пула", "s": "context", "l": "Context C2", "x": "Доля таймаутов за 30 дней"}, {"k": "alerts/x1", "n": "1", "t": "Подобрать порог на истории", "p": "Алерты на таймауты провайдера и заполненность пула", "s": "result", "l": "Result", "x": "0,3% / 5 мин"}, {"k": "alerts/x2", "n": "2", "t": "Алерт на таймауты", "p": "Алерты на таймауты провайдера и заполненность пула", "s": "card", "l": "Title", "x": "Алерт на таймауты"}, {"k": "alerts/x2", "n": "2", "t": "Алерт на таймауты", "p": "Алерты на таймауты провайдера и заполненность пула", "s": "goal", "l": "Task", "x": "Правило написано, маршрут на дежурного не настроен"}, {"k": "alerts/x3", "n": "3", "t": "Алерт на заполненность пула", "p": "Алерты на таймауты провайдера и заполненность пула", "s": "card", "l": "Title", "x": "Алерт на заполненность пула"}, {"k": "alerts/x3", "n": "3", "t": "Алерт на заполненность пула", "p": "Алерты на таймауты провайдера и заполненность пула", "s": "goal", "l": "Task", "x": "Нужна payments_pool_in_use в проде"}, {"k": "runbook", "n": null, "t": "Обновить ранбук платёжных инцидентов", "p": "", "s": "card", "l": "Title", "x": "Обновить ранбук платёжных инцидентов"}, {"k": "runbook", "n": null, "t": "Обновить ранбук платёжных инцидентов", "p": "", "s": "card", "l": "Brief", "x": "Не начато"}, {"k": "runbook", "n": null, "t": "Обновить ранбук платёжных инцидентов", "p": "", "s": "problem", "l": "Problem", "x": "В ранбуке нет: · - исчерпания соединений · - восстановления заказов"}, {"k": "runbook", "n": null, "t": "Обновить ранбук платёжных инцидентов", "p": "", "s": "goal", "l": "Task", "x": "Добавить оба раздела, чтобы следующий дежурный справился без расследования этой недели"}, {"k": "runbook", "n": null, "t": "Обновить ранбук платёжных инцидентов", "p": "", "s": "context", "l": "Context C1", "x": "Ранбук платежей"}, {"k": "runbook", "n": null, "t": "Обновить ранбук платёжных инцидентов", "p": "", "s": "result", "l": "Result", "x": "Не начато"}, {"k": "runbook/w", "n": "1", "t": "Написать разделы ранбука", "p": "Обновить ранбук платёжных инцидентов", "s": "card", "l": "Title", "x": "Написать разделы ранбука"}, {"k": "runbook/w", "n": "1", "t": "Написать разделы ранбука", "p": "Обновить ранбук платёжных инцидентов", "s": "goal", "l": "Task", "x": "Исчерпание соединений; восстановление заказов"}]</script>
+<script type="application/json" id="sr-track">{"prompts": [{"id": "p1", "n": 1}, {"id": "p2", "n": 2}, {"id": "p3", "n": 3}, {"id": "p4", "n": 4}, {"id": "p5", "n": 5}], "blocks": {"latency#card": {"since": "p1", "changed": []}, "latency#problem": {"since": "p1", "changed": []}, "latency#goal": {"since": "p1", "changed": []}, "latency#context": {"since": "p1", "changed": []}, "latency#inferences": {"since": "p1", "changed": ["p5"]}, "latency#assumptions": {"since": "p1", "changed": []}, "latency#result": {"since": "p1", "changed": []}, "latency#unchecked": {"since": "p1", "changed": []}, "latency#workflow": {"since": "p1", "changed": ["p2"]}, "latency#actions": {"since": "p1", "changed": []}, "latency/s1#card": {"since": "p1", "changed": []}, "latency/s1#goal": {"since": "p1", "changed": []}, "latency/s1#result": {"since": "p1", "changed": []}, "latency/s2#card": {"since": "p1", "changed": []}, "latency/s2#goal": {"since": "p1", "changed": []}, "latency/s2#result": {"since": "p1", "changed": []}, "latency/s3#card": {"since": "p1", "changed": []}, "latency/s3#goal": {"since": "p1", "changed": []}, "latency/s3#result": {"since": "p1", "changed": []}, "latency/s3#workflow": {"since": "p1", "changed": []}, "latency/s3/q#card": {"since": "p1", "changed": []}, "latency/s3/q#goal": {"since": "p1", "changed": []}, "latency/s3/q#result": {"since": "p1", "changed": []}, "latency/s3/g#card": {"since": "p1", "changed": []}, "latency/s3/g#goal": {"since": "p1", "changed": []}, "latency/s3/g#result": {"since": "p1", "changed": []}, "latency/s3/g#workflow": {"since": "p1", "changed": []}, "latency/s3/g/g1#card": {"since": "p1", "changed": []}, "latency/s3/g/g1#goal": {"since": "p1", "changed": []}, "latency/s3/g/g2#card": {"since": "p1", "changed": []}, "latency/s3/g/g2#result": {"since": "p1", "changed": []}, "latency/s3/g/g3#card": {"since": "p1", "changed": []}, "latency/s3/g/g3#goal": {"since": "p1", "changed": []}, "latency/s3/c#card": {"since": "p1", "changed": []}, "latency/s3/c#goal": {"since": "p1", "changed": []}, "latency/s3/c#result": {"since": "p1", "changed": []}, "latency/s4#card": {"since": "p2", "changed": []}, "latency/s4#goal": {"since": "p2", "changed": []}, "latency/s4#result": {"since": "p2", "changed": []}, "latency/s5#card": {"since": "p2", "changed": []}, "latency/s5#goal": {"since": "p2", "changed": []}, "latency/s5#result": {"since": "p2", "changed": []}, "latency/s6#card": {"since": "p2", "changed": []}, "latency/s6#goal": {"since": "p2", "changed": []}, "latency/s6#result": {"since": "p2", "changed": []}, "pool#card": {"since": "p2", "changed": []}, "pool#problem": {"since": "p2", "changed": []}, "pool#goal": {"since": "p2", "changed": []}, "pool#context": {"since": "p2", "changed": []}, "pool#inferences": {"since": "p2", "changed": []}, "pool#assumptions": {"since": "p2", "changed": []}, "pool#result": {"since": "p2", "changed": []}, "pool#unchecked": {"since": "p2", "changed": []}, "pool#workflow": {"since": "p2", "changed": []}, "pool#approvals": {"since": "p2", "changed": []}, "pool/a#card": {"since": "p2", "changed": []}, "pool/a#goal": {"since": "p2", "changed": []}, "pool/a#result": {"since": "p2", "changed": []}, "pool/b#card": {"since": "p2", "changed": []}, "pool/b#goal": {"since": "p2", "changed": []}, "pool/c#card": {"since": "p2", "changed": []}, "pool/c#goal": {"since": "p2", "changed": []}, "pool/d#card": {"since": "p2", "changed": []}, "pool/d#goal": {"since": "p2", "changed": []}, "pool/d#result": {"since": "p2", "changed": []}, "pool/e#card": {"since": "p2", "changed": []}, "pool/e#goal": {"since": "p2", "changed": []}, "replay#card": {"since": "p3", "changed": []}, "replay#problem": {"since": "p3", "changed": []}, "replay#goal": {"since": "p3", "changed": []}, "replay#context": {"since": "p3", "changed": []}, "replay#inferences": {"since": "p3", "changed": []}, "replay#assumptions": {"since": "p3", "changed": []}, "replay#result": {"since": "p3", "changed": []}, "replay#workflow": {"since": "p3", "changed": []}, "replay#approvals": {"since": "p3", "changed": []}, "replay#actions": {"since": "p3", "changed": []}, "replay/r1#card": {"since": "p3", "changed": []}, "replay/r1#goal": {"since": "p3", "changed": []}, "replay/r1#result": {"since": "p3", "changed": []}, "replay/r2#card": {"since": "p3", "changed": []}, "replay/r2#goal": {"since": "p3", "changed": []}, "replay/r3#card": {"since": "p3", "changed": []}, "replay/r3#result": {"since": "p3", "changed": []}, "replay/r4#card": {"since": "p3", "changed": []}, "replay/r4#goal": {"since": "p3", "changed": []}, "alerts#card": {"since": "p4", "changed": []}, "alerts#problem": {"since": "p4", "changed": []}, "alerts#goal": {"since": "p4", "changed": []}, "alerts#context": {"since": "p4", "changed": []}, "alerts#inferences": {"since": "p4", "changed": []}, "alerts#result": {"since": "p4", "changed": []}, "alerts#workflow": {"since": "p4", "changed": []}, "alerts/x1#card": {"since": "p4", "changed": []}, "alerts/x1#result": {"since": "p4", "changed": []}, "alerts/x2#card": {"since": "p4", "changed": []}, "alerts/x2#goal": {"since": "p4", "changed": []}, "alerts/x3#card": {"since": "p4", "changed": []}, "alerts/x3#goal": {"since": "p4", "changed": []}, "runbook#card": {"since": "p4", "changed": []}, "runbook#problem": {"since": "p4", "changed": []}, "runbook#goal": {"since": "p4", "changed": []}, "runbook#context": {"since": "p4", "changed": []}, "runbook#result": {"since": "p4", "changed": []}, "runbook#workflow": {"since": "p4", "changed": []}, "runbook/w#card": {"since": "p4", "changed": []}, "runbook/w#goal": {"since": "p4", "changed": []}}}</script>
 <script>
 /* Behaviour only: graph layout, canvases, drawer, navigation. No content is created here. */
 (() => {
@@ -1933,6 +2242,188 @@ document.addEventListener("keydown", e => {
 });
 let rt; addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(() => { mapCanvas.apply(); if (expanded) flows.get(expanded).apply(); }, 120); });
 addEventListener("beforeprint", () => { if (current) close(); });
+
+// ── search: index built at build time (structural label + plain text of every block) ──
+const INDEX = JSON.parse($("#sr-index").textContent || "[]");
+const fold = t => String(t).toLowerCase().replace(/ё/g, "е").normalize("NFD").replace(/[̀-ͯ]/g, "");
+INDEX.forEach(e => { e.f = fold(e.x); e.ft = fold(e.t); });
+const q = $("#q"), res = $("#results");
+let hits = [], sel = 0;
+function snippet(text, terms) {
+  const f = fold(text); let i = Math.max(0, ...terms.map(t => f.indexOf(t)).filter(i => i >= 0).slice(0, 1));
+  const start = Math.max(0, i - 50), raw = (start ? "…" : "") + text.slice(start, start + 180) + (text.length > start + 180 ? "…" : "");
+  let h = esc(raw);
+  for (const t of terms) {
+    if (!t) continue;
+    const ff = fold(raw), out = []; let k = 0, j;
+    while ((j = ff.indexOf(t, k)) >= 0) { out.push([j, j + t.length]); k = j + t.length; }
+    if (out.length) { let r = "", last = 0; for (const [a, b] of out) { r += esc(raw.slice(last, a)) + "<mark>" + esc(raw.slice(a, b)) + "</mark>"; last = b; } h = r + esc(raw.slice(last)); break; }
+  }
+  return h;
+}
+function search() {
+  const terms = fold(q.value).split(/\s+/).filter(Boolean);
+  if (!terms.length) { res.classList.remove("open"); q.setAttribute("aria-expanded", "false"); return; }
+  hits = INDEX.filter(e => terms.every(t => e.f.includes(t) || e.ft.includes(t)))
+    .map(e => ({e, score: (e.l === "Title" ? 0 : 2) + (terms.every(t => e.ft.includes(t)) ? 0 : 1) + (e.n ? e.n.split(".").length * .1 : 0)}))
+    .sort((a, b) => a.score - b.score).slice(0, 40).map(h => h.e);
+  sel = 0;
+  let html = "", grp = null;
+  hits.forEach((e, i) => {
+    const task = e.k.split("/")[0];
+    if (task !== grp) { grp = task; const t = INDEX.find(x => x.k === task && x.l === "Title"); html += `<div class="grp">${esc(t ? t.x : task)}</div>`; }
+    html += `<button type="button" role="option" data-i="${i}" aria-selected="${i === 0}"><span class="lab">${esc(e.l)}</span><span>${e.p ? `<div class="where">${esc(e.p)}</div>` : ""}<div class="snip">${snippet(e.x, terms)}</div></span></button>`;
+  });
+  res.innerHTML = (html || `<div class="empty">Nothing found. Try fewer or different words.</div>`) +
+    `<div class="foot"><span>↑↓ to move</span><span>Enter to open</span><span>Esc to close</span></div>`;
+  res.classList.add("open"); q.setAttribute("aria-expanded", "true");
+}
+function pick(i) {
+  const e = hits[i]; if (!e) return;
+  res.classList.remove("open"); q.blur();
+  if (e.l === "Title" && !e.n && !current) { const n = $(`#map .node[data-task="${CSS.escape(e.k)}"]`); mapCanvas.reveal(n); n.classList.add("found"); setTimeout(() => n.classList.remove("found"), 1700); }
+  open(e.k);
+  const target = e.s === "card" ? $(".r-head", slot) : slot.querySelector(`#sec-${e.s}`);
+  if (target) { setTimeout(() => { target.scrollIntoView({block: "start", behavior: "smooth"}); target.classList.add("found"); setTimeout(() => target.classList.remove("found"), 1700); }, 60); }
+}
+q.addEventListener("input", search);
+q.addEventListener("focus", () => q.value && search());
+q.addEventListener("keydown", e => {
+  if (e.key === "ArrowDown" || e.key === "ArrowUp") { e.preventDefault(); sel = (sel + (e.key === "ArrowDown" ? 1 : -1) + hits.length) % Math.max(1, hits.length);
+    $$("[role=option]", res).forEach((b, i) => { b.setAttribute("aria-selected", String(i === sel)); if (i === sel) b.scrollIntoView({block: "nearest"}); }); }
+  if (e.key === "Enter") { e.preventDefault(); pick(sel); }
+  if (e.key === "Escape") { e.stopPropagation(); q.value = ""; res.classList.remove("open"); q.blur(); }
+});
+res.addEventListener("mousedown", e => { const b = e.target.closest("[data-i]"); if (b) { e.preventDefault(); pick(+b.dataset.i); } });
+q.addEventListener("blur", () => setTimeout(() => res.classList.remove("open"), 120));
+document.addEventListener("keydown", e => {
+  if ((e.key === "/" && !e.target.closest("input,textarea")) || ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k")) { e.preventDefault(); q.focus(); q.select(); }
+}, true);
+
+// ── prompts: when each block appeared / changed (journal stamps from build.py) ──
+const TRACK = JSON.parse($("#sr-track").textContent || "{}");
+const PN = Object.fromEntries((TRACK.prompts || []).map(p => [p.id, p.n]));
+const BLOCKS = TRACK.blocks || {};
+const rail = $("#rail");
+let atPrompt = null;
+function stateAt(block, pid, rollup) {     // "new" | "changed" | null for a block (or its subtree)
+  let st = null;
+  for (const [k, b] of Object.entries(BLOCKS)) {
+    const mine = k === block || k.startsWith(block + "#") || (rollup && k.startsWith(block + "/"));
+    if (!mine) continue;
+    if (b.since === pid && (k.endsWith("#card") || !rollup || k.startsWith(block + "#"))) return "new";
+    if (b.since === pid || (b.changed || []).includes(pid)) st = "changed";
+  }
+  return st;
+}
+function paint(root) {
+  $$(".pbadge", root).forEach(x => x.remove());
+  $$("[data-block]", root).forEach(el => {
+    el.classList.remove("p-new", "p-changed");
+    if (!atPrompt) return;
+    const key = el.dataset.block.replace(/#card$/, "");
+    const isSec = el.classList.contains("sec");
+    const st = isSec ? (BLOCKS[el.dataset.block] && (BLOCKS[el.dataset.block].since === atPrompt ? "new" : (BLOCKS[el.dataset.block].changed || []).includes(atPrompt) ? "changed" : null))
+                     : stateAt(key, atPrompt, true);
+    if (!st || el.tagName === "ARTICLE") return;
+    el.classList.add("p-" + st);
+    if (!isSec) { const b = document.createElement("span"); b.className = "pbadge"; b.textContent = (st === "new" ? "New" : "Changed") + " #" + PN[atPrompt]; el.appendChild(b); }
+  });
+}
+function stamps(root) {                    // small "#n" chips on section titles: appeared / last changed
+  $$(".sec[data-block]", root).forEach(sec => {
+    const b = BLOCKS[sec.dataset.block], h = $(":scope > h3", sec);
+    if (!b || !h || $(".stamps", h)) return;
+    const box = document.createElement("span"); box.className = "stamps";
+    if (b.since && PN[b.since]) box.innerHTML += `<button class="stamp" data-goprompt="${b.since}" title="Appeared at prompt #${PN[b.since]}">#${PN[b.since]}</button>`;
+    const last = (b.changed || []).slice(-1)[0];
+    if (last && PN[last]) box.innerHTML += `<button class="stamp chg" data-goprompt="${last}" title="Last changed at prompt #${PN[last]}">↻ #${PN[last]}</button>`;
+    if (box.innerHTML) h.appendChild(box);
+  });
+}
+function selectPrompt(pid) {
+  atPrompt = atPrompt === pid ? null : pid;
+  document.body.classList.toggle("at-prompt", !!atPrompt);
+  $$("[data-prompt]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.prompt === atPrompt)));
+  const clr = $("#rail-clear"); if (clr) clr.hidden = !atPrompt;
+  paint(document);
+}
+document.addEventListener("click", e => {
+  const pb = e.target.closest("[data-prompt]"); if (pb) return selectPrompt(pb.dataset.prompt);
+  const gp = e.target.closest("[data-goprompt]");
+  if (gp) { if (rail?.classList.contains("closed")) toggleRail(); if (atPrompt !== gp.dataset.goprompt) selectPrompt(gp.dataset.goprompt);
+    $(`[data-prompt="${gp.dataset.goprompt}"]`)?.scrollIntoView({block: "nearest"}); return; }
+  if (e.target.closest("#rail-clear")) return selectPrompt(atPrompt);
+  if (e.target.closest("#rail-btn")) toggleRail();
+});
+function toggleRail() { rail.classList.toggle("closed"); $("#rail-btn").setAttribute("aria-expanded", String(!rail.classList.contains("closed"))); setTimeout(() => mapCanvas.apply(), 280); }
+const _open = open;
+open = function (key, o) { _open(key, o); const a = art(key); if (a) { stamps(a); paint(a); } };
+
+// ── answers: decide in the report; "Send to agent" continues the session ──
+const served = location.protocol.startsWith("http") && new URLSearchParams(location.search).get("t");
+const store = "sr-answers:" + document.title;
+const draft = JSON.parse(localStorage.getItem(store) || "{}");
+const forms = () => $$("form.answer");
+function readForm(f) {
+  const a = f.closest(".report"), t = $("textarea", f).value.trim();
+  const radio = $("input[type=radio]:checked", f), hasRadios = !!$("input[type=radio]", f), box = $("input[type=checkbox]", f);
+  const item = {akey: f.dataset.akey, type: f.dataset.type, question: f.dataset.question, num: a.dataset.num || null, title: a.dataset.title,
+                choice: null, done: null, comment: null};
+  if (f.dataset.type === "approval") { item.choice = hasRadios ? (radio ? radio.value : null) : (t || null); item.comment = hasRadios ? (t || null) : null; }
+  else { item.done = box.checked; item.comment = t || null; }
+  return (item.choice || item.done || item.comment) ? item : null;
+}
+function collect() { return forms().map(readForm).filter(Boolean); }
+function restore() {
+  for (const f of forms()) {
+    const v = draft[f.dataset.akey]; if (!v) continue;
+    if (v.choice) { const r = $$("input[type=radio]", f).find(x => x.value === v.choice); if (r) r.checked = true; }
+    if (v.done) { const d = $("input[type=checkbox]", f); if (d) d.checked = true; }
+    if (v.text) $("textarea", f).value = v.text;
+  }
+}
+const bar = $("#sendbar"), btn = $("#send-btn"), cnt = $("#send-count"), msg = $("#send-message");
+function refresh() {
+  const n = collect().length + (msg.value.trim() ? 1 : 0);
+  bar.classList.toggle("show", n > 0);
+  cnt.textContent = n === 1 ? "1 answer ready" : `${n} answers ready`;
+  btn.textContent = served ? "Send to agent" : "Copy answers";
+}
+document.addEventListener("input", e => {
+  const f = e.target.closest("form.answer");
+  if (f) { const c = $("input[type=radio]:checked", f), d = $("input[type=checkbox]", f);
+    draft[f.dataset.akey] = {choice: c?.value, done: d?.checked, text: $("textarea", f).value}; localStorage.setItem(store, JSON.stringify(draft)); }
+  if (f || e.target === msg) refresh();
+});
+document.addEventListener("change", e => { if (e.target.closest("form.answer")) refresh(); });
+document.addEventListener("submit", e => e.preventDefault());
+function asText(items, m) {
+  const lines = [`Answers from the report «${document.title}»:`];
+  for (const it of items) lines.push(`- [${it.num ? it.num + " " : ""}${it.title}] ${it.question}: ${it.type === "approval" ? (it.choice || "—") : (it.done ? "done" : "not done")}${it.comment ? " — " + it.comment : ""}`);
+  if (m) lines.push("Message: " + m);
+  return lines.join("\n");
+}
+btn.addEventListener("click", async () => {
+  const items = collect(), m = msg.value.trim();
+  if (!items.length && !m) return;
+  if (!served) { await navigator.clipboard?.writeText(asText(items, m)); cnt.textContent = "Copied — paste it into the chat"; return; }
+  btn.disabled = true; cnt.textContent = "Sending…";
+  try {
+    const r = await fetch("/__answers", {method: "POST", headers: {"Content-Type": "application/json", "X-Report-Token": served}, body: JSON.stringify({items, message: m})});
+    if (!r.ok) throw new Error(r.status);
+    const j = await r.json();
+    localStorage.removeItem(store);
+    cnt.textContent = `Sent as prompt #${j.prompt} — the agent continues`; btn.textContent = "Sent"; msg.value = "";
+    forms().forEach(f => { f.querySelectorAll("input,textarea").forEach(x => x.disabled = true); });
+  } catch (err) {
+    btn.disabled = false; cnt.textContent = "Not sent — the report server has stopped. Copy instead:"; btn.textContent = "Copy answers";
+    btn.onclick = () => navigator.clipboard?.writeText(asText(items, m));
+  }
+});
+restore(); refresh();
+const setBar = () => document.documentElement.style.setProperty("--bar-h", $(".bar").offsetHeight + "px");
+setBar(); addEventListener("resize", setBar);
 const hm = /^#task=(.+)$/.exec(location.hash); if (hm) open(decodeURIComponent(hm[1]));
 })();
 </script>

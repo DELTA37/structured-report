@@ -1,0 +1,581 @@
+{
+ "prompts": [
+  {
+   "id": "p1",
+   "n": 1,
+   "at": "2026-11-05 10:12",
+   "kind": "prompt",
+   "text": "Почему после релиза 2.14 оформление заказа стало таким медленным? Разберись по логам и метрикам"
+  },
+  {
+   "id": "p2",
+   "n": 2,
+   "at": "2026-11-05 13:40",
+   "kind": "prompt",
+   "text": "Ок, причина понятна. Сделай фикс пула и прогони нагрузку"
+  },
+  {
+   "id": "p3",
+   "n": 3,
+   "at": "2026-11-05 17:05",
+   "kind": "prompt",
+   "text": "Поддержка пишет про списания без заказа — посчитай, сколько таких и как их восстановить"
+  },
+  {
+   "id": "p4",
+   "n": 4,
+   "at": "2026-11-06 09:30",
+   "kind": "prompt",
+   "text": "Добавь алерты, чтобы такое ловить сразу, и обнови ранбук"
+  },
+  {
+   "id": "p5",
+   "n": 5,
+   "at": "2026-11-06 15:20",
+   "kind": "prompt",
+   "text": "Перепроверь выводы по двойным списаниям и поправь отчёт"
+  }
+ ],
+ "blocks": {
+  "latency#card": {
+   "hash": "fe36913eaf47",
+   "since": "p1",
+   "changed": []
+  },
+  "latency#problem": {
+   "hash": "dc3f3919abd8",
+   "since": "p1",
+   "changed": []
+  },
+  "latency#goal": {
+   "hash": "35c991312f84",
+   "since": "p1",
+   "changed": []
+  },
+  "latency#context": {
+   "hash": "c4210461d81e",
+   "since": "p1",
+   "changed": []
+  },
+  "latency#inferences": {
+   "hash": "e723b43e8423",
+   "since": "p1",
+   "changed": [
+    "p5"
+   ]
+  },
+  "latency#assumptions": {
+   "hash": "6156658ab037",
+   "since": "p1",
+   "changed": []
+  },
+  "latency#result": {
+   "hash": "190437131a5b",
+   "since": "p1",
+   "changed": []
+  },
+  "latency#unchecked": {
+   "hash": "9a73b88be25f",
+   "since": "p1",
+   "changed": []
+  },
+  "latency#workflow": {
+   "hash": "ba1a69a14329",
+   "since": "p1",
+   "changed": [
+    "p2"
+   ]
+  },
+  "latency#actions": {
+   "hash": "6e5b0315efca",
+   "since": "p1",
+   "changed": []
+  },
+  "latency/s1#card": {
+   "hash": "51ad65f953a3",
+   "since": "p1",
+   "changed": []
+  },
+  "latency/s1#goal": {
+   "hash": "83ec2b73c51a",
+   "since": "p1",
+   "changed": []
+  },
+  "latency/s1#result": {
+   "hash": "82aaca76a4a0",
+   "since": "p1",
+   "changed": []
+  },
+  "latency/s2#card": {
+   "hash": "feebac4050c1",
+   "since": "p1",
+   "changed": []
+  },
+  "latency/s2#goal": {
+   "hash": "6d4bdffa0f49",
+   "since": "p1",
+   "changed": []
+  },
+  "latency/s2#result": {
+   "hash": "5732a757a78e",
+   "since": "p1",
+   "changed": []
+  },
+  "latency/s3#card": {
+   "hash": "134b54c8be82",
+   "since": "p1",
+   "changed": []
+  },
+  "latency/s3#goal": {
+   "hash": "71a7986d6415",
+   "since": "p1",
+   "changed": []
+  },
+  "latency/s3#result": {
+   "hash": "8262b41b53c7",
+   "since": "p1",
+   "changed": []
+  },
+  "latency/s3#workflow": {
+   "hash": "b0d198b714b0",
+   "since": "p1",
+   "changed": []
+  },
+  "latency/s3/q#card": {
+   "hash": "443af0d07a60",
+   "since": "p1",
+   "changed": []
+  },
+  "latency/s3/q#goal": {
+   "hash": "c9efd9231499",
+   "since": "p1",
+   "changed": []
+  },
+  "latency/s3/q#result": {
+   "hash": "33a56980ed0f",
+   "since": "p1",
+   "changed": []
+  },
+  "latency/s3/g#card": {
+   "hash": "08789c2a2921",
+   "since": "p1",
+   "changed": []
+  },
+  "latency/s3/g#goal": {
+   "hash": "6713da10e96a",
+   "since": "p1",
+   "changed": []
+  },
+  "latency/s3/g#result": {
+   "hash": "b526b2f44086",
+   "since": "p1",
+   "changed": []
+  },
+  "latency/s3/g#workflow": {
+   "hash": "139241656eef",
+   "since": "p1",
+   "changed": []
+  },
+  "latency/s3/g/g1#card": {
+   "hash": "4c067d12f26b",
+   "since": "p1",
+   "changed": []
+  },
+  "latency/s3/g/g1#goal": {
+   "hash": "9834dc6f34d7",
+   "since": "p1",
+   "changed": []
+  },
+  "latency/s3/g/g2#card": {
+   "hash": "4e8e18fa4957",
+   "since": "p1",
+   "changed": []
+  },
+  "latency/s3/g/g2#result": {
+   "hash": "da1977b08e78",
+   "since": "p1",
+   "changed": []
+  },
+  "latency/s3/g/g3#card": {
+   "hash": "aa4ffcaef989",
+   "since": "p1",
+   "changed": []
+  },
+  "latency/s3/g/g3#goal": {
+   "hash": "10a58a101981",
+   "since": "p1",
+   "changed": []
+  },
+  "latency/s3/c#card": {
+   "hash": "dbce6fa3c1fc",
+   "since": "p1",
+   "changed": []
+  },
+  "latency/s3/c#goal": {
+   "hash": "17e642fd1d67",
+   "since": "p1",
+   "changed": []
+  },
+  "latency/s3/c#result": {
+   "hash": "c4633ba09ff6",
+   "since": "p1",
+   "changed": []
+  },
+  "latency/s4#card": {
+   "hash": "c6424cd5208d",
+   "since": "p2",
+   "changed": []
+  },
+  "latency/s4#goal": {
+   "hash": "3bc615de3835",
+   "since": "p2",
+   "changed": []
+  },
+  "latency/s4#result": {
+   "hash": "83f0e018403e",
+   "since": "p2",
+   "changed": []
+  },
+  "latency/s5#card": {
+   "hash": "0dc592d81b10",
+   "since": "p2",
+   "changed": []
+  },
+  "latency/s5#goal": {
+   "hash": "cbd3ffd253e6",
+   "since": "p2",
+   "changed": []
+  },
+  "latency/s5#result": {
+   "hash": "0266a4548e11",
+   "since": "p2",
+   "changed": []
+  },
+  "latency/s6#card": {
+   "hash": "71f23ba90f1d",
+   "since": "p2",
+   "changed": []
+  },
+  "latency/s6#goal": {
+   "hash": "0209b92fd7fd",
+   "since": "p2",
+   "changed": []
+  },
+  "latency/s6#result": {
+   "hash": "40d5cabe8506",
+   "since": "p2",
+   "changed": []
+  },
+  "pool#card": {
+   "hash": "4506292bd689",
+   "since": "p2",
+   "changed": []
+  },
+  "pool#problem": {
+   "hash": "f55cd715eef9",
+   "since": "p2",
+   "changed": []
+  },
+  "pool#goal": {
+   "hash": "ad1aae426798",
+   "since": "p2",
+   "changed": []
+  },
+  "pool#context": {
+   "hash": "dcbea43e4fcb",
+   "since": "p2",
+   "changed": []
+  },
+  "pool#inferences": {
+   "hash": "4e8aa10b4c06",
+   "since": "p2",
+   "changed": []
+  },
+  "pool#assumptions": {
+   "hash": "b4eb66cc59ef",
+   "since": "p2",
+   "changed": []
+  },
+  "pool#result": {
+   "hash": "e6ffa17486f0",
+   "since": "p2",
+   "changed": []
+  },
+  "pool#unchecked": {
+   "hash": "d3a0974d2bb3",
+   "since": "p2",
+   "changed": []
+  },
+  "pool#workflow": {
+   "hash": "c1a52a6927ca",
+   "since": "p2",
+   "changed": []
+  },
+  "pool#approvals": {
+   "hash": "24ebc39d348c",
+   "since": "p2",
+   "changed": []
+  },
+  "pool/a#card": {
+   "hash": "dd918147aad4",
+   "since": "p2",
+   "changed": []
+  },
+  "pool/a#goal": {
+   "hash": "7475ed26dabb",
+   "since": "p2",
+   "changed": []
+  },
+  "pool/a#result": {
+   "hash": "24b0dff029e4",
+   "since": "p2",
+   "changed": []
+  },
+  "pool/b#card": {
+   "hash": "a12649e4604b",
+   "since": "p2",
+   "changed": []
+  },
+  "pool/b#goal": {
+   "hash": "1738bf920a0d",
+   "since": "p2",
+   "changed": []
+  },
+  "pool/c#card": {
+   "hash": "45ad526d24d3",
+   "since": "p2",
+   "changed": []
+  },
+  "pool/c#goal": {
+   "hash": "dedb59a231df",
+   "since": "p2",
+   "changed": []
+  },
+  "pool/d#card": {
+   "hash": "004c767137b3",
+   "since": "p2",
+   "changed": []
+  },
+  "pool/d#goal": {
+   "hash": "8dfe745ae6db",
+   "since": "p2",
+   "changed": []
+  },
+  "pool/d#result": {
+   "hash": "2913a9aef78c",
+   "since": "p2",
+   "changed": []
+  },
+  "pool/e#card": {
+   "hash": "01d5ffbb4bd2",
+   "since": "p2",
+   "changed": []
+  },
+  "pool/e#goal": {
+   "hash": "e5cc9b984ebe",
+   "since": "p2",
+   "changed": []
+  },
+  "replay#card": {
+   "hash": "b116b697e40e",
+   "since": "p3",
+   "changed": []
+  },
+  "replay#problem": {
+   "hash": "f59428ededc4",
+   "since": "p3",
+   "changed": []
+  },
+  "replay#goal": {
+   "hash": "4ec5624c94bc",
+   "since": "p3",
+   "changed": []
+  },
+  "replay#context": {
+   "hash": "07c46f5ba55b",
+   "since": "p3",
+   "changed": []
+  },
+  "replay#inferences": {
+   "hash": "d6ecc89a2fae",
+   "since": "p3",
+   "changed": []
+  },
+  "replay#assumptions": {
+   "hash": "ed5347c0c943",
+   "since": "p3",
+   "changed": []
+  },
+  "replay#result": {
+   "hash": "12d9329acd02",
+   "since": "p3",
+   "changed": []
+  },
+  "replay#workflow": {
+   "hash": "96a3e1c0f768",
+   "since": "p3",
+   "changed": []
+  },
+  "replay#approvals": {
+   "hash": "54a39ff7624c",
+   "since": "p3",
+   "changed": []
+  },
+  "replay#actions": {
+   "hash": "8fd3344e6be7",
+   "since": "p3",
+   "changed": []
+  },
+  "replay/r1#card": {
+   "hash": "aef33a91dd47",
+   "since": "p3",
+   "changed": []
+  },
+  "replay/r1#goal": {
+   "hash": "f016c964ead7",
+   "since": "p3",
+   "changed": []
+  },
+  "replay/r1#result": {
+   "hash": "81a65c479c89",
+   "since": "p3",
+   "changed": []
+  },
+  "replay/r2#card": {
+   "hash": "d7a6cb788895",
+   "since": "p3",
+   "changed": []
+  },
+  "replay/r2#goal": {
+   "hash": "8edc45e23fb6",
+   "since": "p3",
+   "changed": []
+  },
+  "replay/r3#card": {
+   "hash": "9d3946f54618",
+   "since": "p3",
+   "changed": []
+  },
+  "replay/r3#result": {
+   "hash": "62e2bb6650d8",
+   "since": "p3",
+   "changed": []
+  },
+  "replay/r4#card": {
+   "hash": "d3771c861ba5",
+   "since": "p3",
+   "changed": []
+  },
+  "replay/r4#goal": {
+   "hash": "34693fa256db",
+   "since": "p3",
+   "changed": []
+  },
+  "alerts#card": {
+   "hash": "38cd3a71c3e3",
+   "since": "p4",
+   "changed": []
+  },
+  "alerts#problem": {
+   "hash": "6782106ae3ed",
+   "since": "p4",
+   "changed": []
+  },
+  "alerts#goal": {
+   "hash": "bffee84abd9d",
+   "since": "p4",
+   "changed": []
+  },
+  "alerts#context": {
+   "hash": "abd6ba559761",
+   "since": "p4",
+   "changed": []
+  },
+  "alerts#inferences": {
+   "hash": "121b951f414b",
+   "since": "p4",
+   "changed": []
+  },
+  "alerts#result": {
+   "hash": "3b510b4802eb",
+   "since": "p4",
+   "changed": []
+  },
+  "alerts#workflow": {
+   "hash": "8cfe39e0ce20",
+   "since": "p4",
+   "changed": []
+  },
+  "alerts/x1#card": {
+   "hash": "8b2c36dd4106",
+   "since": "p4",
+   "changed": []
+  },
+  "alerts/x1#result": {
+   "hash": "016cfee1bc1b",
+   "since": "p4",
+   "changed": []
+  },
+  "alerts/x2#card": {
+   "hash": "063cae1cd79d",
+   "since": "p4",
+   "changed": []
+  },
+  "alerts/x2#goal": {
+   "hash": "24856ecb4cde",
+   "since": "p4",
+   "changed": []
+  },
+  "alerts/x3#card": {
+   "hash": "50f1fd371bed",
+   "since": "p4",
+   "changed": []
+  },
+  "alerts/x3#goal": {
+   "hash": "e7a08823e710",
+   "since": "p4",
+   "changed": []
+  },
+  "runbook#card": {
+   "hash": "b2d5988740b3",
+   "since": "p4",
+   "changed": []
+  },
+  "runbook#problem": {
+   "hash": "d40eb66f003c",
+   "since": "p4",
+   "changed": []
+  },
+  "runbook#goal": {
+   "hash": "809b9b087261",
+   "since": "p4",
+   "changed": []
+  },
+  "runbook#context": {
+   "hash": "306a9ac4c2f2",
+   "since": "p4",
+   "changed": []
+  },
+  "runbook#result": {
+   "hash": "f2e89082cec8",
+   "since": "p4",
+   "changed": []
+  },
+  "runbook#workflow": {
+   "hash": "6cbae5a877c1",
+   "since": "p4",
+   "changed": []
+  },
+  "runbook/w#card": {
+   "hash": "21ce1b1b84e5",
+   "since": "p4",
+   "changed": []
+  },
+  "runbook/w#goal": {
+   "hash": "a0290c48e9c3",
+   "since": "p4",
+   "changed": []
+  }
+ },
+ "answers": {}
+}

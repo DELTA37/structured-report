@@ -29,10 +29,23 @@ order, statuses and icons — and the agent supplies only content (any language)
 `{{placeholders}}`. Facts, conclusions and assumptions are drawn with different rules (solid, double, dashed) so a
 reader can tell at a glance what was checked and what was guessed.
 
+![Prompts rail: what each prompt produced](docs/prompts.png)
+
 <img src="docs/task.png" alt="Task report drawer with context, conclusions, assumptions, result and the stage flowchart" width="720">
 
 The output is a single offline HTML file: no CDN, no fonts to download, no tracking. Inline SVG
 icons, keyboard navigation, deep links (`#task=<id>`), and a print view that prints every task.
+
+## Living reports
+
+- **Prompts rail** — bind a Claude Code session (`track.py start`) and a `UserPromptSubmit` hook logs
+  every prompt; each rebuild stamps the blocks that appeared or changed. Pick a prompt to see what
+  it produced.
+- **Answer in the report** — decisions and manual steps have inputs; `track.py serve` serves the
+  report locally, and *Send to agent* hands the answers back to the session as the next prompt.
+- **Search** — `/` or ⌘K, across every task and stage.
+- **Checks** — `verified` needs proof (`how`), finished work must say what was *not checked*,
+  next steps are planned stages, and the build refuses anything that looks like a secret.
 
 ## Install
 
@@ -68,7 +81,7 @@ open skills/structured-report/examples/example.html
 The data format is documented in [`references/schema.md`](skills/structured-report/references/schema.md).
 Content can be in any language; structure labels stay English. See `examples/example.ru.json`.
 
-Requires Python 3.8+ (standard library only) and any modern browser.
+Requires Python 3.9+ (standard library only) and any modern browser.
 
 ## License
 

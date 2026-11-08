@@ -1,112 +1,122 @@
 ---
 name: structured-report
-description: "Turn a piece of finished (or paused) work into a structured, interactive HTML report: an overview graph of tasks with dependencies, and per task the problem, the goal, the context gathered (with links), what was concluded, what was assumed, the result, a directed flowchart of work stages, what needs the reader's approval and what the reader must do. Use when the user asks for a work report, status report, session summary, handoff, \"what did you do\", \"report on the work\", \"отчёт по работе\", or a flowchart/diagram of how a task was solved."
+description: "Turn work into a structured, interactive HTML report and keep it in step with the session: a work map of tasks, and for every task — and every stage inside it, recursively — the problem, the goal, the context gathered (with links), conclusions, assumptions, what was not checked, the result, a workflow canvas of stages, what needs the reader's decision and what the reader must do. The reader can answer the agent's questions inside the report and send them back to continue the session; a prompts rail shows which user prompt each block appeared or changed at; full-text search. Use when the user asks for a work report, status report, session summary, handoff, \"what did you do\", \"report on the work\", \"отчёт по работе\", a tracked/living report of the session, or a flowchart of how a task was solved."
 ---
 
 # Structured report
 
-Produce one self-contained HTML file (no network, no build step) that lets a busy reader
-1. see the whole work as a map of tasks, with what is waiting on them inside each task, then
-2. drill into any task and audit *how* the work was done and *why* each claim is believed.
+One self-contained HTML file (no network) that lets a busy reader
+1. see the whole work as a map of tasks, with what is waiting on them inside each task,
+2. open any task — and any stage inside it — and audit *how* it was done and *why* each claim
+   is believed,
+3. answer the agent's questions right there, and see which of their prompts produced what.
 
 ## Structure vs. content
 
-The report keeps two things apart, and so must you:
-
-- **Structure** belongs to the template (`assets/template.html`): the page layout, section names
-  (Problem, Task, Context, Conclusions, Assumptions, Result, Workflow, Needs approval, Your
-  actions), their order, statuses, and every icon. It is fixed and always in English. Icons mark
-  structure only — a section, a status, an approval or action — never what the content is about.
-- **Content** is yours: the JSON data, written in the user's language. `scripts/build.py`
-  validates it and fills the template's placeholders (`{{title}}`, `{{problem|rich}}`,
-  `{{#tasks}}…{{/tasks}}`). You never write HTML and never invent new sections; if something does
-  not fit a section, it does not belong in the report.
-
-The first page is only the **work map**: every task is a card with its status, title, a short
-`brief`, and the approvals/actions waiting on the reader. It fits the screen without scrolling.
-Clicking a card opens that task's full report.
+- **Structure** belongs to the template (`assets/template.html`): layout, section names (Problem,
+  Task, Context, Conclusions, Assumptions, Result, Not checked, Workflow, Needs approval, Your
+  actions), their order, statuses, every icon and every UI label. Fixed, always English. Icons mark
+  structure only, never what the content is about.
+- **Content** is yours: the JSON, in the user's language. `scripts/build.py` validates it and fills
+  the template's placeholders. You never write HTML and never invent sections.
 
 ## Workflow
 
-1. **Collect the material.** Go back through the work you are reporting on: messages, tool
-   results, files read and changed, commands run, links visited, tests, measurements, decisions.
-   Report only what actually happened. If you did not see it, it is not context.
-2. **Cut it into tasks.** One task = one goal with its own outcome (a bug investigated, a feature
-   built, a migration run). 1–12 tasks; merge trivia, split work that has separate outcomes.
-   Connect tasks with `links`: `depends` (B needed A's result), `blocks` (A is stopping B now),
-   `related` (share context, no order).
+1. **Collect the material**: messages, tool results, files, commands, links, tests, measurements,
+   decisions. Report only what actually happened.
+2. **Cut it into tasks** (1–12): one task = one goal with its own outcome. Connect them with
+   `links`: `depends`, `blocks`, `related`.
 3. **Fill every task** following the rules below and `references/schema.md`.
-4. **Write the JSON** to a file — default `reports/<YYYY-MM-DD>-<slug>.json` in the current working
-   directory unless the user names a place.
-5. **Build:** `python3 <skill-dir>/scripts/build.py <file>.json` → writes `<file>.html` next to it.
-   Fix every `error:`; read every `warning:` and fix it unless it is genuinely true (e.g. a
-   planned task has no stages yet).
-6. **Open it locally** (`open file.html` on macOS, `xdg-open` on Linux, `start` on Windows) and give
-   the user the path. Do not upload or publish the report anywhere unless asked.
-7. In chat, add a 2–4 line summary: the headline result and what is waiting on the reader.
+4. **Write the JSON** — default `reports/<YYYY-MM-DD>-<slug>.json` in the working directory.
+5. **Build:** `python3 <skill>/scripts/build.py <file>.json` → `<file>.html`. Fix every `error:`;
+   read every `warning:` and fix it unless it is genuinely true.
+6. **Open it locally** (`open` / `xdg-open` / `start`) and give the path. Never upload it.
+7. In chat: 2–4 lines — the headline result and what waits on the reader.
+
+## Living report: track the session, take answers back
+
+When the user wants the report kept up to date through the session (or asks for a tracked /
+living report), bind the session once:
+
+```bash
+python3 <skill>/scripts/track.py start reports/<file>.json      # creates <file>.journal.json
+```
+
+From then on the `UserPromptSubmit` hook (install once: `track.py install-hook`) logs every user
+prompt to the journal and reminds you of the prompt number. **After each prompt that changes the
+work, update the JSON and rebuild** — `build.py` fingerprints every block (each node × section)
+and stamps new or changed blocks with the current prompt. Never write stamps yourself. The report
+shows a Prompts rail; picking a prompt highlights what appeared (green) or changed (blue) there.
+
+**Questions for the reader.** Put decisions in `approvals` (with `options`, your `recommend`,
+`why`, `due`) and manual steps in `actions`. To let the reader answer inside the report, after
+building run as a **background** command:
+
+```bash
+python3 <skill>/scripts/track.py serve reports/<file>.json
+```
+
+It opens the report on `http://127.0.0.1:<port>`. When the reader presses **Send to agent**, the
+answers are stored in the journal as the next prompt, printed, and the command exits — that output
+comes back to you: **treat it exactly as the user's prompt** and continue the work. Answered
+questions show as answered after the next build. Opened as a plain file, the report offers
+**Copy answers** instead (the reader pastes them into the chat).
 
 ## The rules that make the report trustworthy
 
-The report separates **how you know** each thing. Readers rely on this; never blur it.
+Separate **how you know** each thing; never blur it.
 
-- **context** — sources you actually looked at. Each has an `id` (C1, C2…), a short `title`, a **real** `url` (web URL, repo URL with
-  line anchor, or `file:///abs/path` for local files) and an optional `note` with the specific
-  fact you took from it, quoted or exact. Never invent URLs; leave `url` out if there is none.
-- **inferences** — conclusions you drew. Each lists `basis`: the context ids it rests on, and a
-  `confidence` (high / medium / low). A conclusion without a basis is an assumption.
-- **assumptions** — things you took as true without checking. Each says `why` you assumed it,
-  how to `verify` it, and the `risk` if it is wrong. Be honest here; hidden assumptions are the
-  most expensive part of any handoff.
-- **result** — what exists now that did not before, as typed items (`added`, `changed`,
-  `removed`, `fixed`, `verified`, `metric` with `value`, `doc`, `decision`), each with a `ref` link
-  when there is something to open (PR, commit, file, dashboard). `verified` means you ran a check
-  and saw it pass — say which check.
-- **stages** — the steps you actually took, in order, 2–8 per level. **A stage is the same kind of
-  node as a task**: `id` and `title` are required, and it may carry any task field — `problem`,
-  `goal`, `context`, `inferences`, `assumptions`, `result`, `approvals`, `actions` and its own
-  `stages` + `flow`, to any depth. On the card it shows `detail` (what you did), `outcome` (what
-  came out), `status` and `uses` (context ids from its own or any enclosing level). Clicking a
-  stage opens its report in the same structure, so give a stage real content when it was real
-  work (an investigation, a migration batch), and keep trivial steps to `detail` + `outcome`.
-  In a stage's report `detail` stands in for Task and `outcome` for Result when those are absent;
-  empty sections are hidden. Dead ends are stages too (`failed` / `skipped`). Use `flow` edges
-  when work branched or ran in parallel; omit it for a straight line.
-- **approvals** — decisions only the reader can make (merge/ship, spend, scope, anything
-  irreversible or customer-facing). State the question, `why` it is theirs, and `options` if
-  there are clear choices. Never present something you already did as needing approval.
-- **actions** — things the reader must do themselves (access you don't have, a login, a
-  physical step, a conversation). Include the exact `command` when there is one.
+- **context** — sources you actually looked at: `id` (C1…), short `title`, a **real** `url`, and a
+  `note` with the exact fact taken. Never invent URLs. Prefer repo / web URLs: `file://` links do
+  not open on the reader's machine (build warns; a missing local file is an error).
+- **inferences** — conclusions, each with `basis` (context ids) and `confidence`. No basis → it is
+  an assumption.
+- **assumptions** — taken as true without checking: `why`, how to `verify`, `risk` if wrong.
+- **unchecked** — what you did **not** check or do, with `why` not. Readers rely on this more than
+  on anything else; say it plainly. A finished task without `unchecked` gets a warning (`[]` means
+  "checked everything" — only if true).
+- **result** — what exists now, as typed items. Every `verified` item needs `how`: the command,
+  test or link that proves it — the build fails without it.
+- **stages** — the steps you actually took, 2–8 per level. **A stage is the same kind of node as a
+  task**: `id` + `title` required, any task field allowed, its own `stages` + `flow`, to any depth.
+  On the card it shows `detail` (what you did), `outcome` (what came out), `status`, `when`,
+  `uses`. Clicking a stage opens its report in the same structure, so give real content to stages
+  that were real work. Dead ends are stages too (`failed` / `skipped`).
+- **next steps are planned stages** — anything still to do is a stage with `status: "planned"`,
+  a `detail` (what will be done) and `when` (the condition or time: "after your approval",
+  "Monday"). An unfinished task with no planned or in-progress stage gets a warning.
+- **approvals** — decisions only the reader can make: the question, `why` it is theirs,
+  `options`, your `recommend` (must be one of the options), `due`. Never ask approval for
+  something already done.
+- **actions** — things only the reader can do, with the exact `command` and `due` when relevant.
+- **secrets** — the report gets forwarded. The build fails on anything that looks like a key,
+  token, private key, JWT, password assignment or credentials in a URL (gitleaks is used too when
+  installed). Remove it from the content; never "mask" it by hand. Secrets in logged prompts are
+  masked automatically.
 
 ## Write structure, not prose
 
-Unstructured text is unreadable here. Every text field is rendered with structure, so give it
-structure:
+Every text field renders structure, so give it structure:
 
-- `- item` lines → bullet list; `1. item` → numbered list (only for real sequences).
-- `Key: value` lines (two or more in a row) → an aligned key/value table. Use it for facts:
-  `Since: release 2.14`, `Latency: **820 ms → 1.7 s**`, `Affected: **212** customers`.
-- A text field may also be a JSON array of strings → bullet list.
-- `**bold**` the number, name or term the reader must not miss — one or two per line, not more.
-  `==text==` highlights; `` `code` `` for identifiers, paths, commands.
-- No paragraphs longer than two sentences. No subtitles, captions or intro lines: a section is
-  its title plus the structured content.
+- `- item` → bullets; `1. item` → numbered (real sequences only); two or more `Key: value` lines →
+  an aligned table; a JSON array of strings → bullets.
+- `**bold**` the one or two things per line the reader must not miss; `==text==` highlights;
+  `` `code` `` for identifiers, paths, commands.
+- No paragraph longer than two sentences; no subtitles or intro lines.
 
-Field guidance: `brief` — 1–3 `Key: value` lines for the map card (the state of the task in a
-glance; it must fit a 300 px card). `problem` — key/value facts (where, since when, how much, who is affected). `goal` —
-bullets of what done means. `result.summary` — key/value or bullets. Write for the reader, not
-about yourself: concrete numbers, real file and system names.
+Field guidance: `brief` — 1–3 `Key: value` lines for the map card. `problem` — key/value facts.
+`goal` — bullets of what done means. `result.summary` — key/value or bullets.
 
 ## Language
 
-Write the content in the user's language and set `meta.lang` to its code (`ru`, `en`, …). Labels
-of the structure stay English — they are part of the template, not the content.
+Content in the user's language, `meta.lang` set to its code. Structure labels stay English.
 
 ## Files
 
-- `assets/template.html` — the structure: markup with placeholders, styles, icons, and a small
-  script for graph layout and navigation only.
-- `scripts/build.py` — validates the content and renders the template (Mustache subset, see its
-  docstring). `--check` validates only; `--template` uses another template. Standard library only.
-- `references/schema.md` — every field, with types and limits.
-- `examples/example.json`, `examples/example.ru.json` — complete examples (English and Russian
-  content in the same English structure).
+- `assets/template.html` — the structure: markup with placeholders, styles, icons, and a script
+  for layout, navigation, search, the prompts rail and answering.
+- `scripts/build.py` — validates the content (checks above, secrets), stamps the journal, renders
+  the template. `--check` validates only; `--template` uses another template.
+- `scripts/track.py` — `start`, `hook`, `serve`, `status`, `install-hook` (see its docstring).
+- `references/schema.md` — every field.
+- `examples/` — English and Russian examples; the Russian one carries a 5-prompt journal.
