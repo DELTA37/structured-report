@@ -32,14 +32,28 @@ code{font:13px/1.4 ui-monospace,"SF Mono",Menlo,monospace;background:var(--panel
 .top h1{font:600 clamp(30px,4vw,46px)/1.05 var(--display);letter-spacing:-.01em;margin:0 0 14px;max-width:22ch}
 .meta{display:flex;flex-wrap:wrap;gap:6px 18px;color:var(--ink-2);font-size:14px;margin:0 0 18px}
 .meta span{display:inline-flex;gap:6px;align-items:center}
-.summary{max-width:68ch;margin:0;font-size:16px}
+.summary{max-width:70ch;margin:0;font-size:16px}
+.rich p{margin:0 0 8px}
+.rich p:last-child{margin-bottom:0}
+.rich strong{font-weight:650;color:var(--ink)}
+.rich ul,.rich ol{margin:0 0 8px;padding:0;list-style:none;display:grid;gap:6px}
+.rich ul:last-child,.rich ol:last-child{margin-bottom:0}
+.rich ul > li{position:relative;padding-left:18px}
+.rich ul > li::before{content:"";position:absolute;left:3px;top:.62em;width:6px;height:6px;background:var(--ink);border-radius:1px;transform:rotate(45deg)}
+.rich ol{counter-reset:pt}
+.rich ol > li{position:relative;padding-left:26px;counter-increment:pt}
+.rich ol > li::before{content:counter(pt);position:absolute;left:0;top:.15em;width:18px;height:18px;border-radius:50%;border:1px solid var(--ink-2);font:600 11px/16px var(--display);text-align:center;color:var(--ink-2)}
+.rich .kv{display:grid;grid-template-columns:max-content 1fr;gap:4px 14px;margin:0 0 8px}
+.rich .kv dt{color:var(--ink-2)}
+.rich .kv dd{margin:0}
+.rich mark{background:linear-gradient(transparent 50%,var(--marker-soft) 50%);color:inherit;padding:0 1px}
 .tally{display:flex;gap:22px;margin-top:22px;flex-wrap:wrap}
 .tally div{display:flex;flex-direction:column}
 .tally b{font:600 28px/1 var(--display)}
 .tally span{color:var(--ink-2);font-size:13px}
 
 .queue{background:var(--panel);border:1px solid var(--rule);border-radius:var(--r-node);padding:18px 18px 8px}
-.queue h2{font:600 19px/1.2 var(--display);margin:0 0 4px;display:flex;gap:8px;align-items:center}
+.queue h2{font:600 19px/1.2 var(--display);margin:0 0 10px;display:flex;gap:8px;align-items:center}
 .queue p.hint{margin:0 0 12px;color:var(--ink-2);font-size:13px}
 .queue ul{list-style:none;margin:0;padding:0}
 .queue li{border-top:1px solid var(--rule)}
@@ -47,7 +61,7 @@ code{font:13px/1.4 ui-monospace,"SF Mono",Menlo,monospace;background:var(--panel
 .queue button:hover .q-text{background:linear-gradient(transparent 55%,var(--marker-soft) 55%)}
 .queue button:focus-visible{outline:2px solid var(--cobalt)}
 .q-text{font-size:14px}
-.q-task{display:block;color:var(--ink-3);font-size:12.5px}
+.q-task{display:flex;gap:5px;align-items:center;color:var(--ink-2);font-size:12.5px;margin-top:3px}
 .queue .empty{color:var(--ink-2);font-size:14px;padding:10px 0}
 
 /* ── map ────────────────────────────────────────────── */
@@ -71,10 +85,11 @@ code{font:13px/1.4 ui-monospace,"SF Mono",Menlo,monospace;background:var(--panel
   box-shadow:0 1px 0 var(--rule);transition:transform .15s ease,box-shadow .15s ease,border-color .15s}
 .node:hover{transform:translateY(-2px);border-color:var(--ink-3);box-shadow:0 6px 18px -10px rgba(23,38,43,.45)}
 .node[aria-current="true"]{border-color:var(--ink);box-shadow:0 0 0 2px var(--ink)}
-.node .st{display:flex;gap:6px;align-items:center;font-size:12.5px;color:var(--ink-2);margin-bottom:6px}
-.node h3{font:600 18px/1.2 var(--display);margin:0 0 8px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.node .nh{display:grid;grid-template-columns:20px 1fr;gap:8px;align-items:start}
+.node .nh .icon{width:20px;height:20px;margin-top:1px}
+.node h3{font:600 18px/1.2 var(--display);margin:0;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
 .node .goal{font-size:13px;color:var(--ink-2);margin:0 0 10px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-.node .flags{display:flex;gap:6px;flex-wrap:wrap}
+.node .flags{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px}
 .flag{display:inline-flex;align-items:center;gap:5px;font-size:12px;border-radius:999px;padding:2px 9px 2px 7px;background:var(--panel-2);border:1px solid var(--rule);color:var(--ink-2)}
 .flag.mine{background:var(--marker);border-color:#D9B92A;color:var(--ink)}
 
@@ -89,7 +104,10 @@ code{font:13px/1.4 ui-monospace,"SF Mono",Menlo,monospace;background:var(--panel
 .drawer.open{transform:none}
 .drawer:focus{outline:none}
 .d-head{position:sticky;top:0;z-index:2;background:var(--paper);border-bottom:1px solid var(--rule);padding:18px 28px 14px;display:grid;grid-template-columns:1fr auto;gap:12px}
-.d-head h2{font:600 28px/1.1 var(--display);margin:4px 0 6px}
+.d-head h2{font:600 28px/1.1 var(--display);margin:0}
+.dh{display:grid;grid-template-columns:26px 1fr;gap:4px 10px;align-items:start}
+.dh > span .icon{width:24px;height:24px;margin-top:3px}
+.dh .ref{grid-column:2;display:inline-flex;gap:5px;align-items:center;font-size:13px;width:max-content}
 .d-head .st{display:flex;gap:8px;align-items:center;font-size:13px;color:var(--ink-2);flex-wrap:wrap}
 .iconbtn{all:unset;cursor:pointer;width:36px;height:36px;display:grid;place-items:center;border-radius:8px;border:1px solid var(--rule);background:var(--panel)}
 .iconbtn:hover{border-color:var(--ink-3)}
@@ -121,7 +139,11 @@ code{font:13px/1.4 ui-monospace,"SF Mono",Menlo,monospace;background:var(--panel
 
 .claims{list-style:none;margin:0 0 12px;padding:0;display:grid;gap:10px}
 .claims li{padding:6px 0 6px 14px;max-width:76ch}
-.claims .sub{display:flex;gap:14px;flex-wrap:wrap;color:var(--ink-2);font-size:13px;margin-top:4px}
+.facts{display:grid;grid-template-columns:max-content 1fr;gap:4px 14px;margin:8px 0 0;font-size:14px}
+.facts dt{color:var(--ink-2)}
+.facts dd{margin:0}
+.risk{display:inline-block;font-size:12.5px;padding:0 8px;border-radius:999px;border:1px solid var(--rule)}
+.risk.r-high{border-color:var(--bad);color:var(--bad)} .risk.r-medium{border-color:var(--warn);color:var(--warn)}
 .chip{display:inline-flex;align-items:center;gap:4px;font-size:12.5px;padding:0 7px;border-radius:999px;border:1px solid var(--rule);background:var(--panel);color:var(--ink-2);text-decoration:none}
 a.chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
 .conf{display:inline-flex;gap:3px;align-items:center}
@@ -247,9 +269,7 @@ footer{padding:24px clamp(20px,5vw,64px) 40px;color:var(--ink-3);font-size:13px;
 <header class="top">
   <div>
     <h1 id="title"></h1>
-    <p class="meta" id="meta"></p>
-    <p class="summary" id="summary"></p>
-    <div class="tally" id="tally"></div>
+    <div class="summary rich" id="summary"></div>
   </div>
   <aside class="queue" id="queue" aria-labelledby="queue-h"></aside>
 </header>
@@ -280,7 +300,7 @@ footer{padding:24px clamp(20px,5vw,64px) 40px;color:var(--ink-3);font-size:13px;
   },
   "generated": "2026-11-06 18:40"
  },
- "summary": "Checkout p95 latency doubled after release **2.14**. The cause is an unbounded connection pool in the payments client that exhausts sockets under retry storms. The fix is ready for review, 212 orders that failed during the incident can be replayed, and alerting is half done. Two decisions and two manual steps are waiting on you.",
+ "summary": "- **Cause:** unbounded connection pool in payments client 4.0 (shipped in **2.14**) exhausts sockets under retries\n- **Impact:** checkout p95 **820 ms → 1.7 s**, **212** customers charged without an order\n- **Fix:** pool cap + backoff, PR ready for review\n- **Waiting on you:** 2 decisions, 2 manual steps",
  "tasks": [
   {
    "id": "latency",
@@ -290,12 +310,11 @@ footer{padding:24px clamp(20px,5vw,64px) 40px;color:var(--ink-3);font-size:13px;
     "label": "ACME-412",
     "url": "https://example.com/issues/ACME-412"
    },
-   "tags": [
-    "incident",
-    "payments"
+   "problem": "Since: release 2.14, Nov 2 14:05\nLatency: checkout p95 **820 ms → 1.7 s**\nTimeouts: **0.9%** of payment attempts\nCustomers: charged without an order (support reports)",
+   "goal": [
+    "Find the root cause **with evidence**",
+    "Say what to change to get p95 back to the pre-2.14 level"
    ],
-   "problem": "Since release 2.14 (Nov 2), checkout p95 latency rose from 820 ms to 1.7 s, and 0.9% of payment attempts time out. Support reports customers being charged without an order.",
-   "goal": "Find the root cause with evidence, and say what to change so that latency returns to the pre-2.14 level.",
    "context": [
     {
      "id": "C1",
@@ -373,7 +392,7 @@ footer{padding:24px clamp(20px,5vw,64px) 40px;color:var(--ink-3);font-size:13px;
     }
    ],
    "result": {
-    "summary": "Root cause found and confirmed by a load test: unbounded connections in payments client 4.0.",
+    "summary": "Root cause: unbounded connections in payments client 4.0\nConfirmed by: load test at 3× peak",
     "items": [
      {
       "kind": "decision",
@@ -495,11 +514,12 @@ footer{padding:24px clamp(20px,5vw,64px) 40px;color:var(--ink-3);font-size:13px;
     "label": "PR #1290",
     "url": "https://example.com/acme/shop/pull/1290"
    },
-   "tags": [
-    "payments"
+   "problem": "Payments client opens **unlimited sockets** → file descriptors run out under retries.",
+   "goal": [
+    "Limit the connection pool",
+    "Add backoff to retries",
+    "Keep payment semantics unchanged"
    ],
-   "problem": "The payments client opens unlimited sockets, which exhausts file descriptors under retries.",
-   "goal": "Limit the pool and make retries back off, without changing payment semantics.",
    "context": [
     {
      "id": "C1",
@@ -538,7 +558,7 @@ footer{padding:24px clamp(20px,5vw,64px) 40px;color:var(--ink-3);font-size:13px;
     }
    ],
    "result": {
-    "summary": "PR ready: pool cap, jittered exponential backoff, and a metric for pool saturation.",
+    "summary": "PR **#1290** ready:\n- pool cap\n- jittered exponential backoff\n- pool saturation metric",
     "items": [
      {
       "kind": "changed",
@@ -627,12 +647,11 @@ footer{padding:24px clamp(20px,5vw,64px) 40px;color:var(--ink-3);font-size:13px;
    "id": "replay",
    "title": "Replay orders that failed during the incident",
    "status": "blocked",
-   "tags": [
-    "data",
-    "customers"
+   "problem": "Affected: **212** customers, **$18,406**\nState: charged by the provider, no order on our side\nCause: our timeout fired after the provider accepted the payment",
+   "goal": [
+    "Create the missing orders from provider records",
+    "Charge nobody twice"
    ],
-   "problem": "212 customers were charged but have no order, because our side timed out after the provider accepted the payment.",
-   "goal": "Create the missing orders from provider records, without charging anyone twice.",
    "context": [
     {
      "id": "C1",
@@ -672,7 +691,7 @@ footer{padding:24px clamp(20px,5vw,64px) 40px;color:var(--ink-3);font-size:13px;
     }
    ],
    "result": {
-    "summary": "Replay script written and dry-run on staging; production run waits for your decision.",
+    "summary": "Script: written, dry-run on staging\nProduction run: waits for your decision",
     "items": [
      {
       "kind": "added",
@@ -737,11 +756,8 @@ footer{padding:24px clamp(20px,5vw,64px) 40px;color:var(--ink-3);font-size:13px;
    "id": "alerts",
    "title": "Alert on provider timeouts and pool saturation",
    "status": "in_progress",
-   "tags": [
-    "observability"
-   ],
-   "problem": "The incident was noticed by support two hours after it started; no alert fired.",
-   "goal": "Page on-call within 5 minutes when payment timeouts or pool saturation rise.",
+   "problem": "Detected by: support, **2 hours** after start\nAlerts fired: none",
+   "goal": "Page on-call **within 5 minutes** when payment timeouts or pool saturation rise.",
    "context": [
     {
      "id": "C1",
@@ -767,7 +783,7 @@ footer{padding:24px clamp(20px,5vw,64px) 40px;color:var(--ink-3);font-size:13px;
    ],
    "assumptions": [],
    "result": {
-    "summary": "Timeout alert drafted; saturation alert waits for the new metric from the pool fix.",
+    "summary": "Timeout alert: drafted\nSaturation alert: waits for the metric from the pool fix",
     "items": [
      {
       "kind": "added",
@@ -814,7 +830,7 @@ footer{padding:24px clamp(20px,5vw,64px) 40px;color:var(--ink-3);font-size:13px;
    "id": "runbook",
    "title": "Update the payments incident runbook",
    "status": "planned",
-   "problem": "The runbook does not mention connection exhaustion or how to replay orders.",
+   "problem": "The runbook lacks:\n- connection exhaustion\n- how to replay orders",
    "goal": "Add both, so the next on-call can act without this week's investigation.",
    "context": [
     {
@@ -914,11 +930,43 @@ function md(s) {
   let h = esc(s);
   h = h.replace(/`([^`]+)`/g, "<code>$1</code>");
   h = h.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+  h = h.replace(/==([^=]+)==/g, "<mark>$1</mark>");
   h = h.replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, (m, t, u) => {
     const url = safeUrl(u.replace(/&amp;/g, "&"));
     return url ? `<a href="${esc(url)}" target="_blank" rel="noopener">${t}</a>` : t;
   });
-  return h.replace(/\n/g, "<br>");
+  return h;
+}
+// Block structure: "- item" lists, "1. item" numbered, "Key: value" lines (when 2+ in a row) → key/value grid,
+// blank line → new paragraph. Arrays render as bullet lists.
+function rich(v) {
+  if (v == null || v === "") return "";
+  if (Array.isArray(v)) return `<ul>${v.map(x => `<li>${md(x)}</li>`).join("")}</ul>`;
+  const lines = String(v).split("\n");
+  let out = "", buf = [], mode = null;
+  const flush = () => {
+    if (!buf.length) return;
+    if (mode === "ul") out += `<ul>${buf.map(x => `<li>${md(x)}</li>`).join("")}</ul>`;
+    else if (mode === "ol") out += `<ol>${buf.map(x => `<li>${md(x)}</li>`).join("")}</ol>`;
+    else if (mode === "kv") out += buf.length > 1
+      ? `<dl class="kv">${buf.map(([k, x]) => `<dt>${md(k)}</dt><dd>${md(x)}</dd>`).join("")}</dl>`
+      : `<p><strong>${md(buf[0][0])}:</strong> ${md(buf[0][1])}</p>`;
+    else out += `<p>${buf.map(md).join("<br>")}</p>`;
+    buf = []; mode = null;
+  };
+  for (const raw of lines) {
+    const line = raw.trim();
+    let m, kind, item;
+    if (!line) { flush(); continue; }
+    if ((m = /^[-•*]\s+(.*)$/.exec(line))) { kind = "ul"; item = m[1]; }
+    else if ((m = /^\d+[.)]\s+(.*)$/.exec(line))) { kind = "ol"; item = m[1]; }
+    else if ((m = /^([^:`*\[]{2,28}):\s+(.+)$/.exec(line))) { kind = "kv"; item = [m[1], m[2]]; }
+    else { kind = "p"; item = line; }
+    if (mode && mode !== kind) flush();
+    mode = kind; buf.push(item);
+  }
+  flush();
+  return out;
 }
 const icon = (id, cls = "") => `<svg class="icon ${cls}" aria-hidden="true"><use href="#i-${id}"/></svg>`;
 const KNOWN_ICON = id => !!document.getElementById("i-" + id);
@@ -1064,23 +1112,12 @@ const approvals = all("approvals"), actions = all("actions");
 
 document.title = meta.title || "Structured report";
 document.getElementById("title").textContent = meta.title || "Report";
-const metaBits = [];
-if (meta.period) metaBits.push(`<span>${icon("calendar", "sm")}${esc([meta.period.from, meta.period.to].filter(Boolean).join(" – "))}</span>`);
-if (meta.author) metaBits.push(`<span>${icon("author", "sm")}${esc(meta.author)}</span>`);
-if (meta.audience) metaBits.push(`<span>${icon("chat", "sm")}${esc(meta.audience)}</span>`);
-document.getElementById("meta").innerHTML = metaBits.join("");
-document.getElementById("summary").innerHTML = md(DATA.summary || "");
-const doneN = tasks.filter(t => t.status === "done").length;
-document.getElementById("tally").innerHTML =
-  `<div><b>${tasks.length}</b><span>${esc(T.tasks)}</span></div>` +
-  `<div><b>${doneN}</b><span>${esc(T.status.done)}</span></div>` +
-  `<div><b>${approvals.length}</b><span>${esc(T.approvals)}</span></div>` +
-  `<div><b>${actions.length}</b><span>${esc(T.actions)}</span></div>`;
+document.getElementById("summary").innerHTML = rich(DATA.summary || "");
 
 const qItems = [...approvals.map(a => ({...a, kind: "approve"})), ...actions.map(a => ({...a, kind: "action"}))];
 document.getElementById("queue").innerHTML =
-  `<h2 id="queue-h">${icon("queue")}${esc(T.queue)}</h2><p class="hint">${esc(T.queueHint)}</p>` +
-  (qItems.length ? `<ul>${qItems.map(q => `<li><button data-task="${esc(q.t.id)}" data-sec="${q.kind === "approve" ? "approvals" : "actions"}">${icon(q.kind)}<span><span class="q-text">${md(q.x.text)}</span><span class="q-task">${esc(q.t.title)}</span></span></button></li>`).join("")}</ul>`
+  `<h2 id="queue-h">${icon("queue")}${esc(T.queue)}</h2>` +
+  (qItems.length ? `<ul>${qItems.map(q => `<li><button data-task="${esc(q.t.id)}" data-sec="${q.kind === "approve" ? "approvals" : "actions"}">${icon(q.kind)}<span><span class="q-text">${md(q.x.text)}</span><span class="q-task">${icon("issue", "sm")}${esc(q.t.title)}</span></span></button></li>`).join("")}</ul>`
     : `<p class="empty">${esc(T.queueEmpty)}</p>`);
 
 document.getElementById("map-h").textContent = T.map;
@@ -1094,10 +1131,9 @@ function nodeEl(t) {
   const b = document.createElement("button");
   b.className = "node"; b.type = "button"; b.dataset.task = t.id;
   const na = arr(t.approvals).length, nc = arr(t.actions).length;
-  b.innerHTML = `<div class="st">${statusBadge(t.status)}</div><h3>${esc(t.title)}</h3>` +
-    (t.goal ? `<p class="goal">${esc(String(t.goal).replace(/[`*]/g, ""))}</p>` : "") +
-    `<div class="flags">${na ? `<span class="flag mine">${icon("approve", "sm")}${esc(T.approvalsN(na))}</span>` : ""}${nc ? `<span class="flag mine">${icon("action", "sm")}${esc(T.actionsN(nc))}</span>` : ""}` +
-    `${arr(t.stages).length ? `<span class="flag">${icon("flow", "sm")}${esc(T.stepsN(arr(t.stages).length))}</span>` : ""}${arr(t.context).length ? `<span class="flag">${icon("context", "sm")}${esc(T.sourcesN(arr(t.context).length))}</span>` : ""}</div>`;
+  b.setAttribute("aria-label", `${t.title} — ${T.status[t.status] || t.status || ""}`);
+  b.innerHTML = `<div class="nh"><span class="s-${esc(t.status || "planned")}" title="${esc(T.status[t.status] || "")}">${ico(t.status || "planned", "planned")}</span><h3>${esc(t.title)}</h3></div>` +
+    ((na || nc) ? `<div class="flags">${na ? `<span class="flag mine">${icon("approve", "sm")}${esc(T.approvals)}</span>` : ""}${nc ? `<span class="flag mine">${icon("action", "sm")}${esc(T.actions)}</span>` : ""}</div>` : "");
   return b;
 }
 // "A depends on B" is drawn B → A (prerequisite first)
@@ -1110,8 +1146,8 @@ drawMap();
 document.getElementById("footer").textContent = `${T.generated}: ${meta.generated || new Date().toISOString().slice(0, 16).replace("T", " ")}`;
 
 // ── task report ───────────────────────────────────────
-function section(id, iconId, title, body, count) {
-  return `<section class="sec" id="sec-${id}"><h3>${icon(iconId)}${esc(title)}${count != null ? `<span class="count">${count}</span>` : ""}</h3>${body}</section>`;
+function section(id, iconId, title, body) {
+  return `<section class="sec" id="sec-${id}"><h3>${icon(iconId)}${esc(title)}</h3>${body}</section>`;
 }
 const noneP = () => `<p class="none">${esc(T.none)}</p>`;
 
@@ -1124,25 +1160,24 @@ function taskHTML(t, forPrint) {
   }).join("");
 
   let h = "";
-  h += section("problem", "problem", T.problem, `<div class="prose lead">${md(t.problem || "")}</div>`);
-  h += section("goal", "goal", T.goal, `<div class="prose">${md(t.goal || "")}</div>`);
+  h += section("problem", "problem", T.problem, `<div class="prose rich lead">${rich(t.problem)}</div>`);
+  h += section("goal", "goal", T.goal, `<div class="prose rich">${rich(t.goal)}</div>`);
 
-  const legend = `<div class="kind-legend"><span><i class="k-evidence"></i>${esc(T.evidence)}</span><span><i class="k-inference"></i>${esc(T.inference)}</span><span><i class="k-assumption"></i>${esc(T.assumption)}</span></div>`;
-  h += section("context", "context", T.context, ctx.length ? legend + `<ul class="ctx">${ctx.map(c => {
+  h += section("context", "context", T.context, ctx.length ? `<ul class="ctx">${ctx.map(c => {
     const url = safeUrl(c.url);
     const title = url ? `<a class="t" href="${esc(url)}" target="_blank" rel="noopener">${esc(c.title)}</a>` : `<span class="t">${esc(c.title)}</span>`;
-    return `<li id="ctx-${esc(t.id)}-${esc(c.id)}" class="k-evidence">${ico(c.kind, "doc")}<div>${title}<span class="id">${esc(c.id)}</span>${c.note ? `<div class="n">${md(c.note)}</div>` : ""}</div></li>`;
-  }).join("")}</ul>` : noneP(), ctx.length);
+    return `<li id="ctx-${esc(t.id)}-${esc(c.id)}" class="k-evidence">${ico(c.kind, "doc")}<div>${title}<span class="id">${esc(c.id)}</span>${c.note ? `<div class="n rich">${rich(c.note)}</div>` : ""}</div></li>`;
+  }).join("")}</ul>` : noneP());
 
   const inf = arr(t.inferences);
-  h += section("inferences", "inference", T.inferences, inf.length ? `<ul class="claims">${inf.map(x => `<li class="k-inference"><div>${md(x.text)}</div><div class="sub">${arr(x.basis).length ? `<span>${esc(T.basis)}: ${refChips(x.basis)}</span>` : ""}${conf(x.confidence)}</div></li>`).join("")}</ul>` : noneP(), inf.length);
+  h += section("inferences", "inference", T.inferences, inf.length ? `<ul class="claims">${inf.map(x => `<li class="k-inference"><div class="rich">${rich(x.text)}</div><dl class="facts">${arr(x.basis).length ? `<dt>${esc(T.basis)}</dt><dd>${refChips(x.basis)}</dd>` : ""}${x.confidence ? `<dt>${esc(T.confidence)}</dt><dd>${conf(x.confidence)}</dd>` : ""}</dl></li>`).join("")}</ul>` : noneP());
 
   const asm = arr(t.assumptions);
-  h += section("assumptions", "assumption", T.assumptions, asm.length ? `<ul class="claims">${asm.map(x => `<li class="k-assumption"><div>${md(x.text)}</div><div class="sub">${x.why ? `<span>${esc(T.why)}: ${md(x.why)}</span>` : ""}${x.verify ? `<span>${esc(T.verify)}: ${md(x.verify)}</span>` : ""}${x.risk ? `<span>${esc(T.risk)}: ${esc(T[x.risk] || x.risk)}</span>` : ""}</div></li>`).join("")}</ul>` : noneP(), asm.length);
+  h += section("assumptions", "assumption", T.assumptions, asm.length ? `<ul class="claims">${asm.map(x => `<li class="k-assumption"><div class="rich">${rich(x.text)}</div><dl class="facts">${x.why ? `<dt>${esc(T.why)}</dt><dd class="rich">${rich(x.why)}</dd>` : ""}${x.verify ? `<dt>${esc(T.verify)}</dt><dd class="rich">${rich(x.verify)}</dd>` : ""}${x.risk ? `<dt>${esc(T.risk)}</dt><dd><span class="risk r-${esc(x.risk)}">${esc(T[x.risk] || x.risk)}</span></dd>` : ""}</dl></li>`).join("")}</ul>` : noneP());
 
   const res = t.result || {};
   const items = arr(res.items);
-  h += section("result", "result", T.result, (res.summary ? `<p class="result-sum">${md(res.summary)}</p>` : "") + (items.length ? `<ul class="result">${items.map(r => {
+  h += section("result", "result", T.result, (res.summary ? `<div class="result-sum rich">${rich(res.summary)}</div>` : "") + (items.length ? `<ul class="result">${items.map(r => {
     const body = r.kind === "metric" && r.value != null
       ? `<span class="metric"><b>${esc(r.value)}</b><span>${md(r.text || "")}</span></span>` : md(r.text || "");
     return `<li>${ico(r.kind, "changed")}<span class="k">${esc(T.kinds[r.kind] || r.kind || "")}</span><div>${body}${r.ref ? ` ${link(r.ref, "chip")}` : ""}</div></li>`;
@@ -1150,22 +1185,22 @@ function taskHTML(t, forPrint) {
 
   const st = arr(t.stages);
   if (forPrint) {
-    h += section("flow", "flow", T.flow, st.length ? `<ol>${st.map(s => `<li><strong>${esc(s.title)}</strong> — ${md(s.detail || "")}${s.outcome ? `<br><em>${esc(T.outcome)}:</em> ${md(s.outcome)}` : ""}</li>`).join("")}</ol>` : noneP(), st.length);
+    h += section("flow", "flow", T.flow, st.length ? `<ol>${st.map(s => `<li><strong>${esc(s.title)}</strong><div class="rich">${rich(s.detail)}</div>${s.outcome ? `<div class="rich"><strong>${esc(T.outcome)}:</strong> ${md(s.outcome)}</div>` : ""}</li>`).join("")}</ol>` : noneP());
   } else {
-    h += section("flow", "flow", T.flow, st.length ? `<div class="flow"><div class="graph" id="flow-graph"></div></div>` : noneP(), st.length);
+    h += section("flow", "flow", T.flow, st.length ? `<div class="flow"><div class="graph" id="flow-graph"></div></div>` : noneP());
   }
 
   const ap = arr(t.approvals);
-  h += section("approvals", "approve", T.approvals, ap.length ? `<ul class="mine-list">${ap.map(a => `<li>${icon("approve")}<div><div class="t">${md(a.text)}</div>${a.why ? `<div class="why">${md(a.why)}</div>` : ""}${arr(a.options).length ? `<div class="opts">${arr(a.options).map(o => `<span>${esc(o)}</span>`).join("")}</div>` : ""}</div></li>`).join("")}</ul>` : noneP(), ap.length);
+  h += section("approvals", "approve", T.approvals, ap.length ? `<ul class="mine-list">${ap.map(a => `<li>${icon("approve")}<div><div class="t">${md(a.text)}</div>${a.why ? `<div class="why rich">${rich(a.why)}</div>` : ""}${arr(a.options).length ? `<div class="opts">${arr(a.options).map(o => `<span>${esc(o)}</span>`).join("")}</div>` : ""}</div></li>`).join("")}</ul>` : noneP());
 
   const ac = arr(t.actions);
-  h += section("actions", "action", T.actions, ac.length ? `<ul class="mine-list">${ac.map(a => `<li>${icon("action")}<div><div class="t">${md(a.text)}</div>${a.why ? `<div class="why">${md(a.why)}</div>` : ""}${a.command ? `<div class="cmd"><code>${esc(a.command)}</code>${forPrint ? "" : `<button class="copy" data-copy="${esc(a.command)}">${icon("copy", "sm")}${esc(T.copy)}</button>`}</div>` : ""}</div></li>`).join("")}</ul>` : noneP(), ac.length);
+  h += section("actions", "action", T.actions, ac.length ? `<ul class="mine-list">${ac.map(a => `<li>${icon("action")}<div><div class="t">${md(a.text)}</div>${a.why ? `<div class="why rich">${rich(a.why)}</div>` : ""}${a.command ? `<div class="cmd"><code>${esc(a.command)}</code>${forPrint ? "" : `<button class="copy" data-copy="${esc(a.command)}">${icon("copy", "sm")}${esc(T.copy)}</button>`}</div>` : ""}</div></li>`).join("")}</ul>` : noneP());
   return h;
 }
 
 function headHTML(t, withNav) {
   const i = tasks.indexOf(t);
-  return `<div><div class="st">${statusBadge(t.status)}${t.ref ? `<span>${link(t.ref)}</span>` : ""}${arr(t.tags).map(x => `<span class="chip">${esc(x)}</span>`).join("")}</div><h2 id="d-title">${esc(t.title)}</h2></div>` +
+  return `<div class="dh"><span class="s-${esc(t.status || "planned")}" title="${esc(T.status[t.status] || "")}">${ico(t.status || "planned", "planned")}</span><h2 id="d-title">${esc(t.title)}</h2>${t.ref && safeUrl(t.ref.url) ? `<a class="ref" href="${esc(safeUrl(t.ref.url))}" target="_blank" rel="noopener">${icon("link", "sm")}${esc(t.ref.label || t.ref.url)}</a>` : ""}</div>` +
     (withNav ? `<div class="d-nav"><button class="iconbtn" data-nav="${i - 1}" ${i ? "" : "disabled"} title="${esc(T.prev)}" aria-label="${esc(T.prev)}">${icon("prev")}</button><button class="iconbtn" data-nav="${i + 1}" ${i < tasks.length - 1 ? "" : "disabled"} title="${esc(T.next)}" aria-label="${esc(T.next)}">${icon("next")}</button><button class="iconbtn" data-close title="${esc(T.close)}" aria-label="${esc(T.close)}">${icon("close")}</button></div>` : "");
 }
 
@@ -1175,7 +1210,7 @@ function stageEl(s, n, t) {
   const ctxIds = new Set(arr(t.context).map(c => c.id));
   const refs = arr(s.uses).filter(id => ctxIds.has(id));
   el.innerHTML = `<div class="h"><span class="num">${n}</span><h4>${esc(s.title)}</h4><span class="s-${esc(s.status || "done")}" title="${esc(T.status[s.status || "done"] || "")}">${ico(s.status || "done", "done", "sm")}</span></div>` +
-    (s.detail ? `<div class="d">${md(s.detail)}</div>` : "") +
+    (s.detail ? `<div class="d rich">${rich(s.detail)}</div>` : "") +
     (s.outcome ? `<div class="o">${icon("outcome", "sm")}<span>${md(s.outcome)}</span></div>` : "") +
     (refs.length ? `<div class="refs">${refs.map(id => `<a class="chip" href="#ctx-${esc(t.id)}-${esc(id)}" data-ctx="${esc(id)}">${ico((arr(t.context).find(c => c.id === id) || {}).kind, "doc", "sm")}${esc(id)}</a>`).join("")}</div>` : "");
   return el;

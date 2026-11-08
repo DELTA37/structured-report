@@ -59,9 +59,24 @@ The report separates **how you know** each thing. Readers rely on this; never bl
 - **actions** — things the reader must do themselves (access you don't have, a login, a
   physical step, a conversation). Include the exact `command` when there is one.
 
-Write for the reader, not about yourself: short sentences, concrete numbers, names of real files
-and systems. Problem = what is wrong and for whom. Task = what "done" means. Keep the overview
-`summary` to 2–4 sentences ending with what is waiting on the reader.
+## Write structure, not prose
+
+Unstructured text is unreadable here. Every text field is rendered with structure, so give it
+structure:
+
+- `- item` lines → bullet list; `1. item` → numbered list (only for real sequences).
+- `Key: value` lines (two or more in a row) → an aligned key/value table. Use it for facts:
+  `Since: release 2.14`, `Latency: **820 ms → 1.7 s**`, `Affected: **212** customers`.
+- A text field may also be a JSON array of strings → bullet list.
+- `**bold**` the number, name or term the reader must not miss — one or two per line, not more.
+  `==text==` highlights; `` `code` `` for identifiers, paths, commands.
+- No paragraphs longer than two sentences. No subtitles, captions or intro lines: a section is
+  its title plus the structured content.
+
+Field guidance: `summary` — 3–5 bullets `**Key:** value` (cause, impact, outcome, what waits on
+the reader). `problem` — key/value facts (where, since when, how much, who is affected). `goal` —
+bullets of what done means. `result.summary` — key/value or bullets. Write for the reader, not
+about yourself: concrete numbers, real file and system names.
 
 ## Language
 

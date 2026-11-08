@@ -5,7 +5,7 @@ tasks you can click into, where every claim says how it is known.
 
 ![Overview: tasks laid out as a graph, with a queue of what waits on the reader](docs/overview.png)
 
-**Overview** — summary, counters, a *Waiting on you* queue (every approval and manual step across
+**Overview** — a structured summary, a *Waiting on you* queue (every approval and manual step across
 all tasks), and the tasks laid out as a graph: arrows for dependencies, dashed lines for related work.
 
 **Task report** (click a task) — in a fixed order:

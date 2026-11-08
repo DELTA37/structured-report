@@ -1,7 +1,17 @@
 # Report data schema
 
-One JSON object. Text fields accept a tiny Markdown subset: `` `code` ``, `**bold**`,
-`[label](https://…)`, and line breaks. Everything is HTML-escaped.
+One JSON object. Text fields (`summary`, `problem`, `goal`, notes, `detail`, `why`, …) are
+structured text — a string or an array of strings (array → bullet list). Inside a string:
+
+| Write | Renders as |
+|---|---|
+| `- item` lines | bullet list |
+| `1. item` lines | numbered list |
+| two or more `Key: value` lines | aligned key/value table (one alone → **Key:** value) |
+| blank line | new paragraph |
+| `**bold**`, `==highlight==`, `` `code` ``, `[label](https://…)` | inline emphasis / link |
+
+Everything is HTML-escaped.
 
 ```jsonc
 {
