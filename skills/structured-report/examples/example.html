@@ -53,8 +53,9 @@ code{font:12.5px/1.4 ui-monospace,"SF Mono",Menlo,monospace;background:var(--pan
 .iconbtn[disabled]{opacity:.35;cursor:default}
 
 /* ── canvas: shared by the work map and every workflow ─── */
-.canvas{position:relative;overflow:hidden;touch-action:none;cursor:grab;
+.canvas{position:relative;overflow:hidden;touch-action:none;cursor:grab;user-select:none;-webkit-user-select:none;
   background-image:radial-gradient(var(--dot) 1px,transparent 1.2px);background-size:18px 18px}
+.canvas a,.canvas img{-webkit-user-drag:none;user-drag:none}
 .canvas.dragging{cursor:grabbing} .canvas.dragging .node,.canvas.dragging .stage{cursor:grabbing}
 .canvas .graph{position:absolute;left:0;top:0;transform-origin:0 0}
 .canvas.animate .graph{transition:transform .25s cubic-bezier(.2,.7,.2,1)}
@@ -2118,13 +2119,14 @@ class Canvas {
     let drag = null, suppress = false;
     el.addEventListener("pointerdown", e => {
       if (e.button !== 0 || e.target.closest(".zoom,.minimap")) return;
+      if (e.pointerType === "mouse" && !e.target.closest("input,textarea,button,a")) e.preventDefault();   // no text selection / native drag
       drag = {x: e.clientX, y: e.clientY, vx: this.V.x, vy: this.V.y, id: e.pointerId, moved: false};
     });
     el.addEventListener("pointermove", e => {
       if (!drag || e.pointerId !== drag.id) return;
       const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
       if (!drag.moved && Math.hypot(dx, dy) < 5) return;
-      if (!drag.moved) { drag.moved = true; el.classList.add("dragging"); el.setPointerCapture(e.pointerId); }
+      if (!drag.moved) { drag.moved = true; el.classList.add("dragging"); el.setPointerCapture(e.pointerId); getSelection()?.removeAllRanges(); }
       this.V.x = drag.vx + dx; this.V.y = drag.vy + dy; this.apply();
     });
     const end = () => { if (drag?.moved) { suppress = true; setTimeout(() => suppress = false, 0); } drag = null; el.classList.remove("dragging"); };
