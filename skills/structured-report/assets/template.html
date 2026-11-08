@@ -77,7 +77,9 @@ body.map-page{height:100vh;overflow:hidden;display:flex;flex-direction:column}
 .bar{position:relative;z-index:20}
 .bar{display:flex;align-items:center;gap:24px;padding:14px clamp(16px,3vw,36px);border-bottom:1px solid var(--rule)}
 .bar h1{font:600 22px/1.15 var(--display);margin:0;flex:1 1 0;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.legend{display:flex;gap:16px;color:var(--ink-2);font-size:13px;align-items:center}
+.legend{position:absolute;right:12px;bottom:12px;z-index:2;display:flex;gap:14px;align-items:center;color:var(--ink-2);font-size:12.5px;
+  padding:6px 12px;border-radius:8px;background:rgba(248,249,246,.88);border:1px solid var(--rule);pointer-events:none}
+#map .minimap{bottom:52px}
 .legend span{display:inline-flex;align-items:center;gap:7px}
 .legend svg.line{width:30px;height:10px}
 #map{flex:1;min-width:0}
@@ -125,8 +127,18 @@ body.map-page{height:100vh;overflow:hidden;display:flex;flex-direction:column}
 /* ── prompts rail: the conversation that produced the report ── */
 .page{flex:1;display:flex;min-height:0}
 .rail{width:300px;flex:none;border-right:1px solid var(--rule);display:flex;flex-direction:column;background:var(--panel);transition:margin-left .25s cubic-bezier(.2,.7,.2,1)}
-.rail.closed{margin-left:-300px}
-.rail h2{font:600 16px var(--display);margin:0;padding:14px 16px 10px;display:flex;align-items:center;gap:8px}
+.rail.closed{margin-left:-301px}
+.rail-head{display:flex;align-items:center;gap:8px;padding:12px 10px 10px 16px}
+.rail h2{font:600 16px var(--display);margin:0;display:flex;align-items:center;gap:8px;flex:1}
+.rail-x{all:unset;cursor:pointer;width:28px;height:28px;display:grid;place-items:center;border-radius:7px;color:var(--ink-2)}
+.rail-x:hover{background:var(--panel-2);color:var(--ink)} .rail-x:focus-visible{outline:2px solid var(--cobalt)}
+.rail-x .icon{width:16px;height:16px}
+.rail-tab{position:absolute;left:12px;top:12px;z-index:3;display:none;align-items:center;gap:7px;cursor:pointer;font:500 13px var(--text);color:var(--ink);
+  padding:6px 8px 6px 10px;border-radius:9px;background:var(--panel);border:1px solid var(--rule);box-shadow:0 6px 16px -12px rgba(23,38,43,.6)}
+.rail-tab:hover{border-color:var(--ink-3)} .rail-tab:focus-visible{outline:2px solid var(--cobalt)}
+.rail-tab .icon{width:16px;height:16px}
+.rail-tab .cnt{font:600 11px/18px var(--display);min-width:20px;padding:0 6px;border-radius:9px;background:var(--ink);color:var(--panel);text-align:center}
+.rail.closed + #map .rail-tab{display:inline-flex}
 .rail ol{list-style:none;margin:0;padding:0 8px 16px;overflow:auto;flex:1}
 .rail li button{all:unset;box-sizing:border-box;cursor:pointer;display:grid;grid-template-columns:30px 1fr;gap:8px;width:100%;padding:9px 8px;border-radius:8px}
 .rail li button:hover{background:var(--panel-2)}
@@ -135,7 +147,8 @@ body.map-page{height:100vh;overflow:hidden;display:flex;flex-direction:column}
 .rail .pt{font-size:13px;line-height:1.4;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
 .rail .pa{font-size:11.5px;opacity:.7;margin-top:2px;display:flex;gap:6px;align-items:center}
 .rail .pa .icon{width:13px;height:13px}
-.rail .clear{margin:0 16px 12px;font-size:12.5px;color:var(--cobalt);background:none;border:0;cursor:pointer;text-align:left;padding:0}
+.rail .clear{font:500 12px var(--text);color:var(--cobalt);background:var(--paper);border:1px solid rgba(45,79,214,.35);border-radius:999px;cursor:pointer;padding:3px 10px;white-space:nowrap}
+.rail .clear:hover{background:#fff;border-color:var(--cobalt)}
 .rail .clear[hidden]{display:none}
 /* prompt focus: what appeared / changed at the selected prompt */
 body.at-prompt #map .node:not(.p-new):not(.p-changed),body.at-prompt .stage:not(.p-new):not(.p-changed){opacity:.32}
@@ -290,11 +303,11 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
 .copy:focus-visible{outline:2px solid var(--cobalt)}
 
 .reports{display:none}
-@media (max-width:760px){.rail{position:absolute;z-index:30;height:calc(100% - 66px)} .search{flex-basis:200px} .search:focus-within{flex-basis:100%} .legend span{display:none} .report{padding:0 16px 48px} .r-head{padding-right:120px} .flow .canvas{height:380px}}
+@media (max-width:760px){.legend{display:none} .rail{position:absolute;z-index:30;height:calc(100% - 66px)} .search{flex-basis:200px} .search:focus-within{flex-basis:100%} .legend span{display:none} .report{padding:0 16px 48px} .r-head{padding-right:120px} .flow .canvas{height:380px}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 @media print{
   body.map-page{height:auto;overflow:visible;display:block;background:#fff}
-  #map,.legend,.drawer,.scrim,#print-btn,.zoom,.minimap,.search,.rail,.sendbar,.answer,#rail-btn{display:none!important}
+  #map,.drawer,.scrim,#print-btn,.zoom,.minimap,.search,.rail,.sendbar,.answer{display:none!important}
   .reports{display:block!important}
   .reports .report{break-before:page;padding:0}
   .reports .r-head{position:static;padding-right:0}
@@ -351,7 +364,6 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
 
 <!-- ═══ Page 1 — Work map ═══════════════════════════════════════════════════ -->
 <header class="bar">
-  {{#prompts?}}<button class="iconbtn" id="rail-btn" title="Prompts of the session" aria-label="Prompts of the session" aria-expanded="true"><svg class="icon"><use href="#i-prompts"/></svg></button>{{/prompts?}}
   <h1>{{meta.title}}</h1>
   <div class="search" role="search">
     <svg class="icon"><use href="#i-search"/></svg>
@@ -359,23 +371,27 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
     <kbd>/</kbd>
     <div class="results" id="results" role="listbox" aria-label="Search results"></div>
   </div>
-  <div class="legend">
-    <span><svg class="line" viewBox="0 0 30 10"><path d="M1 5h26" stroke="#4A5A60" stroke-width="1.5" marker-end="url(#arrow)"/></svg>Depends on</span>
-    <span><svg class="line" viewBox="0 0 30 10"><path d="M1 5h28" stroke="#77878C" stroke-width="1.5" stroke-dasharray="5 5"/></svg>Related</span>
-    {{#has_blocks}}<span><svg class="line" viewBox="0 0 30 10"><path d="M1 5h26" stroke="#B8432F" stroke-width="1.5" marker-end="url(#arrow-bad)"/></svg>Blocks</span>{{/has_blocks}}
-  </div>
   <button class="iconbtn" id="print-btn" title="Print all tasks" aria-label="Print all tasks"><svg class="icon"><use href="#i-print"/></svg></button>
 </header>
 
 <div class="page">
 {{#prompts?}}<aside class="rail" id="rail" aria-label="Prompts of the session">
-  <h2><svg class="icon"><use href="#i-prompts"/></svg>Prompts</h2>
-  <button class="clear" id="rail-clear" hidden>Show everything</button>
+  <div class="rail-head">
+    <h2><svg class="icon"><use href="#i-prompts"/></svg>Prompts</h2>
+    <button class="clear" id="rail-clear" hidden title="Clear the prompt filter">Show everything</button>
+    <button class="rail-x" id="rail-close" title="Hide prompts" aria-label="Hide prompts" aria-controls="rail"><svg class="icon"><use href="#i-prev"/></svg></button>
+  </div>
   <ol>{{#prompts}}
     <li><button type="button" data-prompt="{{id}}" aria-pressed="false"><span class="pn">{{n}}</span><span><span class="pt">{{text}}</span><span class="pa">{{#answer}}<svg class="icon"><use href="#i-answer"/></svg>Answered in the report · {{/answer}}{{at}}</span></span></button></li>{{/prompts}}
   </ol>
 </aside>{{/prompts?}}
 <main class="canvas" id="map" aria-label="Work map" data-dir="LR">
+  {{#prompts?}}<button class="rail-tab" id="rail-open" type="button" aria-controls="rail" aria-expanded="true"><svg class="icon"><use href="#i-prompts"/></svg>Prompts<span class="cnt">{{prompt_count}}</span></button>{{/prompts?}}
+  <div class="legend" aria-label="Legend">
+    <span><svg class="line" viewBox="0 0 30 10"><path d="M1 5h26" stroke="#4A5A60" stroke-width="1.5" marker-end="url(#arrow)"/></svg>Depends on</span>
+    <span><svg class="line" viewBox="0 0 30 10"><path d="M1 5h28" stroke="#77878C" stroke-width="1.5" stroke-dasharray="5 5"/></svg>Related</span>
+    {{#has_blocks}}<span><svg class="line" viewBox="0 0 30 10"><path d="M1 5h26" stroke="#B8432F" stroke-width="1.5" marker-end="url(#arrow-bad)"/></svg>Blocks</span>{{/has_blocks}}
+  </div>
   <div class="graph" data-key="map" data-edges="{{edges|json}}">
     {{#tasks}}
     <button class="node" type="button" data-id="{{id}}" data-task="{{id}}" data-block="{{key}}" aria-label="{{title}} — {{status_label}}">
@@ -929,9 +945,14 @@ document.addEventListener("click", e => {
   if (gp) { if (rail?.classList.contains("closed")) toggleRail(); if (atPrompt !== gp.dataset.goprompt) selectPrompt(gp.dataset.goprompt);
     $(`[data-prompt="${gp.dataset.goprompt}"]`)?.scrollIntoView({block: "nearest"}); return; }
   if (e.target.closest("#rail-clear")) return selectPrompt(atPrompt);
-  if (e.target.closest("#rail-btn")) toggleRail();
+  if (e.target.closest("#rail-close,#rail-open")) toggleRail(e.detail === 0);
 });
-function toggleRail() { rail.classList.toggle("closed"); $("#rail-btn").setAttribute("aria-expanded", String(!rail.classList.contains("closed"))); setTimeout(() => mapCanvas.apply(), 280); }
+function toggleRail(byKeyboard) {
+  const closed = rail.classList.toggle("closed");
+  $("#rail-open").setAttribute("aria-expanded", String(!closed));
+  if (byKeyboard) (closed ? $("#rail-open") : $("#rail-close")).focus({preventScroll: true});
+  setTimeout(() => mapCanvas.apply(), 280);
+}
 const _open = open;
 open = function (key, o) { _open(key, o); const a = art(key); if (a) { stamps(a); paint(a); } };
 

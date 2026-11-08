@@ -500,6 +500,7 @@ def view(d, journal=None):
     v["index"] = search_index(reports)
     j = journal or {}
     v["prompts"] = [dict(p, text=redact_text(p.get("text", "")), answer=p.get("kind") == "answer") for p in j.get("prompts", [])]
+    v["prompt_count"] = len(v["prompts"])
     v["track"] = {"prompts": [{"id": p["id"], "n": p["n"]} for p in j.get("prompts", [])], "blocks": {k: {"since": b.get("since"), "changed": b.get("changed", [])} for k, b in j.get("blocks", {}).items()}}
     return v
 
