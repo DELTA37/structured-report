@@ -228,6 +228,24 @@ body.at-prompt #map .node:not(.p-new):not(.p-changed),body.at-prompt .stage:not(
 .quiz-nav button:disabled{cursor:default;opacity:.45}
 .quiz-nav button[hidden]{display:none}
 .quiz-nav button:focus-visible{outline:2px solid var(--cobalt);outline-offset:2px}
+.quiz-nav .qsubmit{margin-left:auto;display:inline-flex;align-items:center;gap:9px;padding:10px 18px 10px 14px;border-radius:11px;border:0;
+  background:var(--ink);color:var(--panel);font:600 14.5px var(--text);box-shadow:0 10px 22px -14px rgba(23,38,43,.9);transition:transform .15s,box-shadow .15s,background .15s}
+.quiz-nav .qsubmit .icon{width:18px;height:18px;transition:transform .25s cubic-bezier(.2,.7,.2,1)}
+.quiz-nav .qsubmit:not(:disabled):hover{transform:translateY(-1px);box-shadow:0 14px 26px -14px rgba(23,38,43,.95)}
+.quiz-nav .qsubmit:not(:disabled):hover .icon{transform:translate(2px,-2px)}
+.quiz-nav .qsubmit.busy .icon{animation:fly .6s ease-in-out infinite alternate}
+@keyframes fly{to{transform:translate(4px,-4px)}}
+.quiz-nav .qsubmit:disabled{background:var(--rule);color:var(--ink-2);box-shadow:none}
+.review{padding:12px 16px 2px}
+.rv-title{font:600 18px/1.3 var(--display);margin-bottom:8px}
+.rv-list{list-style:none;margin:0;padding:0;display:grid;gap:6px;counter-reset:rv}
+.rv-list li{counter-increment:rv}
+.rv-list button{all:unset;box-sizing:border-box;cursor:pointer;width:100%;display:grid;grid-template-columns:24px 1fr auto;gap:2px 10px;align-items:start;padding:9px 12px;border-radius:9px;background:var(--paper);border:1px solid transparent}
+.rv-list button::before{content:counter(rv);grid-row:span 2;font:600 11px/20px var(--display);width:20px;height:20px;text-align:center;border-radius:50%;background:var(--ink);color:var(--panel)}
+.rv-list button:hover{border-color:var(--rule)} .rv-list button:focus-visible{outline:2px solid var(--cobalt)}
+.rv-q{font-size:13px;color:var(--ink-2)}
+.rv-a{grid-column:2;font-weight:600;font-size:14.5px}
+.rv-list .icon{grid-row:1 / span 2;grid-column:3;color:var(--ink-3);align-self:center}
 .quiz.sent{border-left-color:var(--ok)}
 .sent-msg{display:flex;gap:10px;align-items:center;padding:14px 16px;font-size:14.5px;color:var(--ok)}
 
@@ -414,6 +432,8 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
   <symbol id="i-prompts" viewBox="0 0 24 24"><path d="M4 5h16v10H9l-5 4z"/><path d="M8 9h8M8 12h5"/></symbol>
   <symbol id="i-answer" viewBox="0 0 24 24"><path d="M10 9V5l-7 7 7 7v-4.1c5 0 8.5 1.6 11 5.1-1-5-4-10-11-11z"/></symbol>
   <symbol id="i-unchecked" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2" stroke-dasharray="3 2.4"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.6 2.2c-.7.4-1.1.9-1.1 1.6M12 16v.1"/></symbol>
+  <symbol id="i-send" viewBox="0 0 24 24"><path d="M21 3 10.5 13.5"/><path d="M21 3 14.5 21l-4-7.5L3 9.5z"/></symbol>
+  <symbol id="i-edit" viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16z"/></symbol>
   <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
   <symbol id="i-minus" viewBox="0 0 24 24"><path d="M5 12h14"/></symbol>
   <symbol id="i-fit" viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></symbol>
@@ -2459,21 +2479,42 @@ function saveDraft(f) {
   draft[f.dataset.akey] = {picked: $$("input:checked", f).map(x => x.value), own: $("textarea.own", f).value};
   localStorage.setItem(store, JSON.stringify(draft));
 }
+function answerLabel(f) {
+  const v = valueOf(f);
+  return [...v.choices, ...(v.other ? ["Own answer: " + v.other] : [])].join("; ") || "—";
+}
 function quizState(quiz) {
-  const forms = $$("form.q", quiz), i = +(quiz.dataset.i || 0), f = forms[i], last = i === forms.length - 1;
+  const forms = $$("form.q", quiz), n = forms.length, i = Math.min(+(quiz.dataset.i || 0), n), review = i === n;
+  const f = forms[i], last = i === n - 1;
   forms.forEach((x, k) => x.hidden = k !== i);
-  $(".qi", quiz).textContent = i + 1;
-  $(".qbar i", quiz).style.width = ((i + 1) / forms.length * 100) + "%";
-  const back = $(".qback", quiz), next = $(".qnext", quiz), note = $(".note", quiz);
+  const back = $(".qback", quiz), next = $(".qnext", quiz), note = $(".note", quiz), submit = $(".qsubmit", quiz), rv = $(".review", quiz);
+  rv.hidden = !review; submit.hidden = !review;
+  $(".qcount", quiz).innerHTML = review ? "Review" : "Question <b class=\"qi\">" + (i + 1) + "</b> of " + n;
+  $(".qbar i", quiz).style.width = (review ? 100 : (i + 1) / (n + 1) * 100) + "%";
   back.disabled = i === 0;
+  if (review) {
+    const list = $(".rv-list", rv); list.innerHTML = "";
+    forms.forEach((x, k) => {
+      const li = document.createElement("li"), b = document.createElement("button");
+      b.type = "button"; b.dataset.goto = k; b.title = "Change this answer";
+      b.innerHTML = '<span class="rv-q"></span><span class="rv-a"></span><svg class="icon sm"><use href="#i-edit"/></svg>';
+      b.querySelector(".rv-q").textContent = x.dataset.question; b.querySelector(".rv-a").textContent = answerLabel(x);
+      li.appendChild(b); list.appendChild(li);
+    });
+    next.hidden = true;
+    submit.disabled = !online;
+    submit.querySelector("span").textContent = online ? "Submit answers" : "Agent offline";
+    note.textContent = online ? "Check your answers — click one to change it." : "The agent's answer service is not running — your answers are kept here until it is.";
+    return;
+  }
   const ok = valueOf(f).valid, own = !!$('input[value="__other"]:checked', f) || !$("input", f);
   const needsConfirm = !!f.dataset.multi || own;     // a single option answers by itself
   next.hidden = !needsConfirm;
-  next.textContent = last ? "Finish" : "Next";
+  next.textContent = last ? "Review" : "Next";
   next.disabled = !ok;
   next.classList.toggle("primary", last);
-  note.textContent = quiz.dataset.pending ? "The agent is offline — your answers will be sent as soon as it is back." :
-                     f.dataset.multi ? "Choose any that apply, then " + (last ? "Finish" : "Next") + "." : "";
+  submit.hidden = true;
+  note.textContent = f.dataset.multi ? "Choose any that apply, then " + (last ? "Review" : "Next") + "." : "";
 }
 const quizzes = () => $$(".sec.asks .quiz");
 function restore() {
@@ -2486,16 +2527,13 @@ function restore() {
 }
 async function ping() {
   try { const r = await fetch(ANSWER.url + "/ping", {headers: {"X-Report-Token": ANSWER.token}}); online = r.ok; } catch (e) { online = false; }
-  quizzes().forEach(q => { if (online && q.dataset.pending) { delete q.dataset.pending; sendQuiz(q); } else quizState(q); });
+  quizzes().forEach(quizState);
 }
 function advance(quiz) {
   const forms = $$("form.q", quiz), i = +(quiz.dataset.i || 0);
-  if (i < forms.length - 1) { quiz.dataset.i = i + 1; quizState(quiz); forms[i + 1].querySelector("input,textarea")?.focus({preventScroll: true}); }
-  else finish(quiz);
-}
-function finish(quiz) {
-  if (online) return sendQuiz(quiz);
-  quiz.dataset.pending = "1"; quizState(quiz);
+  quiz.dataset.i = Math.min(i + 1, forms.length); quizState(quiz);
+  const target = i + 1 < forms.length ? forms[i + 1].querySelector("input,textarea") : $(".qsubmit", quiz);
+  target?.focus({preventScroll: true});
 }
 document.addEventListener("change", e => {
   const f = e.target.closest("form.q"); if (!f) return;
@@ -2509,8 +2547,8 @@ document.addEventListener("input", e => {
 });
 document.addEventListener("submit", e => e.preventDefault());
 async function sendQuiz(quiz) {
-  const items = $$("form.q", quiz).map(itemOf), note = $(".note", quiz), next = $(".qnext", quiz);
-  next.disabled = true; note.textContent = "Sending…";
+  const items = $$("form.q", quiz).map(itemOf), note = $(".note", quiz), btn = $(".qsubmit", quiz);
+  btn.disabled = true; btn.classList.add("busy"); note.textContent = "Sending…";
   try {
     const r = await fetch(ANSWER.url + "/answers", {method: "POST", headers: {"Content-Type": "application/json", "X-Report-Token": ANSWER.token}, body: JSON.stringify({items, message: ""})});
     if (!r.ok) throw new Error(String(r.status));
@@ -2519,17 +2557,20 @@ async function sendQuiz(quiz) {
     quiz.classList.add("sent");
     quiz.innerHTML = '<div class="sent-msg"><svg class="icon"><use href="#i-done"/></svg><span>' +
       (j.waiting ? "Delivered as prompt #" + j.prompt + " — the agent continues" : "Saved as prompt #" + j.prompt + " — the agent picks it up as soon as it is free") + "</span></div>";
-  } catch (err) { online = false; quiz.dataset.pending = "1"; quizState(quiz); }
+  } catch (err) { online = false; quizState(quiz); }
 }
 document.addEventListener("click", e => {
   const quiz = e.target.closest(".quiz"); if (!quiz) return;
   const n = $$("form.q", quiz).length, i = +(quiz.dataset.i || 0);
   if (e.target.closest(".qback") && i > 0) { quiz.dataset.i = i - 1; quizState(quiz); }
   if (e.target.closest(".qnext")) advance(quiz);
+  const go = e.target.closest(".rv-list [data-goto]"); if (go) { quiz.dataset.i = go.dataset.goto; quizState(quiz); }
+  if (e.target.closest(".qsubmit") && online) sendQuiz(quiz);
 });
 document.addEventListener("keydown", e => {
   const quiz = e.target.closest?.(".quiz"); if (!quiz || quiz.classList.contains("sent")) return;
   const f = $$("form.q", quiz)[+(quiz.dataset.i || 0)];
+  if (!f) return;
   if (e.target.tagName !== "TEXTAREA" && /^[0-9]$/.test(e.key)) {
     const box = e.key === "0" ? $('input[value="__other"]', f) : $$("input", f).filter(x => x.value !== "__other")[+e.key - 1];
     if (box) { e.preventDefault(); box.checked = box.type === "checkbox" ? !box.checked : true; box.dispatchEvent(new Event("change", {bubbles: true})); box.focus(); }

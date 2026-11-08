@@ -54,9 +54,9 @@ shows a Prompts rail; picking a prompt highlights what appeared (green) or chang
 list for multi), `why` and `due`. The reader always has "your own answer" as an extra option; a
 question without options is answered in free text. In the report the open questions of a
 **Needs approval** section form a **series**, one question at a time: an exclusive option answers
-and moves on, a multi-choice or own answer is confirmed with Next / Finish, and finishing the
-series sends the answers to you — there is no other way to send, and `actions` (steps the reader
-takes) have no inputs. The answers go to a local answer service (`127.0.0.1:47319`, started and
+and moves on, a multi-choice or own answer is confirmed with Next, the series ends on a review of
+all answers, and **Submit answers** sends them to you — there is no other way to send, and
+`actions` (steps the reader takes) have no inputs. The answers go to a local answer service (`127.0.0.1:47319`, started and
 kept up to date by the build) even when the report is opened as a plain file, and are stored in
 the journal as the next prompt. While the report has open questions, keep a waiter running as a
 **background** command:
