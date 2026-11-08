@@ -72,6 +72,11 @@ UserPromptSubmit hook attaches them to the user's next message — answers are n
 questions show as answered after the next build. `--static` builds a report without the answer
 channel (for sharing outside this machine): questions are shown read-only, with no inputs.
 
+**Link under the input.** `scripts/statusline.py` prints one status-line row for the session's
+report — its title as a clickable link that opens the HTML in the browser, and how many questions
+still wait. Use it as the status line or append its output to an existing one; it prints nothing
+for sessions without a report.
+
 Every block of the report has a **copy as Markdown** button (the whole report, a task card, a
 report, a section, a single item, a step, a prompt) — point the reader to it when they want to
 paste something elsewhere.
@@ -134,5 +139,6 @@ Content in the user's language, `meta.lang` set to its code. Structure labels st
   the template. `--check` validates only; `--template` uses another template.
 - `scripts/track.py` — `start`, `wait`, `hook`, `stop-hook`, `daemon`, `status`, `install-hook`
   (see its docstring).
+- `scripts/statusline.py` — the report link for the Claude Code status line.
 - `references/schema.md` — every field.
 - `examples/` — English and Russian examples; the Russian one carries a 5-prompt journal.

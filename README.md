@@ -46,6 +46,8 @@ icons, keyboard navigation, deep links (`#task=<id>`), and a print view that pri
   `track.py wait`, or the Stop / UserPromptSubmit hooks).
 - **Copy as Markdown** — every report, card, section, item, step and prompt has a copy button.
 - **Search** — `/` or ⌘K, across every task and stage.
+- **Link in the session** — `scripts/statusline.py` adds the report to the Claude Code status line,
+  under the input: a clickable link that opens it, and how many questions are waiting.
 - **Checks** — `verified` needs proof (`how`), finished work must say what was *not checked*,
   next steps are planned stages, and the build refuses anything that looks like a secret.
 
