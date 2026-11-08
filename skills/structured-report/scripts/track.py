@@ -1,20 +1,26 @@
 #!/usr/bin/env python3
-"""track.py — keep a report in step with a Claude Code session, and take answers back from it.
+"""track.py — keep a report in step with a Claude Code session, and take the reader's answers
+straight back to the agent.
 
     track.py start <report.json> [--session ID]   bind this session to the report (creates the journal)
-    track.py hook                                  UserPromptSubmit hook: log the prompt to the bound report
-    track.py serve <report.json> [--port N]        serve the built report; the first "Send to agent"
-                                                   stores the answers, prints them and exits
-    track.py status [--session ID]                 which report this session tracks, current prompt
-    track.py install-hook [--settings PATH]        add the UserPromptSubmit hook to Claude Code settings
+    track.py wait  <report.json> [--session ID]   block until the reader answers in the report, print
+                                                   the answers, exit. Run it as a BACKGROUND command:
+                                                   its exit wakes the agent with the answers as a prompt.
+    track.py hook                                  UserPromptSubmit hook: log the prompt; hand over
+                                                   answers that are still queued
+    track.py stop-hook                             Stop hook: if answers are queued, keep the agent going
+    track.py daemon                                the local answer service (127.0.0.1:47319); started
+                                                   automatically by build.py / wait
+    track.py status [--session ID]
+    track.py install-hook [--settings PATH]        add both hooks to Claude Code settings
 
-The journal (<report>.journal.json, next to the report JSON) holds the prompts, the answers given
-in the report, and — written by build.py — when each block appeared or changed. Standard library only.
-
-Flow: the agent runs `start` once, then updates the report JSON and rebuilds whenever a prompt
-changes the work. With open questions it runs `serve` as a background command; when the reader
-presses "Send to agent", serve prints the answers and exits — the harness hands that output back
-to the agent, which continues as if the reader had typed it.
+How answers travel: the built report (even opened as a plain file) posts "Send to agent" to the
+local daemon with the report's token. The daemon stores the answers in the journal as the next
+prompt (kind "answer", delivered=false). They reach the agent by the first of:
+  1. a running `wait` (the agent is idle and waiting) — it exits with the answers → the agent wakes;
+  2. the Stop hook (the agent is mid-turn) — it blocks the stop and passes the answers on;
+  3. the UserPromptSubmit hook (nobody was waiting) — the answers ride along with the next message.
+Standard library only.
 """
 import argparse
 import datetime
@@ -22,14 +28,24 @@ import http.server
 import json
 import os
 import secrets
+import signal
+import socket
+import subprocess
 import sys
-import threading
-import webbrowser
+import time
+import urllib.request
 
 HOME = os.path.expanduser("~/.claude/structured-report")
 SESSIONS = os.path.join(HOME, "sessions.json")
+REGISTRY = os.path.join(HOME, "reports.json")
+LOG = os.path.join(HOME, "daemon.log")
 HERE = os.path.dirname(os.path.abspath(__file__))
+HOST = "127.0.0.1"
+PORT = int(os.environ.get("STRUCTURED_REPORT_PORT", "47319"))
+ENDPOINT = f"http://{HOST}:{PORT}"
 
+
+# ── files ───────────────────────────────────────────────────────────────────
 
 def journal_path(data_path):
     return os.path.splitext(os.path.abspath(data_path))[0] + ".journal.json"
@@ -45,7 +61,7 @@ def load(path, default):
 
 def save(path, data):
     os.makedirs(os.path.dirname(path), exist_ok=True)
-    tmp = path + ".tmp"
+    tmp = f"{path}.{os.getpid()}.tmp"
     with open(tmp, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=1)
     os.replace(tmp, path)
@@ -55,30 +71,212 @@ def now():
     return datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
 
 
-def add_prompt(jpath, text, kind="prompt"):
+def journal(jpath):
     j = load(jpath, {})
     j.setdefault("prompts", []); j.setdefault("blocks", {}); j.setdefault("answers", {})
+    return j
+
+
+def add_prompt(jpath, text, kind="prompt"):
+    j = journal(jpath)
     n = len(j["prompts"]) + 1
     entry = {"id": f"p{n}", "n": n, "at": now(), "kind": kind, "text": text}
+    if kind == "answer":
+        entry["delivered"] = False
     j["prompts"].append(entry)
     save(jpath, j)
     return j, entry
+
+
+def ensure_token(data_path):
+    """Journal + answer token for a report; registers the token with the daemon registry."""
+    jp = journal_path(data_path)
+    j = journal(jp)
+    if not j.get("token"):
+        j["token"] = secrets.token_urlsafe(18)
+        save(jp, j)
+    reg = load(REGISTRY, {})
+    if reg.get(j["token"], {}).get("journal") != jp:
+        reg[j["token"]] = {"journal": jp, "data": os.path.abspath(data_path)}
+        save(REGISTRY, reg)
+    return j["token"]
+
+
+def take_pending(jpath):
+    """Mark queued answers delivered and return their text (or None)."""
+    j = journal(jpath)
+    pending = [p for p in j["prompts"] if p.get("kind") == "answer" and not p.get("delivered")]
+    if not pending:
+        return None
+    for p in pending:
+        p["delivered"] = True
+    save(jpath, j)
+    return "\n\n".join(f"#{p['n']} — {p['text']}" for p in pending)
+
+
+def bound_report(sid):
+    b = load(SESSIONS, {}).get(sid) if sid else None
+    return b["report"] if b and os.path.exists(b["report"]) else None
+
+
+def bind(data, sid):
+    m = load(SESSIONS, {})
+    m[sid] = {"report": os.path.abspath(data), "since": now()}
+    save(SESSIONS, m)
+
+
+def session_id(a):
+    return getattr(a, "session", None) or os.environ.get("CLAUDE_CODE_SESSION_ID") or os.environ.get("CLAUDE_SESSION_ID")
+
+
+# ── daemon ──────────────────────────────────────────────────────────────────
+
+def daemon_alive():
+    try:
+        with socket.create_connection((HOST, PORT), timeout=0.3):
+            return True
+    except OSError:
+        return False
+
+
+def ensure_daemon():
+    if daemon_alive():
+        return True
+    os.makedirs(HOME, exist_ok=True)
+    with open(LOG, "a") as log:
+        subprocess.Popen([sys.executable, os.path.join(HERE, "track.py"), "daemon"], stdin=subprocess.DEVNULL,
+                         stdout=log, stderr=log, start_new_session=True, close_fds=True)
+    for _ in range(30):
+        if daemon_alive():
+            return True
+        time.sleep(0.1)
+    return False
+
+
+def waiter_alive(jpath):
+    try:
+        pid = int(open(jpath + ".waiting").read().strip())
+        os.kill(pid, 0)
+        return True
+    except (OSError, ValueError):
+        return False
+
+
+def format_answers(title, items, message):
+    lines = [f"Answers from the report «{title}»:"]
+    for it in items:
+        where = f"{it['num']} " if it.get("num") else ""
+        val = (it.get("choice") or "—") if it.get("type") == "approval" else ("done" if it.get("done") else "not done")
+        c = f" — {it['comment']}" if it.get("comment") else ""
+        lines.append(f"- [{where}{it.get('title', '')}] {it.get('question', '')}: {val}{c}")
+    if message:
+        lines.append(f"Message: {message}")
+    return "\n".join(lines)
+
+
+class Handler(http.server.BaseHTTPRequestHandler):
+    def log_message(self, *args):
+        pass
+
+    def cors(self):
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+        self.send_header("Access-Control-Allow-Headers", "Content-Type, X-Report-Token")
+        self.send_header("Access-Control-Allow-Private-Network", "true")
+
+    def reply(self, code, body):
+        self.send_response(code)
+        self.cors()
+        self.send_header("Content-Type", "application/json")
+        self.end_headers()
+        self.wfile.write(json.dumps(body).encode())
+
+    def report(self):
+        return load(REGISTRY, {}).get(self.headers.get("X-Report-Token") or "")
+
+    def do_OPTIONS(self):
+        self.send_response(204)
+        self.cors()
+        self.end_headers()
+
+    def do_GET(self):
+        r = self.report()
+        if self.path != "/ping" or not r:
+            return self.reply(403, {"ok": False})
+        self.reply(200, {"ok": True, "waiting": waiter_alive(r["journal"])})
+
+    def do_POST(self):
+        r = self.report()
+        if self.path != "/answers" or not r:
+            return self.reply(403, {"ok": False})
+        try:
+            body = json.loads(self.rfile.read(int(self.headers.get("Content-Length", 0))) or b"{}")
+        except ValueError:
+            return self.reply(400, {"ok": False})
+        items, message = body.get("items") or [], (body.get("message") or "").strip()
+        if not items and not message:
+            return self.reply(400, {"ok": False})
+        title = load(r["data"], {}).get("meta", {}).get("title", "report")
+        j, entry = add_prompt(r["journal"], format_answers(title, items, message), kind="answer")
+        for it in items:
+            if it.get("akey"):
+                j["answers"][it["akey"]] = {k: it.get(k) for k in ("choice", "done", "comment")} | {"prompt": entry["id"]}
+        save(r["journal"], j)
+        self.reply(200, {"ok": True, "prompt": entry["n"], "waiting": waiter_alive(r["journal"])})
+
+
+def cmd_daemon(a):
+    srv = http.server.ThreadingHTTPServer((HOST, PORT), Handler)
+    print(f"{now()} structured-report daemon on {ENDPOINT}", flush=True)
+    srv.serve_forever()
 
 
 # ── commands ────────────────────────────────────────────────────────────────
 
 def cmd_start(a):
     data = os.path.abspath(a.report)
-    jp = journal_path(data)
-    if not os.path.exists(jp):
-        save(jp, {"prompts": [], "blocks": {}, "answers": {}})
-    sid = a.session or os.environ.get("CLAUDE_CODE_SESSION_ID") or os.environ.get("CLAUDE_SESSION_ID")
+    ensure_token(data)
+    sid = session_id(a)
     if not sid:
         sys.exit("no session id: pass --session or run inside Claude Code")
-    m = load(SESSIONS, {})
-    m[sid] = {"report": data, "since": now()}
-    save(SESSIONS, m)
-    print(f"tracking {data}\njournal  {jp}\nsession  {sid}")
+    bind(data, sid)
+    ok = ensure_daemon()
+    print(f"tracking {data}\njournal  {journal_path(data)}\nsession  {sid}\nanswers  {ENDPOINT} ({'up' if ok else 'NOT running'})")
+
+
+def cmd_wait(a):
+    data = os.path.abspath(a.report)
+    jp = journal_path(data)
+    ensure_token(data)
+    sid = session_id(a)
+    if sid:
+        bind(data, sid)
+    ensure_daemon()
+    pidfile = jp + ".waiting"
+    with open(pidfile, "w") as f:
+        f.write(str(os.getpid()))
+
+    def bye(*_):
+        try:
+            os.remove(pidfile)
+        except OSError:
+            pass
+        sys.exit(0)
+    signal.signal(signal.SIGTERM, bye)
+    print(f"waiting for answers to {data} (send them from the report)", file=sys.stderr, flush=True)
+    try:
+        while True:
+            text = take_pending(jp)
+            if text:
+                print("The reader answered in the report — treat this as their prompt and continue:\n")
+                print(text)
+                return
+            time.sleep(1)
+    finally:
+        try:
+            os.remove(pidfile)
+        except OSError:
+            pass
 
 
 def cmd_hook(a):
@@ -86,128 +284,80 @@ def cmd_hook(a):
     try:
         ev = json.load(sys.stdin)
         sid, text = ev.get("session_id"), ev.get("prompt") or ""
-        b = load(SESSIONS, {}).get(sid)
-        if not b or not os.path.exists(b["report"]):
+        report = bound_report(sid)
+        if not report:
             return
-        if text.strip().startswith("/") and len(text.split()) == 1:
-            return                                    # bare slash commands are not work prompts
-        _, e = add_prompt(journal_path(b["report"]), text)
-        print(f"[structured-report] This session tracks {b['report']} — this is prompt #{e['n']}. "
-              f"If this prompt changes the work, update the report JSON and rebuild it "
-              f"(build.py stamps changed blocks with #{e['n']}).")
+        jp = journal_path(report)
+        pending = take_pending(jp)
+        out = []
+        if pending:
+            out.append(f"[structured-report] The reader also answered in the report (not yet seen by you):\n{pending}")
+        if not (text.strip().startswith("/") and len(text.split()) == 1):
+            _, e = add_prompt(jp, text)
+            out.append(f"[structured-report] This session tracks {report} — this is prompt #{e['n']}. "
+                       f"If it changes the work, update the report JSON and rebuild (changed blocks get #{e['n']}).")
+        print("\n".join(out))
+    except Exception:
+        pass
+
+
+def cmd_stop_hook(a):
+    """Stop: if the reader answered while the agent was working, don't let the turn end."""
+    try:
+        ev = json.load(sys.stdin)
+        report = bound_report(ev.get("session_id"))
+        if not report:
+            return
+        pending = take_pending(journal_path(report))
+        if pending:
+            print(json.dumps({"decision": "block",
+                              "reason": "The reader answered in the report — treat this as their prompt and continue:\n" + pending}))
     except Exception:
         pass
 
 
 def cmd_status(a):
-    sid = a.session or os.environ.get("CLAUDE_CODE_SESSION_ID")
-    b = load(SESSIONS, {}).get(sid)
-    if not b:
+    report = bound_report(session_id(a))
+    if not report:
         print("this session tracks no report"); return
-    j = load(journal_path(b["report"]), {})
-    p = (j.get("prompts") or [{}])[-1]
-    print(f"report  {b['report']}\nprompts {len(j.get('prompts', []))} (current #{p.get('n', '—')})")
-
-
-def format_answers(title, items, message):
-    lines = [f"Answers from the report «{title}»:"]
-    for it in items:
-        where = f"{it['num']} " if it.get("num") else ""
-        if it["type"] == "approval":
-            val = it.get("choice") or "—"
-        else:
-            val = "done" if it.get("done") else "not done"
-        c = f" — {it['comment']}" if it.get("comment") else ""
-        lines.append(f"- [{where}{it['title']}] {it['question']}: {val}{c}")
-    if message:
-        lines.append(f"Message: {message}")
-    return "\n".join(lines)
-
-
-def cmd_serve(a):
-    data = os.path.abspath(a.report)
-    html_path = os.path.splitext(data)[0] + ".html"
-    jp = journal_path(data)
-    if not os.path.exists(html_path):
-        sys.exit(f"build the report first: {html_path} not found")
-    token = secrets.token_urlsafe(16)
-    done = threading.Event()
-    result = {}
-
-    class H(http.server.BaseHTTPRequestHandler):
-        def log_message(self, *args):
-            pass
-
-        def do_GET(self):
-            if self.path.split("?")[0] not in ("/", "/index.html"):
-                self.send_error(404); return
-            with open(html_path, "rb") as f:
-                body = f.read()
-            self.send_response(200)
-            self.send_header("Content-Type", "text/html; charset=utf-8")
-            self.send_header("Cache-Control", "no-store")
-            self.end_headers()
-            self.wfile.write(body)
-
-        def do_POST(self):
-            if self.path != "/__answers" or self.headers.get("X-Report-Token") != token:
-                self.send_error(403); return
-            try:
-                body = json.loads(self.rfile.read(int(self.headers.get("Content-Length", 0))) or b"{}")
-            except ValueError:
-                self.send_error(400); return
-            items, message = body.get("items") or [], (body.get("message") or "").strip()
-            if not items and not message:
-                self.send_error(400); return
-            title = load(data, {}).get("meta", {}).get("title", "report")
-            text = format_answers(title, items, message)
-            j, entry = add_prompt(jp, text, kind="answer")
-            for it in items:
-                j["answers"][it["akey"]] = {k: it.get(k) for k in ("choice", "done", "comment")} | {"prompt": entry["id"]}
-            save(jp, j)
-            self.send_response(200)
-            self.send_header("Content-Type", "application/json")
-            self.end_headers()
-            self.wfile.write(json.dumps({"ok": True, "prompt": entry["n"]}).encode())
-            result["text"] = text
-            done.set()
-
-    srv = http.server.ThreadingHTTPServer(("127.0.0.1", a.port), H)
-    url = f"http://127.0.0.1:{srv.server_address[1]}/?t={token}"
-    threading.Thread(target=srv.serve_forever, daemon=True).start()
-    print(f"report served at {url} — waiting for answers", file=sys.stderr, flush=True)
-    if not a.no_open:
-        webbrowser.open(url)
-    done.wait()
-    srv.shutdown()
-    print("The reader answered in the report (treat this as their prompt):\n")
-    print(result["text"])
+    j = journal(journal_path(report))
+    p = (j["prompts"] or [{}])[-1]
+    queued = sum(1 for x in j["prompts"] if x.get("kind") == "answer" and not x.get("delivered"))
+    print(f"report  {report}\nprompts {len(j['prompts'])} (current #{p.get('n', '—')}), queued answers {queued}\n"
+          f"daemon  {ENDPOINT} {'up' if daemon_alive() else 'down'}; waiter {'running' if waiter_alive(journal_path(report)) else 'not running'}")
 
 
 def cmd_install_hook(a):
     path = os.path.expanduser(a.settings)
     s = load(path, {})
-    cmd = f'python3 "{os.path.join(HERE, "track.py")}" hook'
-    hooks = s.setdefault("hooks", {}).setdefault("UserPromptSubmit", [])
-    if any(cmd == h.get("command") for g in hooks for h in g.get("hooks", [])):
-        print("hook already installed"); return
-    hooks.append({"hooks": [{"type": "command", "command": cmd, "timeout": 5}]})
+    changed = False
+    for event, sub in (("UserPromptSubmit", "hook"), ("Stop", "stop-hook")):
+        cmd = f'python3 "{os.path.join(HERE, "track.py")}" {sub}'
+        groups = s.setdefault("hooks", {}).setdefault(event, [])
+        if any(cmd == h.get("command") for g in groups for h in g.get("hooks", [])):
+            continue
+        groups.append({"hooks": [{"type": "command", "command": cmd, "timeout": 5}]})
+        changed = True
+    if not changed:
+        print("hooks already installed"); return
     if os.path.exists(path):
-        os.replace(path, path + ".bak-structured-report")
+        with open(path, encoding="utf-8") as src, open(path + ".bak-structured-report", "w", encoding="utf-8") as dst:
+            dst.write(src.read())
     save(path, s)
-    print(f"installed UserPromptSubmit hook in {path}")
+    print(f"installed UserPromptSubmit + Stop hooks in {path}")
 
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = ap.add_subparsers(dest="cmd", required=True)
     p = sub.add_parser("start"); p.add_argument("report"); p.add_argument("--session")
-    sub.add_parser("hook")
+    p = sub.add_parser("wait"); p.add_argument("report"); p.add_argument("--session")
+    sub.add_parser("hook"); sub.add_parser("stop-hook"); sub.add_parser("daemon")
     p = sub.add_parser("status"); p.add_argument("--session")
-    p = sub.add_parser("serve"); p.add_argument("report"); p.add_argument("--port", type=int, default=0); p.add_argument("--no-open", action="store_true")
     p = sub.add_parser("install-hook"); p.add_argument("--settings", default="~/.claude/settings.json")
     a = ap.parse_args()
-    {"start": cmd_start, "hook": cmd_hook, "status": cmd_status, "serve": cmd_serve, "install-hook": cmd_install_hook}[a.cmd](a)
+    {"start": cmd_start, "wait": cmd_wait, "hook": cmd_hook, "stop-hook": cmd_stop_hook, "daemon": cmd_daemon,
+     "status": cmd_status, "install-hook": cmd_install_hook}[a.cmd](a)
 
 
 if __name__ == "__main__":

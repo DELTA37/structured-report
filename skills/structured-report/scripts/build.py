@@ -507,6 +507,12 @@ def view(d, journal=None):
 
 # ── validation ──────────────────────────────────────────────────────────────
 
+def _asks_reader(d):
+    def walk(n):
+        return bool(n.get("approvals") or n.get("actions")) or any(walk(s) for s in n.get("stages") or [])
+    return any(walk(t) for t in d.get("tasks") or [])
+
+
 def _has_next(n):
     return any(s.get("status") in ("planned", "in_progress") or _has_next(s) for s in n.get("stages") or [])
 
@@ -634,6 +640,7 @@ def main():
     ap.add_argument("--template", default=TEMPLATE, help="template HTML (default: bundled)")
     ap.add_argument("--check", action="store_true", help="validate only")
     ap.add_argument("--journal", help="journal JSON (default: <data>.journal.json if it exists)")
+    ap.add_argument("--static", action="store_true", help="no answer channel: don't create a journal/token or start the answer service")
     a = ap.parse_args()
     with open(a.data, encoding="utf-8") as f:
         data = json.load(f)
@@ -648,6 +655,16 @@ def main():
         print(f"ok: {len(data['tasks'])} tasks")
         return
     jpath = a.journal or journal_path(a.data)
+    answer_to = None
+    if not a.static and not a.journal and (os.path.exists(jpath) or _asks_reader(data)):
+        # questions for the reader → a journal, a token, and the local answer service
+        sys.path.insert(0, HERE)
+        import track
+        token = track.ensure_token(a.data)
+        up = track.ensure_daemon()
+        answer_to = {"url": track.ENDPOINT, "token": token}
+        if not up:
+            print(f"warning: the answer service did not start ({track.LOG}) — the report will offer copying instead", file=sys.stderr)
     journal = load_journal(jpath)
     if journal is not None:
         stamp_blocks(data, journal)
@@ -657,7 +674,9 @@ def main():
         if hidden:
             print(f"warning: {hidden} prompt(s) contained something like a secret — masked in the report", file=sys.stderr)
     with open(a.template, encoding="utf-8") as f:
-        out_html = render(f.read(), view(data, journal))
+        v = view(data, journal)
+        v["track"]["answer_to"] = answer_to
+        out_html = render(f.read(), v)
     out = a.out or os.path.splitext(a.data)[0] + ".html"
     with open(out, "w", encoding="utf-8") as f:
         f.write(out_html)

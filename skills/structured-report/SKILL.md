@@ -42,25 +42,33 @@ living report), bind the session once:
 python3 <skill>/scripts/track.py start reports/<file>.json      # creates <file>.journal.json
 ```
 
-From then on the `UserPromptSubmit` hook (install once: `track.py install-hook`) logs every user
+From then on the `UserPromptSubmit` hook (install once: `track.py install-hook`, which also adds
+the Stop hook) logs every user
 prompt to the journal and reminds you of the prompt number. **After each prompt that changes the
 work, update the JSON and rebuild** — `build.py` fingerprints every block (each node × section)
 and stamps new or changed blocks with the current prompt. Never write stamps yourself. The report
 shows a Prompts rail; picking a prompt highlights what appeared (green) or changed (blue) there.
 
 **Questions for the reader.** Put decisions in `approvals` (with `options`, your `recommend`,
-`why`, `due`) and manual steps in `actions`. To let the reader answer inside the report, after
-building run as a **background** command:
+`why`, `due`) and manual steps in `actions`. The reader answers inside the report — even when it is
+opened as a plain file — and presses **Send to agent**: the answers go to a local answer service
+(`127.0.0.1:47319`, started by the build) and are stored in the journal as the next prompt. While
+the report has open questions, keep a waiter running as a **background** command:
 
 ```bash
-python3 <skill>/scripts/track.py serve reports/<file>.json
+python3 <skill>/scripts/track.py wait reports/<file>.json
 ```
 
-It opens the report on `http://127.0.0.1:<port>`. When the reader presses **Send to agent**, the
-answers are stored in the journal as the next prompt, printed, and the command exits — that output
-comes back to you: **treat it exactly as the user's prompt** and continue the work. Answered
-questions show as answered after the next build. Opened as a plain file, the report offers
-**Copy answers** instead (the reader pastes them into the chat).
+When the reader sends, `wait` prints the answers and exits — that output comes back to you:
+**treat it exactly as the user's prompt** and continue; start `wait` again if questions remain.
+If no waiter is running, the Stop hook hands queued answers over before your turn ends, and the
+UserPromptSubmit hook attaches them to the user's next message — answers are never lost. Answered
+questions show as answered after the next build. `--static` builds a report without the answer
+channel (for sharing outside this machine); then the report offers copying instead.
+
+Every block of the report has a **copy as Markdown** button (the whole report, a task card, a
+report, a section, a single item, a step, a prompt) — point the reader to it when they want to
+paste something elsewhere.
 
 ## The rules that make the report trustworthy
 
@@ -117,6 +125,7 @@ Content in the user's language, `meta.lang` set to its code. Structure labels st
   for layout, navigation, search, the prompts rail and answering.
 - `scripts/build.py` — validates the content (checks above, secrets), stamps the journal, renders
   the template. `--check` validates only; `--template` uses another template.
-- `scripts/track.py` — `start`, `hook`, `serve`, `status`, `install-hook` (see its docstring).
+- `scripts/track.py` — `start`, `wait`, `hook`, `stop-hook`, `daemon`, `status`, `install-hook`
+  (see its docstring).
 - `references/schema.md` — every field.
 - `examples/` — English and Russian examples; the Russian one carries a 5-prompt journal.

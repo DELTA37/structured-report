@@ -141,9 +141,13 @@ Written by `scripts/track.py` (prompts, answers) and `build.py` (block stamps) �
 {
   "prompts": [{"id": "p3", "n": 3, "at": "2026-11-05 17:05", "kind": "prompt | answer", "text": "…"}],
   "blocks":  {"replay#problem": {"hash": "…", "since": "p3", "changed": ["p5"]}},   // node key # section
-  "answers": {"replay#a0": {"choice": "B", "done": null, "comment": "…", "prompt": "p6"}}
+  "answers": {"replay#a0": {"choice": "B", "done": null, "comment": "…", "prompt": "p6"}},
+  "token": "…"          // lets the report post answers to the local answer service; never share the journal
 }
 ```
+
+Prompts of kind `answer` also carry `delivered` (false until a waiter or a hook has handed them to
+the agent).
 
 Block sections: `card`, `problem`, `goal`, `context`, `inferences`, `assumptions`, `result`,
 `unchecked`, `workflow`, `approvals`, `actions`. Answer keys: `<node key>#a<i>` for approvals,

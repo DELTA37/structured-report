@@ -90,7 +90,7 @@ body.map-page{height:100vh;overflow:hidden;display:flex;flex-direction:column}
   transition:border-color .15s,box-shadow .15s}
 .node:hover{border-color:var(--ink-3);box-shadow:0 8px 20px -14px rgba(23,38,43,.55)}
 .node[aria-current="true"]{border-color:var(--ink);box-shadow:0 0 0 2px var(--ink)}
-.node .nh{display:grid;grid-template-columns:20px 1fr;gap:8px;align-items:start}
+.node .nh{display:grid;grid-template-columns:20px 1fr;gap:8px;align-items:start;padding-right:22px}
 .node .nh .icon{width:20px;height:20px;margin-top:1px}
 .node h2{font:600 18px/1.2 var(--display);margin:0}
 .node .brief{font-size:13.5px;margin:10px 0 0;padding-top:10px;border-top:1px solid var(--rule)}
@@ -141,9 +141,9 @@ body.map-page{height:100vh;overflow:hidden;display:flex;flex-direction:column}
 .rail-tab .cnt{font:600 11px/18px var(--display);min-width:20px;padding:0 6px;border-radius:9px;background:var(--ink);color:var(--panel);text-align:center}
 .rail.closed + #map .rail-tab{display:inline-flex}
 .rail ol{list-style:none;margin:0;padding:0 8px 16px;overflow:auto;flex:1}
-.rail li button{all:unset;box-sizing:border-box;cursor:pointer;display:grid;grid-template-columns:30px 1fr;gap:8px;width:100%;padding:9px 8px;border-radius:8px}
-.rail li button:hover{background:var(--panel-2)}
-.rail li button[aria-pressed="true"]{background:var(--ink);color:var(--panel)}
+.rail li > button[data-prompt]{all:unset;box-sizing:border-box;cursor:pointer;display:grid;grid-template-columns:30px 1fr;gap:8px;width:100%;padding:9px 8px;border-radius:8px}
+.rail li > button[data-prompt]:hover{background:var(--panel-2)}
+.rail li > button[data-prompt][aria-pressed="true"]{background:var(--ink);color:var(--panel)}
 .rail .pn{font:600 12px/22px var(--display);height:22px;border-radius:11px;text-align:center;border:1px solid currentColor}
 .rail .pt{font-size:13px;line-height:1.4;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
 .rail .pa{font-size:11.5px;opacity:.7;margin-top:2px;display:flex;gap:6px;align-items:center}
@@ -196,6 +196,30 @@ body.at-prompt #map .node:not(.p-new):not(.p-changed),body.at-prompt .stage:not(
 .unchecked .kv{margin-top:4px;font-size:14px}
 .results .how,.stage .when{font-size:13px;color:var(--ink-2);margin-top:4px}
 .stage .when{display:grid;grid-template-columns:auto 1fr;gap:6px;margin-top:8px;padding:6px 8px;border-radius:6px;background:var(--panel-2)}
+
+/* ── copy as Markdown ─────────────────────────────────── */
+.copybtn{all:unset;box-sizing:border-box;cursor:pointer;display:inline-flex;align-items:center;gap:5px;color:var(--ink-3);border-radius:6px;
+  height:26px;min-width:26px;justify-content:center;padding:0 5px;transition:opacity .15s,color .15s,background .15s}
+.copybtn:hover{color:var(--ink);background:var(--panel-2)} .copybtn:focus-visible{outline:2px solid var(--cobalt);opacity:1}
+.copybtn span{font:500 12.5px var(--text)}
+.node > .copybtn,.stage > .copybtn,.items > li > .copybtn,.claims > li > .copybtn,.results > li > .copybtn,.unchecked > li > .copybtn,.mine > li > .copybtn,.rail li > .copybtn{
+  position:absolute;top:6px;right:6px;opacity:0;background:var(--panel)}
+.node:hover > .copybtn,.stage:hover > .copybtn,li:hover > .copybtn,.node:focus-within > .copybtn{opacity:1}
+.items > li,.claims > li,.results > li,.unchecked > li,.mine > li,.rail li{position:relative}
+.claims > li,.results > li,.unchecked > li{padding-right:34px}
+.sec > h3 > .copybtn{opacity:0} .sec:hover > h3 > .copybtn{opacity:1}
+.stamps + .copybtn,.sec > h3 > .copybtn{margin-left:4px}
+.sec > h3 .stamps{margin-left:auto}
+.sec > h3:not(:has(.stamps)) > .copybtn{margin-left:auto}
+.r-head > .copybtn{position:absolute;right:140px;bottom:12px;border:1px solid var(--rule);background:var(--panel);color:var(--ink-2);height:28px;padding:0 9px}
+.r-head{position:sticky}
+.bar > .copybtn.cb-all{border:1px solid var(--rule);background:var(--panel);color:var(--ink);height:36px;padding:0 12px;border-radius:8px}
+.rail li > .copybtn{top:6px;right:6px}
+.rail li > button[data-prompt]{padding-right:30px}
+.toast{position:fixed;left:50%;top:76px;z-index:90;transform:translate(-50%,-12px);opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;
+  background:var(--ink);color:var(--panel);font-size:13.5px;padding:8px 14px;border-radius:9px;box-shadow:0 12px 30px -16px rgba(23,38,43,.7)}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+@media print{.copybtn,.toast{display:none!important}}
 
 /* ── task report (drawer) ─────────────────────────────── */
 .scrim{position:fixed;inset:var(--bar-h,66px) 0 0 0;z-index:35;background:rgba(23,38,43,.28);opacity:0;pointer-events:none;transition:opacity .2s}
@@ -958,8 +982,9 @@ function toggleRail(byKeyboard) {
 const _open = open;
 open = function (key, o) { _open(key, o); const a = art(key); if (a) { stamps(a); paint(a); } };
 
-// ── answers: decide in the report; "Send to agent" continues the session ──
-const served = location.protocol.startsWith("http") && new URLSearchParams(location.search).get("t");
+// ── answers: decide in the report; "Send to agent" goes straight to the session ──
+const ANSWER = TRACK.answer_to;          // {url, token} — the local answer service, if this report has one
+let reachable = false;
 const store = "sr-answers:" + document.title;
 const draft = JSON.parse(localStorage.getItem(store) || "{}");
 const forms = () => $$("form.answer");
@@ -983,43 +1008,206 @@ function restore() {
 }
 const bar = $("#sendbar"), btn = $("#send-btn"), cnt = $("#send-count"), msg = $("#send-message");
 function refresh() {
+  if (btn.dataset.sent) return;
   const n = collect().length + (msg.value.trim() ? 1 : 0);
   bar.classList.toggle("show", n > 0);
-  cnt.textContent = n === 1 ? "1 answer ready" : `${n} answers ready`;
-  btn.textContent = served ? "Send to agent" : "Copy answers";
+  cnt.textContent = (n === 1 ? "1 answer ready" : n + " answers ready") + (reachable ? "" : " · the agent is not connected");
+  btn.textContent = reachable ? "Send to agent" : "Copy answers";
+}
+async function ping() {
+  if (!ANSWER) return false;
+  try { const r = await fetch(ANSWER.url + "/ping", {headers: {"X-Report-Token": ANSWER.token}}); return r.ok; } catch (e) { return false; }
 }
 document.addEventListener("input", e => {
   const f = e.target.closest("form.answer");
   if (f) { const c = $("input[type=radio]:checked", f), d = $("input[type=checkbox]", f);
-    draft[f.dataset.akey] = {choice: c?.value, done: d?.checked, text: $("textarea", f).value}; localStorage.setItem(store, JSON.stringify(draft)); }
+    draft[f.dataset.akey] = {choice: c && c.value, done: d && d.checked, text: $("textarea", f).value}; localStorage.setItem(store, JSON.stringify(draft)); }
   if (f || e.target === msg) refresh();
 });
 document.addEventListener("change", e => { if (e.target.closest("form.answer")) refresh(); });
 document.addEventListener("submit", e => e.preventDefault());
 function asText(items, m) {
-  const lines = [`Answers from the report «${document.title}»:`];
-  for (const it of items) lines.push(`- [${it.num ? it.num + " " : ""}${it.title}] ${it.question}: ${it.type === "approval" ? (it.choice || "—") : (it.done ? "done" : "not done")}${it.comment ? " — " + it.comment : ""}`);
+  const lines = ["Answers from the report «" + document.title + "»:"];
+  for (const it of items) lines.push("- [" + (it.num ? it.num + " " : "") + it.title + "] " + it.question + ": " +
+    (it.type === "approval" ? (it.choice || "—") : (it.done ? "done" : "not done")) + (it.comment ? " — " + it.comment : ""));
   if (m) lines.push("Message: " + m);
   return lines.join("\n");
 }
 btn.addEventListener("click", async () => {
   const items = collect(), m = msg.value.trim();
   if (!items.length && !m) return;
-  if (!served) { await navigator.clipboard?.writeText(asText(items, m)); cnt.textContent = "Copied — paste it into the chat"; return; }
+  if (!reachable) reachable = await ping();
+  if (!reachable) {
+    if (navigator.clipboard) await navigator.clipboard.writeText(asText(items, m));
+    cnt.textContent = ANSWER ? "The agent's answer service is not running — copied, paste into the chat"
+                             : "This report has no agent connection — copied, paste into the chat";
+    return;
+  }
   btn.disabled = true; cnt.textContent = "Sending…";
   try {
-    const r = await fetch("/__answers", {method: "POST", headers: {"Content-Type": "application/json", "X-Report-Token": served}, body: JSON.stringify({items, message: m})});
-    if (!r.ok) throw new Error(r.status);
+    const r = await fetch(ANSWER.url + "/answers", {method: "POST", headers: {"Content-Type": "application/json", "X-Report-Token": ANSWER.token}, body: JSON.stringify({items, message: m})});
+    if (!r.ok) throw new Error(String(r.status));
     const j = await r.json();
     localStorage.removeItem(store);
-    cnt.textContent = `Sent as prompt #${j.prompt} — the agent continues`; btn.textContent = "Sent"; msg.value = "";
-    forms().forEach(f => { f.querySelectorAll("input,textarea").forEach(x => x.disabled = true); });
+    btn.dataset.sent = "1"; btn.textContent = "Sent"; msg.value = ""; msg.disabled = true;
+    cnt.textContent = j.waiting ? "Delivered as prompt #" + j.prompt + " — the agent continues"
+                                : "Saved as prompt #" + j.prompt + " — the agent gets it as soon as it is free or with your next message";
+    forms().forEach(f => f.querySelectorAll("input,textarea").forEach(x => x.disabled = true));
   } catch (err) {
-    btn.disabled = false; cnt.textContent = "Not sent — the report server has stopped. Copy instead:"; btn.textContent = "Copy answers";
-    btn.onclick = () => navigator.clipboard?.writeText(asText(items, m));
+    btn.disabled = false; reachable = false; refresh();
+    cnt.textContent = "Could not reach the agent — press again to copy instead";
   }
 });
+ping().then(ok => { reachable = ok; refresh(); });
 restore(); refresh();
+
+// ── copy as Markdown: a button wherever there is something worth taking away ──
+// Markdown is produced from the rendered structure (headings, lists, key/value rows, emphasis, code, links).
+const ORDER = $$(".report").map(r => r.dataset.key);
+function mdOf(node) {
+  if (node.nodeType === 3) {
+    if (!node.nodeValue.trim()) {            // whitespace between block elements is layout, not text
+      const near = [node.previousSibling, node.nextSibling].find(x => x && x.nodeType === 1);
+      if (!near || /^(DIV|DL|UL|OL|P|SECTION|HEADER|FORM|LI|DT|DD|H[1-6])$/.test(near.tagName)) return "";
+    }
+    return node.nodeValue.replace(/\s+/g, " ");
+  }
+  if (node.nodeType !== 1) return "";
+  const el = node, tag = el.tagName.toLowerCase();
+  if (el.matches("form.answer")) {          // the question's options, not the inputs
+    const opts = $$(".choice", el).map(c => c.querySelector("input").value + (c.querySelector(".rec") ? " (recommended)" : ""));
+    return opts.length ? "\n- **Options:** " + opts.join(" / ") + "\n" : "";
+  }
+  if (["svg", "button", "form", "script", "style", "textarea", "input", "output"].includes(tag)) return "";
+  if (el.matches(".stamps,.pbadge,.copybtn,.zoom,.minimap,.flow,.flow-bar,.trail,.dots")) return "";
+  const kids = () => [...el.childNodes].map(mdOf).join("");
+  const inline = () => kids().replace(/\s+/g, " ").trim();
+  switch (tag) {
+    case "strong": case "b": { const t = inline(); return t ? "**" + t + "**" : ""; }
+    case "mark": { const t = inline(); return t ? "**" + t + "**" : ""; }
+    case "code": return "`" + el.textContent + "`";
+    case "a": { const t = inline(), h = el.getAttribute("href") || ""; return h && !h.startsWith("#") ? "[" + t + "](" + h + ")" : t; }
+    case "br": return "\n";
+    case "p": return inline() + "\n\n";
+    case "h2": return "## " + inline() + "\n\n";
+    case "h3": return "### " + inline() + "\n\n";
+    case "h4": return "#### " + inline() + "\n\n";
+    case "ul": return [...el.children].map(li => "- " + mdOf(li).trim().replace(/\n/g, "\n  ")).join("\n") + "\n\n";
+    case "ol": return [...el.children].map((li, i) => (el.matches(".stages-print") ? "- " : (i + 1) + ". ") + mdOf(li).trim().replace(/\n+/g, "\n  ")).join("\n") + "\n\n";
+    case "dl": {
+      const out = []; let k = null;
+      for (const c of el.children) { if (c.tagName === "DT") k = c.textContent.trim(); else out.push("- **" + k + ":** " + mdOf(c).trim().replace(/\n+/g, " ")); }
+      return out.join("\n") + "\n\n";
+    }
+    case "li": case "div": case "span": case "section": case "article": case "header": case "dd": {
+      if (el.matches("li.item")) {             // context source: [C1] [title](url) — note
+        const t = el.querySelector(".t"), n = el.querySelector(".n");
+        return "[" + el.querySelector(".tag").textContent.trim() + "] " + mdOf(t).trim() + (n ? " — " + mdOf(n).trim().replace(/\n+/g, "; ") : "");
+      }
+      if (el.matches(".tag")) return "[" + el.textContent.trim() + "] ";
+      if (el.matches(".num")) return el.textContent.trim() + " ";
+      if (el.matches(".k")) return "*" + el.textContent.trim() + "* ";
+      if (el.matches(".level")) return el.textContent.trim();
+      if (el.matches(".stages-print")) return kids();
+      const block = tag !== "span" && getComputedStyle(el).display !== "inline";
+      return block ? "\n" + kids() + "\n" : kids();
+    }
+    default: return kids();
+  }
+}
+const tidy = t => t.replace(/[ \t]+\n/g, "\n").replace(/\n{3,}/g, "\n\n").trim() + "\n";
+function sectionMd(sec) {
+  const h = $(":scope > h3", sec);
+  const clone = sec.cloneNode(true);
+  clone.querySelector(":scope > h3")?.remove();
+  const sp = clone.querySelector(".stages-print");
+  if (sp) { sp.style.display = "block"; }
+  const hc = h.cloneNode(true); hc.querySelectorAll(".stamps,.copybtn,svg").forEach(x => x.remove());
+  return "### " + hc.textContent.trim() + "\n\n" + mdOfHidden(clone);
+}
+function mdOfHidden(el) {                  // render off-screen so computed styles exist
+  const host = document.createElement("div"); host.style.cssText = "position:absolute;left:-99999px;top:0;width:800px";
+  host.appendChild(el); document.body.appendChild(host);
+  $$(".stages-print", el).forEach(x => x.style.display = "block");
+  const t = mdOf(el); host.remove(); return t;
+}
+function reportMd(art) {
+  const head = $(".r-head", art), num = art.dataset.num, title = art.dataset.title;
+  const trail = $$(".trail button", head).map(b => b.textContent.trim()).filter(Boolean).join(" › ");
+  const status = $(".r-head > span[title]", art)?.getAttribute("title") || "";
+  const ref = $(".r-head .ref", art);
+  let out = "## " + (num ? num + " " : "") + title + "\n\n";
+  const meta = [trail && "- **Where:** " + trail, status && "- **Status:** " + status, ref && "- **Link:** [" + ref.textContent.trim() + "](" + ref.href + ")"].filter(Boolean);
+  if (meta.length) out += meta.join("\n") + "\n\n";
+  for (const sec of $$(":scope > .sec", art)) out += sectionMd(sec) + "\n";
+  return tidy(out);
+}
+function cardMd(node) {
+  const title = $("h2", node).textContent.trim(), status = $(".nh > span[title]", node).getAttribute("title");
+  let out = "### " + title + "\n\n- **Status:** " + status + "\n";
+  const brief = $(".brief", node); if (brief) out += mdOf(brief.cloneNode(true)).trim().split("\n").filter(Boolean).map(l => l.startsWith("- ") ? l : "- " + l).join("\n") + "\n";
+  const w = $$(".waiting li", node);
+  if (w.length) out += "\n**Waiting on you:**\n" + w.map(li => "- " + li.title.split(" —")[0] + ": " + mdOf($("span", li)).trim()).join("\n") + "\n";
+  return tidy(out);
+}
+function stageMd(st) {
+  const num = $(".num", st).textContent.trim(), title = $("h4", st).textContent.trim();
+  const status = $(".h > span[title]", st).getAttribute("title");
+  let out = "#### " + num + " " + title + "\n\n- **Status:** " + status + "\n";
+  const d = $(".d", st), o = $(".o", st), w = $(".when", st);
+  if (d) out += "- **Done:** " + mdOf(d).trim().replace(/\n+/g, " ") + "\n";
+  if (o) out += "- **Outcome:** " + mdOf($(".rich", o)).trim().replace(/\n+/g, " ") + "\n";
+  if (w) out += "- **When:** " + mdOf($(".rich", w)).trim() + "\n";
+  const refs = $$(".refs .ref-chip", st).map(a => a.textContent.trim()); if (refs.length) out += "- **Uses:** " + refs.join(", ") + "\n";
+  return tidy(out);
+}
+function itemMd(el) { return tidy(mdOfHidden(el.cloneNode(true)).replace(/^\s*/, "- ").replace(/\n(?!$)/g, "\n  ")); }
+function allMd() {
+  const title = $(".bar h1").textContent.trim();
+  let out = "# " + title + "\n\n";
+  const reports = ORDER.map(k => document.getElementById("report-" + k)).filter(Boolean);
+  for (const a of reports) out += reportMd(a) + "\n";
+  return tidy(out);
+}
+
+const toast = document.createElement("div"); toast.className = "toast"; toast.setAttribute("role", "status"); document.body.appendChild(toast);
+let tt;
+async function copyMd(text, what) {
+  try { await navigator.clipboard.writeText(text); toast.textContent = what + " copied as Markdown"; }
+  catch (e) { toast.textContent = "Copy failed — the browser blocked the clipboard"; }
+  toast.classList.add("show"); clearTimeout(tt); tt = setTimeout(() => toast.classList.remove("show"), 1600);
+}
+function addCopy(host, kind, label) {
+  if ($(":scope > .copybtn", host)) return;
+  const b = document.createElement("button");
+  b.type = "button"; b.className = "copybtn cb-" + kind; b.dataset.copyKind = kind;
+  b.title = "Copy " + label + " as Markdown"; b.setAttribute("aria-label", b.title);
+  b.innerHTML = '<svg class="icon sm"><use href="#i-copy"/></svg>' + (kind === "report" || kind === "all" ? "<span>Copy</span>" : "");
+  host.appendChild(b);
+}
+function decorate(root) {
+  $$("#map .node", root).forEach(n => addCopy(n, "card", "this task"));
+  $$(".stage", root).forEach(n => addCopy(n, "stage", "this step"));
+  $$(".r-head", root).forEach(h => addCopy(h, "report", "this report"));
+  $$(".sec > h3", root).forEach(h => addCopy(h, "section", "this section"));
+  $$(".items > li, .claims > li, .results > li, .unchecked > li, .mine > li", root).forEach(li => addCopy(li, "item", "this item"));
+  $$(".rail li", root).forEach(li => addCopy(li, "prompt", "this prompt"));
+}
+decorate(document);
+addCopy($(".bar"), "all", "the whole report");
+$(".bar > .copybtn.cb-all").before($("#print-btn"));
+document.addEventListener("click", e => {
+  const b = e.target.closest(".copybtn"); if (!b) return;
+  e.preventDefault(); e.stopPropagation();
+  const k = b.dataset.copyKind;
+  if (k === "all") return copyMd(allMd(), "The whole report");
+  if (k === "card") return copyMd(cardMd(b.closest(".node")), "Task");
+  if (k === "stage") return copyMd(stageMd(b.closest(".stage")), "Step");
+  if (k === "report") return copyMd(reportMd(b.closest(".report")), "Report");
+  if (k === "section") return copyMd(tidy(sectionMd(b.closest(".sec"))), "Section");
+  if (k === "item") return copyMd(itemMd(b.closest("li")), "Item");
+  if (k === "prompt") { const li = b.closest("li"); return copyMd(tidy("> " + $(".pt", li).textContent.trim().replace(/\n/g, "\n> ") + "\n\n— prompt #" + $(".pn", li).textContent.trim() + ", " + $(".pa", li).textContent.trim()), "Prompt"); }
+}, true);
 const setBar = () => document.documentElement.style.setProperty("--bar-h", $(".bar").offsetHeight + "px");
 setBar(); addEventListener("resize", setBar);
 const hm = /^#task=(.+)$/.exec(location.hash); if (hm) open(decodeURIComponent(hm[1]));

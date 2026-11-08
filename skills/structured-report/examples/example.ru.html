@@ -90,7 +90,7 @@ body.map-page{height:100vh;overflow:hidden;display:flex;flex-direction:column}
   transition:border-color .15s,box-shadow .15s}
 .node:hover{border-color:var(--ink-3);box-shadow:0 8px 20px -14px rgba(23,38,43,.55)}
 .node[aria-current="true"]{border-color:var(--ink);box-shadow:0 0 0 2px var(--ink)}
-.node .nh{display:grid;grid-template-columns:20px 1fr;gap:8px;align-items:start}
+.node .nh{display:grid;grid-template-columns:20px 1fr;gap:8px;align-items:start;padding-right:22px}
 .node .nh .icon{width:20px;height:20px;margin-top:1px}
 .node h2{font:600 18px/1.2 var(--display);margin:0}
 .node .brief{font-size:13.5px;margin:10px 0 0;padding-top:10px;border-top:1px solid var(--rule)}
@@ -141,9 +141,9 @@ body.map-page{height:100vh;overflow:hidden;display:flex;flex-direction:column}
 .rail-tab .cnt{font:600 11px/18px var(--display);min-width:20px;padding:0 6px;border-radius:9px;background:var(--ink);color:var(--panel);text-align:center}
 .rail.closed + #map .rail-tab{display:inline-flex}
 .rail ol{list-style:none;margin:0;padding:0 8px 16px;overflow:auto;flex:1}
-.rail li button{all:unset;box-sizing:border-box;cursor:pointer;display:grid;grid-template-columns:30px 1fr;gap:8px;width:100%;padding:9px 8px;border-radius:8px}
-.rail li button:hover{background:var(--panel-2)}
-.rail li button[aria-pressed="true"]{background:var(--ink);color:var(--panel)}
+.rail li > button[data-prompt]{all:unset;box-sizing:border-box;cursor:pointer;display:grid;grid-template-columns:30px 1fr;gap:8px;width:100%;padding:9px 8px;border-radius:8px}
+.rail li > button[data-prompt]:hover{background:var(--panel-2)}
+.rail li > button[data-prompt][aria-pressed="true"]{background:var(--ink);color:var(--panel)}
 .rail .pn{font:600 12px/22px var(--display);height:22px;border-radius:11px;text-align:center;border:1px solid currentColor}
 .rail .pt{font-size:13px;line-height:1.4;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
 .rail .pa{font-size:11.5px;opacity:.7;margin-top:2px;display:flex;gap:6px;align-items:center}
@@ -196,6 +196,30 @@ body.at-prompt #map .node:not(.p-new):not(.p-changed),body.at-prompt .stage:not(
 .unchecked .kv{margin-top:4px;font-size:14px}
 .results .how,.stage .when{font-size:13px;color:var(--ink-2);margin-top:4px}
 .stage .when{display:grid;grid-template-columns:auto 1fr;gap:6px;margin-top:8px;padding:6px 8px;border-radius:6px;background:var(--panel-2)}
+
+/* ── copy as Markdown ─────────────────────────────────── */
+.copybtn{all:unset;box-sizing:border-box;cursor:pointer;display:inline-flex;align-items:center;gap:5px;color:var(--ink-3);border-radius:6px;
+  height:26px;min-width:26px;justify-content:center;padding:0 5px;transition:opacity .15s,color .15s,background .15s}
+.copybtn:hover{color:var(--ink);background:var(--panel-2)} .copybtn:focus-visible{outline:2px solid var(--cobalt);opacity:1}
+.copybtn span{font:500 12.5px var(--text)}
+.node > .copybtn,.stage > .copybtn,.items > li > .copybtn,.claims > li > .copybtn,.results > li > .copybtn,.unchecked > li > .copybtn,.mine > li > .copybtn,.rail li > .copybtn{
+  position:absolute;top:6px;right:6px;opacity:0;background:var(--panel)}
+.node:hover > .copybtn,.stage:hover > .copybtn,li:hover > .copybtn,.node:focus-within > .copybtn{opacity:1}
+.items > li,.claims > li,.results > li,.unchecked > li,.mine > li,.rail li{position:relative}
+.claims > li,.results > li,.unchecked > li{padding-right:34px}
+.sec > h3 > .copybtn{opacity:0} .sec:hover > h3 > .copybtn{opacity:1}
+.stamps + .copybtn,.sec > h3 > .copybtn{margin-left:4px}
+.sec > h3 .stamps{margin-left:auto}
+.sec > h3:not(:has(.stamps)) > .copybtn{margin-left:auto}
+.r-head > .copybtn{position:absolute;right:140px;bottom:12px;border:1px solid var(--rule);background:var(--panel);color:var(--ink-2);height:28px;padding:0 9px}
+.r-head{position:sticky}
+.bar > .copybtn.cb-all{border:1px solid var(--rule);background:var(--panel);color:var(--ink);height:36px;padding:0 12px;border-radius:8px}
+.rail li > .copybtn{top:6px;right:6px}
+.rail li > button[data-prompt]{padding-right:30px}
+.toast{position:fixed;left:50%;top:76px;z-index:90;transform:translate(-50%,-12px);opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;
+  background:var(--ink);color:var(--panel);font-size:13.5px;padding:8px 14px;border-radius:9px;box-shadow:0 12px 30px -16px rgba(23,38,43,.7)}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+@media print{.copybtn,.toast{display:none!important}}
 
 /* ── task report (drawer) ─────────────────────────────── */
 .scrim{position:fixed;inset:var(--bar-h,66px) 0 0 0;z-index:35;background:rgba(23,38,43,.28);opacity:0;pointer-events:none;transition:opacity .2s}
@@ -1964,7 +1988,7 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
   <button type="button" id="send-btn">Send to agent</button>
 </div>
 <script type="application/json" id="sr-index">[{"k": "latency", "n": null, "t": "Почему p95 оформления удвоился после 2.14", "p": "", "s": "card", "l": "Title", "x": "Почему p95 оформления удвоился после 2.14"}, {"k": "latency", "n": null, "t": "Почему p95 оформления удвоился после 2.14", "p": "", "s": "card", "l": "Brief", "x": "Причина: лимит соединений снят в клиенте 4.0 · Доказано: нагрузочным тестом"}, {"k": "latency", "n": null, "t": "Почему p95 оформления удвоился после 2.14", "p": "", "s": "problem", "l": "Problem", "x": "С какого момента: релиз 2.14, 2 ноября 14:05 · Задержка: p95 оформления 820 мс → 1,7 с · Таймауты: 0,9% попыток оплаты · Клиенты: деньги списаны, заказа нет (жалобы в поддержку)"}, {"k": "latency", "n": null, "t": "Почему p95 оформления удвоился после 2.14", "p": "", "s": "goal", "l": "Task", "x": "Найти причину с доказательствами · Сказать, что поменять, чтобы p95 вернулся к уровню до 2.14"}, {"k": "latency", "n": null, "t": "Почему p95 оформления удвоился после 2.14", "p": "", "s": "context", "l": "Context C1", "x": "Дашборд задержки оформления, 26 окт – 4 ноя · Скачок p95 в 14:05 2 ноября — время выкладки 2.14"}, {"k": "latency", "n": null, "t": "Почему p95 оформления удвоился после 2.14", "p": "", "s": "context", "l": "Context C2", "x": "Diff 2.14: платёжный клиент 3.2 → 4.0"}, {"k": "latency", "n": null, "t": "Почему p95 оформления удвоился после 2.14", "p": "", "s": "context", "l": "Context C3", "x": "Changelog платёжного клиента 4.0 · «maxConnections now defaults to unlimited»"}, {"k": "latency", "n": null, "t": "Почему p95 оформления удвоился после 2.14", "p": "", "s": "context", "l": "Context C4", "x": "Логи подов в пик, 3 ноября 19:00–19:30 · 3 140 ошибок EMFILE: too many open files, все из платёжного клиента"}, {"k": "latency", "n": null, "t": "Почему p95 оформления удвоился после 2.14", "p": "", "s": "context", "l": "Context C5", "x": "Тред поддержки о двойных списаниях"}, {"k": "latency", "n": null, "t": "Почему p95 оформления удвоился после 2.14", "p": "", "s": "context", "l": "Context C6", "x": "src/payments/client.ts"}, {"k": "latency", "n": null, "t": "Почему p95 оформления удвоился после 2.14", "p": "", "s": "inferences", "l": "Conclusion", "x": "Рост начался ровно с выкладкой 2.14 → причина в изменении внутри 2.14, а не в трафике"}, {"k": "latency", "n": null, "t": "Почему p95 оформления удвоился после 2.14", "p": "", "s": "inferences", "l": "Conclusion", "x": "Клиент открывает новый сокет на каждый ретрай без лимита → под ретраями у пода кончаются файловые дескрипторы"}, {"k": "latency", "n": null, "t": "Почему p95 оформления удвоился после 2.14", "p": "", "s": "inferences", "l": "Conclusion", "x": "Двойные списания: провайдер принял платёж, а наш таймаут (10 с) сработал до записи заказа"}, {"k": "latency", "n": null, "t": "Почему p95 оформления удвоился после 2.14", "p": "", "s": "assumptions", "l": "Assumption", "x": "Сам провайдер во время инцидента работал нормально · Запросить у провайдера логи запросов за 3 ноября 19:00–19:30"}, {"k": "latency", "n": null, "t": "Почему p95 оформления удвоился после 2.14", "p": "", "s": "result", "l": "Result", "x": "Причина: соединения без лимита в платёжном клиенте 4.0 · Подтверждено: нагрузочным тестом при 3× пиковой нагрузке · Лимит пула 50 соединений на под + backoff с джиттером · Нагрузочный тест с лимитом: ни одной ошибки EMFILE при 3× пике · p95 в тесте с лимитом (было 1,7 с) · Хронология инцидента описана"}, {"k": "latency", "n": null, "t": "Почему p95 оформления удвоился после 2.14", "p": "", "s": "unchecked", "l": "Not checked", "x": "Метрики провайдера за время инцидента · Доступа нет — запрос в «Сделать вам»"}, {"k": "latency", "n": null, "t": "Почему p95 оформления удвоился после 2.14", "p": "", "s": "actions", "l": "Your action", "x": "Запросить у провайдера логи за 3 ноября 19:00–19:30"}, {"k": "latency/s1", "n": "1", "t": "Подтвердить регрессию", "p": "Почему p95 оформления удвоился после 2.14", "s": "card", "l": "Title", "x": "Подтвердить регрессию"}, {"k": "latency/s1", "n": "1", "t": "Подтвердить регрессию", "p": "Почему p95 оформления удвоился после 2.14", "s": "goal", "l": "Task", "x": "Сравнил p95 по часам за две недели вокруг релиза"}, {"k": "latency/s1", "n": "1", "t": "Подтвердить регрессию", "p": "Почему p95 оформления удвоился после 2.14", "s": "context", "l": "Context C1", "x": "Дашборд задержки оформления, 26 окт – 4 ноя · Скачок p95 в 14:05 2 ноября — время выкладки 2.14"}, {"k": "latency/s1", "n": "1", "t": "Подтвердить регрессию", "p": "Почему p95 оформления удвоился после 2.14", "s": "result", "l": "Result", "x": "Ступенька в момент выкладки 2.14"}, {"k": "latency/s2", "n": "2", "t": "Разобрать diff релиза", "p": "Почему p95 оформления удвоился после 2.14", "s": "card", "l": "Title", "x": "Разобрать diff релиза"}, {"k": "latency/s2", "n": "2", "t": "Разобрать diff релиза", "p": "Почему p95 оформления удвоился после 2.14", "s": "goal", "l": "Task", "x": "Выписал все изменения зависимостей и конфигов в 2.14"}, {"k": "latency/s2", "n": "2", "t": "Разобрать diff релиза", "p": "Почему p95 оформления удвоился после 2.14", "s": "context", "l": "Context C2", "x": "Diff 2.14: платёжный клиент 3.2 → 4.0"}, {"k": "latency/s2", "n": "2", "t": "Разобрать diff релиза", "p": "Почему p95 оформления удвоился после 2.14", "s": "result", "l": "Result", "x": "Одно рискованное: клиент 3.2 → 4.0"}, {"k": "latency/s3", "n": "3", "t": "Прочитать логи ошибок", "p": "Почему p95 оформления удвоился после 2.14", "s": "card", "l": "Title", "x": "Прочитать логи ошибок"}, {"k": "latency/s3", "n": "3", "t": "Прочитать логи ошибок", "p": "Почему p95 оформления удвоился после 2.14", "s": "goal", "l": "Task", "x": "Сгруппировал ошибки вечернего пика по тексту и источнику"}, {"k": "latency/s3", "n": "3", "t": "Прочитать логи ошибок", "p": "Почему p95 оформления удвоился после 2.14", "s": "context", "l": "Context C4", "x": "Логи подов в пик, 3 ноября 19:00–19:30 · 3 140 ошибок EMFILE: too many open files, все из платёжного клиента"}, {"k": "latency/s3", "n": "3", "t": "Прочитать логи ошибок", "p": "Почему p95 оформления удвоился после 2.14", "s": "result", "l": "Result", "x": "Доминирует EMFILE из платёжного клиента"}, {"k": "latency/s3/q", "n": "3.1", "t": "Выгрузить логи пика", "p": "Почему p95 оформления удвоился после 2.14 › 3 Прочитать логи ошибок", "s": "card", "l": "Title", "x": "Выгрузить логи пика"}, {"k": "latency/s3/q", "n": "3.1", "t": "Выгрузить логи пика", "p": "Почему p95 оформления удвоился после 2.14 › 3 Прочитать логи ошибок", "s": "goal", "l": "Task", "x": "Запрос в лог-хранилище за 19:00–19:30"}, {"k": "latency/s3/q", "n": "3.1", "t": "Выгрузить логи пика", "p": "Почему p95 оформления удвоился после 2.14 › 3 Прочитать логи ошибок", "s": "context", "l": "Context C4", "x": "Логи подов в пик, 3 ноября 19:00–19:30 · 3 140 ошибок EMFILE: too many open files, все из платёжного клиента"}, {"k": "latency/s3/q", "n": "3.1", "t": "Выгрузить логи пика", "p": "Почему p95 оформления удвоился после 2.14 › 3 Прочитать логи ошибок", "s": "result", "l": "Result", "x": "41 200 строк"}, {"k": "latency/s3/g", "n": "3.2", "t": "Сгруппировать ошибки", "p": "Почему p95 оформления удвоился после 2.14 › 3 Прочитать логи ошибок", "s": "card", "l": "Title", "x": "Сгруппировать ошибки"}, {"k": "latency/s3/g", "n": "3.2", "t": "Сгруппировать ошибки", "p": "Почему p95 оформления удвоился после 2.14 › 3 Прочитать логи ошибок", "s": "goal", "l": "Task", "x": "По тексту и сервису-источнику"}, {"k": "latency/s3/g", "n": "3.2", "t": "Сгруппировать ошибки", "p": "Почему p95 оформления удвоился после 2.14 › 3 Прочитать логи ошибок", "s": "result", "l": "Result", "x": "Топ-1: EMFILE — 76%"}, {"k": "latency/s3/g/g1", "n": "3.2.1", "t": "Нормализовать тексты", "p": "Почему p95 оформления удвоился после 2.14 › 3 Прочитать логи ошибок › 3.2 Сгруппировать ошибки", "s": "card", "l": "Title", "x": "Нормализовать тексты"}, {"k": "latency/s3/g/g1", "n": "3.2.1", "t": "Нормализовать тексты", "p": "Почему p95 оформления удвоился после 2.14 › 3 Прочитать логи ошибок › 3.2 Сгруппировать ошибки", "s": "goal", "l": "Task", "x": "Убрал id и таймстемпы"}, {"k": "latency/s3/g/g2", "n": "3.2.2", "t": "Посчитать по источнику", "p": "Почему p95 оформления удвоился после 2.14 › 3 Прочитать логи ошибок › 3.2 Сгруппировать ошибки", "s": "card", "l": "Title", "x": "Посчитать по источнику"}, {"k": "latency/s3/g/g2", "n": "3.2.2", "t": "Посчитать по источнику", "p": "Почему p95 оформления удвоился после 2.14 › 3 Прочитать логи ошибок › 3.2 Сгруппировать ошибки", "s": "result", "l": "Result", "x": "Платёжный клиент — источник всех EMFILE"}, {"k": "latency/s3/g/g3", "n": "3.2.3", "t": "Проверить другие поды", "p": "Почему p95 оформления удвоился после 2.14 › 3 Прочитать логи ошибок › 3.2 Сгруппировать ошибки", "s": "card", "l": "Title", "x": "Проверить другие поды"}, {"k": "latency/s3/g/g3", "n": "3.2.3", "t": "Проверить другие поды", "p": "Почему p95 оформления удвоился после 2.14 › 3 Прочитать логи ошибок › 3.2 Сгруппировать ошибки", "s": "goal", "l": "Task", "x": "Ошибка только в checkout — пропустил"}, {"k": "latency/s3/c", "n": "3.3", "t": "Сверить с метриками сокетов", "p": "Почему p95 оформления удвоился после 2.14 › 3 Прочитать логи ошибок", "s": "card", "l": "Title", "x": "Сверить с метриками сокетов"}, {"k": "latency/s3/c", "n": "3.3", "t": "Сверить с метриками сокетов", "p": "Почему p95 оформления удвоился после 2.14 › 3 Прочитать логи ошибок", "s": "goal", "l": "Task", "x": "Метрика открытых файлов не собирается"}, {"k": "latency/s3/c", "n": "3.3", "t": "Сверить с метриками сокетов", "p": "Почему p95 оформления удвоился после 2.14 › 3 Прочитать логи ошибок", "s": "result", "l": "Result", "x": "Тупик — перешёл к changelog"}, {"k": "latency/s4", "n": "4", "t": "Проверить changelog клиента", "p": "Почему p95 оформления удвоился после 2.14", "s": "card", "l": "Title", "x": "Проверить changelog клиента"}, {"k": "latency/s4", "n": "4", "t": "Проверить changelog клиента", "p": "Почему p95 оформления удвоился после 2.14", "s": "goal", "l": "Task", "x": "Искал изменения поведения в 4.0"}, {"k": "latency/s4", "n": "4", "t": "Проверить changelog клиента", "p": "Почему p95 оформления удвоился после 2.14", "s": "context", "l": "Context C3", "x": "Changelog платёжного клиента 4.0 · «maxConnections now defaults to unlimited»"}, {"k": "latency/s4", "n": "4", "t": "Проверить changelog клиента", "p": "Почему p95 оформления удвоился после 2.14", "s": "context", "l": "Context C6", "x": "src/payments/client.ts"}, {"k": "latency/s4", "n": "4", "t": "Проверить changelog клиента", "p": "Почему p95 оформления удвоился после 2.14", "s": "result", "l": "Result", "x": "Лимит пула по умолчанию стал «без ограничений»"}, {"k": "latency/s5", "n": "5", "t": "Воспроизвести под нагрузкой", "p": "Почему p95 оформления удвоился после 2.14", "s": "card", "l": "Title", "x": "Воспроизвести под нагрузкой"}, {"k": "latency/s5", "n": "5", "t": "Воспроизвести под нагрузкой", "p": "Почему p95 оформления удвоился после 2.14", "s": "goal", "l": "Task", "x": "Прогнал нагрузочный тест с лимитом пула и без"}, {"k": "latency/s5", "n": "5", "t": "Воспроизвести под нагрузкой", "p": "Почему p95 оформления удвоился после 2.14", "s": "result", "l": "Result", "x": "С лимитом ошибки уходят, задержка возвращается"}, {"k": "latency/s6", "n": "6", "t": "Описать", "p": "Почему p95 оформления удвоился после 2.14", "s": "card", "l": "Title", "x": "Описать"}, {"k": "latency/s6", "n": "6", "t": "Описать", "p": "Почему p95 оформления удвоился после 2.14", "s": "goal", "l": "Task", "x": "Причина, доказательства и предлагаемый фикс — в задаче"}, {"k": "latency/s6", "n": "6", "t": "Описать", "p": "Почему p95 оформления удвоился после 2.14", "s": "result", "l": "Result", "x": "Передано в задачу с исправлением"}, {"k": "pool", "n": null, "t": "Ограничить соединения платёжного клиента", "p": "", "s": "card", "l": "Title", "x": "Ограничить соединения платёжного клиента"}, {"k": "pool", "n": null, "t": "Ограничить соединения платёжного клиента", "p": "", "s": "card", "l": "Brief", "x": "Лимит: 50 соединений на под · Статус: PR #1290 на ревью"}, {"k": "pool", "n": null, "t": "Ограничить соединения платёжного клиента", "p": "", "s": "problem", "l": "Problem", "x": "Клиент открывает сокеты без лимита → под ретраями кончаются файловые дескрипторы"}, {"k": "pool", "n": null, "t": "Ограничить соединения платёжного клиента", "p": "", "s": "goal", "l": "Task", "x": "Ограничить пул соединений · Добавить backoff ретраям · Не менять семантику платежей"}, {"k": "pool", "n": null, "t": "Ограничить соединения платёжного клиента", "p": "", "s": "context", "l": "Context C1", "x": "src/payments/client.ts"}, {"k": "pool", "n": null, "t": "Ограничить соединения платёжного клиента", "p": "", "s": "context", "l": "Context C2", "x": "Опции пула платёжного клиента"}, {"k": "pool", "n": null, "t": "Ограничить соединения платёжного клиента", "p": "", "s": "context", "l": "Context C3", "x": "Разбор причины (ACME-412)"}, {"k": "pool", "n": null, "t": "Ограничить соединения платёжного клиента", "p": "", "s": "inferences", "l": "Conclusion", "x": "50 соединений на под — двукратный запас: в пик ~22 одновременных платёжных запроса на под"}, {"k": "pool", "n": null, "t": "Ограничить соединения платёжного клиента", "p": "", "s": "assumptions", "l": "Assumption", "x": "Ключ идемпотентности уже передаётся при каждом ретрае → backoff не создаст двойных списаний · Найти один ретрай в кабинете провайдера и сверить ключ"}, {"k": "pool", "n": null, "t": "Ограничить соединения платёжного клиента", "p": "", "s": "result", "l": "Result", "x": "PR #1290 готов: · - лимит пула · - экспоненциальный backoff с джиттером · - метрика заполненности пула · maxConnections: 50, queueTimeout: 2s в фабрике клиента · Backoff 100 мс → 1,6 с с полным джиттером, максимум 4 попытки · Метрика payments_pool_in_use · Юнит-тесты зелёные; нагрузочный тест из ACME-412 проходит на этой ветке"}, {"k": "pool", "n": null, "t": "Ограничить соединения платёжного клиента", "p": "", "s": "unchecked", "l": "Not checked", "x": "Поведение пула при отказе DNS · Нет стенда для такого сбоя"}, {"k": "pool", "n": null, "t": "Ограничить соединения платёжного клиента", "p": "", "s": "approvals", "l": "Needs approval", "x": "Смержить PR #1290 и выпустить 2.14.1 сегодня · Выпустить сегодня · С релизом в понедельник"}, {"k": "pool/a", "n": "1", "t": "Подобрать лимиты", "p": "Ограничить соединения платёжного клиента", "s": "card", "l": "Title", "x": "Подобрать лимиты"}, {"k": "pool/a", "n": "1", "t": "Подобрать лимиты", "p": "Ограничить соединения платёжного клиента", "s": "goal", "l": "Task", "x": "Вывел размер пула из пиковой конкурентности"}, {"k": "pool/a", "n": "1", "t": "Подобрать лимиты", "p": "Ограничить соединения платёжного клиента", "s": "context", "l": "Context C3", "x": "Разбор причины (ACME-412)"}, {"k": "pool/a", "n": "1", "t": "Подобрать лимиты", "p": "Ограничить соединения платёжного клиента", "s": "result", "l": "Result", "x": "50 на под, таймаут очереди 2 с"}, {"k": "pool/b", "n": "2", "t": "Сделать лимит и backoff", "p": "Ограничить соединения платёжного клиента", "s": "card", "l": "Title", "x": "Сделать лимит и backoff"}, {"k": "pool/b", "n": "2", "t": "Сделать лимит и backoff", "p": "Ограничить соединения платёжного клиента", "s": "goal", "l": "Task", "x": "Настроил пул; обернул ретраи в хелпер backoff"}, {"k": "pool/b", "n": "2", "t": "Сделать лимит и backoff", "p": "Ограничить соединения платёжного клиента", "s": "context", "l": "Context C1", "x": "src/payments/client.ts"}, {"k": "pool/b", "n": "2", "t": "Сделать лимит и backoff", "p": "Ограничить соединения платёжного клиента", "s": "context", "l": "Context C2", "x": "Опции пула платёжного клиента"}, {"k": "pool/c", "n": "3", "t": "Добавить метрику заполненности", "p": "Ограничить соединения платёжного клиента", "s": "card", "l": "Title", "x": "Добавить метрику заполненности"}, {"k": "pool/c", "n": "3", "t": "Добавить метрику заполненности", "p": "Ограничить соединения платёжного клиента", "s": "goal", "l": "Task", "x": "Экспорт занятых соединений по подам"}, {"k": "pool/d", "n": "4", "t": "Проверить", "p": "Ограничить соединения платёжного клиента", "s": "card", "l": "Title", "x": "Проверить"}, {"k": "pool/d", "n": "4", "t": "Проверить", "p": "Ограничить соединения платёжного клиента", "s": "goal", "l": "Task", "x": "Юнит-тесты и нагрузочный тест инцидента"}, {"k": "pool/d", "n": "4", "t": "Проверить", "p": "Ограничить соединения платёжного клиента", "s": "result", "l": "Result", "x": "Зелёные"}, {"k": "pool/e", "n": "5", "t": "Выкатить 2.14.1", "p": "Ограничить соединения платёжного клиента", "s": "card", "l": "Title", "x": "Выкатить 2.14.1"}, {"k": "pool/e", "n": "5", "t": "Выкатить 2.14.1", "p": "Ограничить соединения платёжного клиента", "s": "goal", "l": "Task", "x": "Мерж, релиз, наблюдение p95 сутки"}, {"k": "replay", "n": null, "t": "Восстановить заказы, упавшие во время инцидента", "p": "", "s": "card", "l": "Title", "x": "Восстановить заказы, упавшие во время инцидента"}, {"k": "replay", "n": null, "t": "Восстановить заказы, упавшие во время инцидента", "p": "", "s": "card", "l": "Brief", "x": "Затронуто: 212 клиентов, $18 406 · Скрипт: готов, ждёт решения"}, {"k": "replay", "n": null, "t": "Восстановить заказы, упавшие во время инцидента", "p": "", "s": "problem", "l": "Problem", "x": "Затронуто: 212 клиентов, $18 406 · Состояние: провайдер списал деньги, заказа у нас нет · Причина: наш таймаут сработал после того, как провайдер принял платёж"}, {"k": "replay", "n": null, "t": "Восстановить заказы, упавшие во время инцидента", "p": "", "s": "goal", "l": "Task", "x": "Создать недостающие заказы по данным провайдера · Никого не списать дважды"}, {"k": "replay", "n": null, "t": "Восстановить заказы, упавшие во время инцидента", "p": "", "s": "context", "l": "Context C1", "x": "Платежи провайдера без заказа, 2–5 ноября · 212 строк, сумма $18 406"}, {"k": "replay", "n": null, "t": "Восстановить заказы, упавшие во время инцидента", "p": "", "s": "context", "l": "Context C2", "x": "Сервис создания заказов"}, {"k": "replay", "n": null, "t": "Восстановить заказы, упавшие во время инцидента", "p": "", "s": "context", "l": "Context C3", "x": "Тред поддержки о двойных списаниях"}, {"k": "replay", "n": null, "t": "Восстановить заказы, упавшие во время инцидента", "p": "", "s": "inferences", "l": "Conclusion", "x": "Все 212 платежей проведены и ни один не возвращён → создавать заказы безопасно, новых списаний не нужно"}, {"k": "replay", "n": null, "t": "Восстановить заказы, упавшие во время инцидента", "p": "", "s": "assumptions", "l": "Assumption", "x": "Товары из затронутых заказов ещё есть на складе · Сухой прогон скрипта показывает остаток по каждому заказу"}, {"k": "replay", "n": null, "t": "Восстановить заказы, упавшие во время инцидента", "p": "", "s": "result", "l": "Result", "x": "Скрипт: написан, сухой прогон на стейдже · Запуск в проде: ждёт вашего решения · scripts/replay-orders.ts с --dry-run и идемпотентным ключом заказа · Сухой прогон на стейдже: 212 заказов, 0 дублей, 7 позиций нет в наличии"}, {"k": "replay", "n": null, "t": "Восстановить заказы, упавшие во время инцидента", "p": "", "s": "approvals", "l": "Needs approval", "x": "Что делать с 7 заказами, товара по которым нет · Вернуть деньги за эти 7 · Предзаказ и письмо клиентам · Заменить похожим товаром"}, {"k": "replay", "n": null, "t": "Восстановить заказы, упавшие во время инцидента", "p": "", "s": "actions", "l": "Your action", "x": "Запустить восстановление в проде после решения · npm run replay-orders -- --from 2026-11-02 --to 2026-11-05 --out-of-stockrefund"}, {"k": "replay/r1", "n": "1", "t": "Найти затронутые платежи", "p": "Восстановить заказы, упавшие во время инцидента", "s": "card", "l": "Title", "x": "Найти затронутые платежи"}, {"k": "replay/r1", "n": "1", "t": "Найти затронутые платежи", "p": "Восстановить заказы, упавшие во время инцидента", "s": "goal", "l": "Task", "x": "Сопоставил списания провайдера с заказами по id платежа"}, {"k": "replay/r1", "n": "1", "t": "Найти затронутые платежи", "p": "Восстановить заказы, упавшие во время инцидента", "s": "context", "l": "Context C1", "x": "Платежи провайдера без заказа, 2–5 ноября · 212 строк, сумма $18 406"}, {"k": "replay/r1", "n": "1", "t": "Найти затронутые платежи", "p": "Восстановить заказы, упавшие во время инцидента", "s": "result", "l": "Result", "x": "212 платежей без заказов"}, {"k": "replay/r2", "n": "2", "t": "Написать скрипт восстановления", "p": "Восстановить заказы, упавшие во время инцидента", "s": "card", "l": "Title", "x": "Написать скрипт восстановления"}, {"k": "replay/r2", "n": "2", "t": "Написать скрипт восстановления", "p": "Восстановить заказы, упавшие во время инцидента", "s": "goal", "l": "Task", "x": "Создаёт заказы через обычный сервис с идемпотентным ключом"}, {"k": "replay/r2", "n": "2", "t": "Написать скрипт восстановления", "p": "Восстановить заказы, упавшие во время инцидента", "s": "context", "l": "Context C2", "x": "Сервис создания заказов"}, {"k": "replay/r3", "n": "3", "t": "Сухой прогон на стейдже", "p": "Восстановить заказы, упавшие во время инцидента", "s": "card", "l": "Title", "x": "Сухой прогон на стейдже"}, {"k": "replay/r3", "n": "3", "t": "Сухой прогон на стейдже", "p": "Восстановить заказы, упавшие во время инцидента", "s": "result", "l": "Result", "x": "7 заказов упираются в отсутствие товара"}, {"k": "replay/r4", "n": "4", "t": "Запуск в проде", "p": "Восстановить заказы, упавшие во время инцидента", "s": "card", "l": "Title", "x": "Запуск в проде"}, {"k": "replay/r4", "n": "4", "t": "Запуск в проде", "p": "Восстановить заказы, упавшие во время инцидента", "s": "goal", "l": "Task", "x": "Ждёт решения по товарам, которых нет"}, {"k": "alerts", "n": null, "t": "Алерты на таймауты провайдера и заполненность пула", "p": "", "s": "card", "l": "Title", "x": "Алерты на таймауты провайдера и заполненность пула"}, {"k": "alerts", "n": null, "t": "Алерты на таймауты провайдера и заполненность пула", "p": "", "s": "card", "l": "Brief", "x": "Таймауты: черновик алерта · Пул: ждёт метрику"}, {"k": "alerts", "n": null, "t": "Алерты на таймауты провайдера и заполненность пула", "p": "", "s": "problem", "l": "Problem", "x": "Кто заметил: поддержка, через 2 часа после начала · Сработало алертов: ни одного"}, {"k": "alerts", "n": null, "t": "Алерты на таймауты провайдера и заполненность пула", "p": "", "s": "goal", "l": "Task", "x": "Будить дежурного в течение 5 минут, когда растут таймауты оплаты или заполненность пула"}, {"k": "alerts", "n": null, "t": "Алерты на таймауты провайдера и заполненность пула", "p": "", "s": "context", "l": "Context C1", "x": "Правила алертинга"}, {"k": "alerts", "n": null, "t": "Алерты на таймауты провайдера и заполненность пула", "p": "", "s": "context", "l": "Context C2", "x": "Доля таймаутов за 30 дней"}, {"k": "alerts", "n": null, "t": "Алерты на таймауты провайдера и заполненность пула", "p": "", "s": "inferences", "l": "Conclusion", "x": "Порог 0,3% таймаутов за 5 минут сработал бы на 9-й минуте инцидента и ни разу за прошлые 30 дней"}, {"k": "alerts", "n": null, "t": "Алерты на таймауты провайдера и заполненность пула", "p": "", "s": "result", "l": "Result", "x": "Алерт на таймауты: черновик · Алерт на пул: ждёт метрику из фикса пула · Правило PaymentsTimeoutRate > 0.3% for 5m (не выкачено)"}, {"k": "alerts/x1", "n": "1", "t": "Подобрать порог на истории", "p": "Алерты на таймауты провайдера и заполненность пула", "s": "card", "l": "Title", "x": "Подобрать порог на истории"}, {"k": "alerts/x1", "n": "1", "t": "Подобрать порог на истории", "p": "Алерты на таймауты провайдера и заполненность пула", "s": "context", "l": "Context C2", "x": "Доля таймаутов за 30 дней"}, {"k": "alerts/x1", "n": "1", "t": "Подобрать порог на истории", "p": "Алерты на таймауты провайдера и заполненность пула", "s": "result", "l": "Result", "x": "0,3% / 5 мин"}, {"k": "alerts/x2", "n": "2", "t": "Алерт на таймауты", "p": "Алерты на таймауты провайдера и заполненность пула", "s": "card", "l": "Title", "x": "Алерт на таймауты"}, {"k": "alerts/x2", "n": "2", "t": "Алерт на таймауты", "p": "Алерты на таймауты провайдера и заполненность пула", "s": "goal", "l": "Task", "x": "Правило написано, маршрут на дежурного не настроен"}, {"k": "alerts/x3", "n": "3", "t": "Алерт на заполненность пула", "p": "Алерты на таймауты провайдера и заполненность пула", "s": "card", "l": "Title", "x": "Алерт на заполненность пула"}, {"k": "alerts/x3", "n": "3", "t": "Алерт на заполненность пула", "p": "Алерты на таймауты провайдера и заполненность пула", "s": "goal", "l": "Task", "x": "Нужна payments_pool_in_use в проде"}, {"k": "runbook", "n": null, "t": "Обновить ранбук платёжных инцидентов", "p": "", "s": "card", "l": "Title", "x": "Обновить ранбук платёжных инцидентов"}, {"k": "runbook", "n": null, "t": "Обновить ранбук платёжных инцидентов", "p": "", "s": "card", "l": "Brief", "x": "Не начато"}, {"k": "runbook", "n": null, "t": "Обновить ранбук платёжных инцидентов", "p": "", "s": "problem", "l": "Problem", "x": "В ранбуке нет: · - исчерпания соединений · - восстановления заказов"}, {"k": "runbook", "n": null, "t": "Обновить ранбук платёжных инцидентов", "p": "", "s": "goal", "l": "Task", "x": "Добавить оба раздела, чтобы следующий дежурный справился без расследования этой недели"}, {"k": "runbook", "n": null, "t": "Обновить ранбук платёжных инцидентов", "p": "", "s": "context", "l": "Context C1", "x": "Ранбук платежей"}, {"k": "runbook", "n": null, "t": "Обновить ранбук платёжных инцидентов", "p": "", "s": "result", "l": "Result", "x": "Не начато"}, {"k": "runbook/w", "n": "1", "t": "Написать разделы ранбука", "p": "Обновить ранбук платёжных инцидентов", "s": "card", "l": "Title", "x": "Написать разделы ранбука"}, {"k": "runbook/w", "n": "1", "t": "Написать разделы ранбука", "p": "Обновить ранбук платёжных инцидентов", "s": "goal", "l": "Task", "x": "Исчерпание соединений; восстановление заказов"}]</script>
-<script type="application/json" id="sr-track">{"prompts": [{"id": "p1", "n": 1}, {"id": "p2", "n": 2}, {"id": "p3", "n": 3}, {"id": "p4", "n": 4}, {"id": "p5", "n": 5}], "blocks": {"latency#card": {"since": "p1", "changed": []}, "latency#problem": {"since": "p1", "changed": []}, "latency#goal": {"since": "p1", "changed": []}, "latency#context": {"since": "p1", "changed": []}, "latency#inferences": {"since": "p1", "changed": ["p5"]}, "latency#assumptions": {"since": "p1", "changed": []}, "latency#result": {"since": "p1", "changed": []}, "latency#unchecked": {"since": "p1", "changed": []}, "latency#workflow": {"since": "p1", "changed": ["p2"]}, "latency#actions": {"since": "p1", "changed": []}, "latency/s1#card": {"since": "p1", "changed": []}, "latency/s1#goal": {"since": "p1", "changed": []}, "latency/s1#result": {"since": "p1", "changed": []}, "latency/s2#card": {"since": "p1", "changed": []}, "latency/s2#goal": {"since": "p1", "changed": []}, "latency/s2#result": {"since": "p1", "changed": []}, "latency/s3#card": {"since": "p1", "changed": []}, "latency/s3#goal": {"since": "p1", "changed": []}, "latency/s3#result": {"since": "p1", "changed": []}, "latency/s3#workflow": {"since": "p1", "changed": []}, "latency/s3/q#card": {"since": "p1", "changed": []}, "latency/s3/q#goal": {"since": "p1", "changed": []}, "latency/s3/q#result": {"since": "p1", "changed": []}, "latency/s3/g#card": {"since": "p1", "changed": []}, "latency/s3/g#goal": {"since": "p1", "changed": []}, "latency/s3/g#result": {"since": "p1", "changed": []}, "latency/s3/g#workflow": {"since": "p1", "changed": []}, "latency/s3/g/g1#card": {"since": "p1", "changed": []}, "latency/s3/g/g1#goal": {"since": "p1", "changed": []}, "latency/s3/g/g2#card": {"since": "p1", "changed": []}, "latency/s3/g/g2#result": {"since": "p1", "changed": []}, "latency/s3/g/g3#card": {"since": "p1", "changed": []}, "latency/s3/g/g3#goal": {"since": "p1", "changed": []}, "latency/s3/c#card": {"since": "p1", "changed": []}, "latency/s3/c#goal": {"since": "p1", "changed": []}, "latency/s3/c#result": {"since": "p1", "changed": []}, "latency/s4#card": {"since": "p2", "changed": []}, "latency/s4#goal": {"since": "p2", "changed": []}, "latency/s4#result": {"since": "p2", "changed": []}, "latency/s5#card": {"since": "p2", "changed": []}, "latency/s5#goal": {"since": "p2", "changed": []}, "latency/s5#result": {"since": "p2", "changed": []}, "latency/s6#card": {"since": "p2", "changed": []}, "latency/s6#goal": {"since": "p2", "changed": []}, "latency/s6#result": {"since": "p2", "changed": []}, "pool#card": {"since": "p2", "changed": []}, "pool#problem": {"since": "p2", "changed": []}, "pool#goal": {"since": "p2", "changed": []}, "pool#context": {"since": "p2", "changed": []}, "pool#inferences": {"since": "p2", "changed": []}, "pool#assumptions": {"since": "p2", "changed": []}, "pool#result": {"since": "p2", "changed": []}, "pool#unchecked": {"since": "p2", "changed": []}, "pool#workflow": {"since": "p2", "changed": []}, "pool#approvals": {"since": "p2", "changed": []}, "pool/a#card": {"since": "p2", "changed": []}, "pool/a#goal": {"since": "p2", "changed": []}, "pool/a#result": {"since": "p2", "changed": []}, "pool/b#card": {"since": "p2", "changed": []}, "pool/b#goal": {"since": "p2", "changed": []}, "pool/c#card": {"since": "p2", "changed": []}, "pool/c#goal": {"since": "p2", "changed": []}, "pool/d#card": {"since": "p2", "changed": []}, "pool/d#goal": {"since": "p2", "changed": []}, "pool/d#result": {"since": "p2", "changed": []}, "pool/e#card": {"since": "p2", "changed": []}, "pool/e#goal": {"since": "p2", "changed": []}, "replay#card": {"since": "p3", "changed": []}, "replay#problem": {"since": "p3", "changed": []}, "replay#goal": {"since": "p3", "changed": []}, "replay#context": {"since": "p3", "changed": []}, "replay#inferences": {"since": "p3", "changed": []}, "replay#assumptions": {"since": "p3", "changed": []}, "replay#result": {"since": "p3", "changed": []}, "replay#workflow": {"since": "p3", "changed": []}, "replay#approvals": {"since": "p3", "changed": []}, "replay#actions": {"since": "p3", "changed": []}, "replay/r1#card": {"since": "p3", "changed": []}, "replay/r1#goal": {"since": "p3", "changed": []}, "replay/r1#result": {"since": "p3", "changed": []}, "replay/r2#card": {"since": "p3", "changed": []}, "replay/r2#goal": {"since": "p3", "changed": []}, "replay/r3#card": {"since": "p3", "changed": []}, "replay/r3#result": {"since": "p3", "changed": []}, "replay/r4#card": {"since": "p3", "changed": []}, "replay/r4#goal": {"since": "p3", "changed": []}, "alerts#card": {"since": "p4", "changed": []}, "alerts#problem": {"since": "p4", "changed": []}, "alerts#goal": {"since": "p4", "changed": []}, "alerts#context": {"since": "p4", "changed": []}, "alerts#inferences": {"since": "p4", "changed": []}, "alerts#result": {"since": "p4", "changed": []}, "alerts#workflow": {"since": "p4", "changed": []}, "alerts/x1#card": {"since": "p4", "changed": []}, "alerts/x1#result": {"since": "p4", "changed": []}, "alerts/x2#card": {"since": "p4", "changed": []}, "alerts/x2#goal": {"since": "p4", "changed": []}, "alerts/x3#card": {"since": "p4", "changed": []}, "alerts/x3#goal": {"since": "p4", "changed": []}, "runbook#card": {"since": "p4", "changed": []}, "runbook#problem": {"since": "p4", "changed": []}, "runbook#goal": {"since": "p4", "changed": []}, "runbook#context": {"since": "p4", "changed": []}, "runbook#result": {"since": "p4", "changed": []}, "runbook#workflow": {"since": "p4", "changed": []}, "runbook/w#card": {"since": "p4", "changed": []}, "runbook/w#goal": {"since": "p4", "changed": []}}}</script>
+<script type="application/json" id="sr-track">{"prompts": [{"id": "p1", "n": 1}, {"id": "p2", "n": 2}, {"id": "p3", "n": 3}, {"id": "p4", "n": 4}, {"id": "p5", "n": 5}], "blocks": {"latency#card": {"since": "p1", "changed": []}, "latency#problem": {"since": "p1", "changed": []}, "latency#goal": {"since": "p1", "changed": []}, "latency#context": {"since": "p1", "changed": []}, "latency#inferences": {"since": "p1", "changed": ["p5"]}, "latency#assumptions": {"since": "p1", "changed": []}, "latency#result": {"since": "p1", "changed": []}, "latency#unchecked": {"since": "p1", "changed": []}, "latency#workflow": {"since": "p1", "changed": ["p2"]}, "latency#actions": {"since": "p1", "changed": []}, "latency/s1#card": {"since": "p1", "changed": []}, "latency/s1#goal": {"since": "p1", "changed": []}, "latency/s1#result": {"since": "p1", "changed": []}, "latency/s2#card": {"since": "p1", "changed": []}, "latency/s2#goal": {"since": "p1", "changed": []}, "latency/s2#result": {"since": "p1", "changed": []}, "latency/s3#card": {"since": "p1", "changed": []}, "latency/s3#goal": {"since": "p1", "changed": []}, "latency/s3#result": {"since": "p1", "changed": []}, "latency/s3#workflow": {"since": "p1", "changed": []}, "latency/s3/q#card": {"since": "p1", "changed": []}, "latency/s3/q#goal": {"since": "p1", "changed": []}, "latency/s3/q#result": {"since": "p1", "changed": []}, "latency/s3/g#card": {"since": "p1", "changed": []}, "latency/s3/g#goal": {"since": "p1", "changed": []}, "latency/s3/g#result": {"since": "p1", "changed": []}, "latency/s3/g#workflow": {"since": "p1", "changed": []}, "latency/s3/g/g1#card": {"since": "p1", "changed": []}, "latency/s3/g/g1#goal": {"since": "p1", "changed": []}, "latency/s3/g/g2#card": {"since": "p1", "changed": []}, "latency/s3/g/g2#result": {"since": "p1", "changed": []}, "latency/s3/g/g3#card": {"since": "p1", "changed": []}, "latency/s3/g/g3#goal": {"since": "p1", "changed": []}, "latency/s3/c#card": {"since": "p1", "changed": []}, "latency/s3/c#goal": {"since": "p1", "changed": []}, "latency/s3/c#result": {"since": "p1", "changed": []}, "latency/s4#card": {"since": "p2", "changed": []}, "latency/s4#goal": {"since": "p2", "changed": []}, "latency/s4#result": {"since": "p2", "changed": []}, "latency/s5#card": {"since": "p2", "changed": []}, "latency/s5#goal": {"since": "p2", "changed": []}, "latency/s5#result": {"since": "p2", "changed": []}, "latency/s6#card": {"since": "p2", "changed": []}, "latency/s6#goal": {"since": "p2", "changed": []}, "latency/s6#result": {"since": "p2", "changed": []}, "pool#card": {"since": "p2", "changed": []}, "pool#problem": {"since": "p2", "changed": []}, "pool#goal": {"since": "p2", "changed": []}, "pool#context": {"since": "p2", "changed": []}, "pool#inferences": {"since": "p2", "changed": []}, "pool#assumptions": {"since": "p2", "changed": []}, "pool#result": {"since": "p2", "changed": []}, "pool#unchecked": {"since": "p2", "changed": []}, "pool#workflow": {"since": "p2", "changed": []}, "pool#approvals": {"since": "p2", "changed": []}, "pool/a#card": {"since": "p2", "changed": []}, "pool/a#goal": {"since": "p2", "changed": []}, "pool/a#result": {"since": "p2", "changed": []}, "pool/b#card": {"since": "p2", "changed": []}, "pool/b#goal": {"since": "p2", "changed": []}, "pool/c#card": {"since": "p2", "changed": []}, "pool/c#goal": {"since": "p2", "changed": []}, "pool/d#card": {"since": "p2", "changed": []}, "pool/d#goal": {"since": "p2", "changed": []}, "pool/d#result": {"since": "p2", "changed": []}, "pool/e#card": {"since": "p2", "changed": []}, "pool/e#goal": {"since": "p2", "changed": []}, "replay#card": {"since": "p3", "changed": []}, "replay#problem": {"since": "p3", "changed": []}, "replay#goal": {"since": "p3", "changed": []}, "replay#context": {"since": "p3", "changed": []}, "replay#inferences": {"since": "p3", "changed": []}, "replay#assumptions": {"since": "p3", "changed": []}, "replay#result": {"since": "p3", "changed": []}, "replay#workflow": {"since": "p3", "changed": []}, "replay#approvals": {"since": "p3", "changed": []}, "replay#actions": {"since": "p3", "changed": []}, "replay/r1#card": {"since": "p3", "changed": []}, "replay/r1#goal": {"since": "p3", "changed": []}, "replay/r1#result": {"since": "p3", "changed": []}, "replay/r2#card": {"since": "p3", "changed": []}, "replay/r2#goal": {"since": "p3", "changed": []}, "replay/r3#card": {"since": "p3", "changed": []}, "replay/r3#result": {"since": "p3", "changed": []}, "replay/r4#card": {"since": "p3", "changed": []}, "replay/r4#goal": {"since": "p3", "changed": []}, "alerts#card": {"since": "p4", "changed": []}, "alerts#problem": {"since": "p4", "changed": []}, "alerts#goal": {"since": "p4", "changed": []}, "alerts#context": {"since": "p4", "changed": []}, "alerts#inferences": {"since": "p4", "changed": []}, "alerts#result": {"since": "p4", "changed": []}, "alerts#workflow": {"since": "p4", "changed": []}, "alerts/x1#card": {"since": "p4", "changed": []}, "alerts/x1#result": {"since": "p4", "changed": []}, "alerts/x2#card": {"since": "p4", "changed": []}, "alerts/x2#goal": {"since": "p4", "changed": []}, "alerts/x3#card": {"since": "p4", "changed": []}, "alerts/x3#goal": {"since": "p4", "changed": []}, "runbook#card": {"since": "p4", "changed": []}, "runbook#problem": {"since": "p4", "changed": []}, "runbook#goal": {"since": "p4", "changed": []}, "runbook#context": {"since": "p4", "changed": []}, "runbook#result": {"since": "p4", "changed": []}, "runbook#workflow": {"since": "p4", "changed": []}, "runbook/w#card": {"since": "p4", "changed": []}, "runbook/w#goal": {"since": "p4", "changed": []}}, "answer_to": null}</script>
 <script>
 /* Behaviour only: graph layout, canvases, drawer, navigation. No content is created here. */
 (() => {
@@ -2383,8 +2407,9 @@ function toggleRail(byKeyboard) {
 const _open = open;
 open = function (key, o) { _open(key, o); const a = art(key); if (a) { stamps(a); paint(a); } };
 
-// ── answers: decide in the report; "Send to agent" continues the session ──
-const served = location.protocol.startsWith("http") && new URLSearchParams(location.search).get("t");
+// ── answers: decide in the report; "Send to agent" goes straight to the session ──
+const ANSWER = TRACK.answer_to;          // {url, token} — the local answer service, if this report has one
+let reachable = false;
 const store = "sr-answers:" + document.title;
 const draft = JSON.parse(localStorage.getItem(store) || "{}");
 const forms = () => $$("form.answer");
@@ -2408,43 +2433,206 @@ function restore() {
 }
 const bar = $("#sendbar"), btn = $("#send-btn"), cnt = $("#send-count"), msg = $("#send-message");
 function refresh() {
+  if (btn.dataset.sent) return;
   const n = collect().length + (msg.value.trim() ? 1 : 0);
   bar.classList.toggle("show", n > 0);
-  cnt.textContent = n === 1 ? "1 answer ready" : `${n} answers ready`;
-  btn.textContent = served ? "Send to agent" : "Copy answers";
+  cnt.textContent = (n === 1 ? "1 answer ready" : n + " answers ready") + (reachable ? "" : " · the agent is not connected");
+  btn.textContent = reachable ? "Send to agent" : "Copy answers";
+}
+async function ping() {
+  if (!ANSWER) return false;
+  try { const r = await fetch(ANSWER.url + "/ping", {headers: {"X-Report-Token": ANSWER.token}}); return r.ok; } catch (e) { return false; }
 }
 document.addEventListener("input", e => {
   const f = e.target.closest("form.answer");
   if (f) { const c = $("input[type=radio]:checked", f), d = $("input[type=checkbox]", f);
-    draft[f.dataset.akey] = {choice: c?.value, done: d?.checked, text: $("textarea", f).value}; localStorage.setItem(store, JSON.stringify(draft)); }
+    draft[f.dataset.akey] = {choice: c && c.value, done: d && d.checked, text: $("textarea", f).value}; localStorage.setItem(store, JSON.stringify(draft)); }
   if (f || e.target === msg) refresh();
 });
 document.addEventListener("change", e => { if (e.target.closest("form.answer")) refresh(); });
 document.addEventListener("submit", e => e.preventDefault());
 function asText(items, m) {
-  const lines = [`Answers from the report «${document.title}»:`];
-  for (const it of items) lines.push(`- [${it.num ? it.num + " " : ""}${it.title}] ${it.question}: ${it.type === "approval" ? (it.choice || "—") : (it.done ? "done" : "not done")}${it.comment ? " — " + it.comment : ""}`);
+  const lines = ["Answers from the report «" + document.title + "»:"];
+  for (const it of items) lines.push("- [" + (it.num ? it.num + " " : "") + it.title + "] " + it.question + ": " +
+    (it.type === "approval" ? (it.choice || "—") : (it.done ? "done" : "not done")) + (it.comment ? " — " + it.comment : ""));
   if (m) lines.push("Message: " + m);
   return lines.join("\n");
 }
 btn.addEventListener("click", async () => {
   const items = collect(), m = msg.value.trim();
   if (!items.length && !m) return;
-  if (!served) { await navigator.clipboard?.writeText(asText(items, m)); cnt.textContent = "Copied — paste it into the chat"; return; }
+  if (!reachable) reachable = await ping();
+  if (!reachable) {
+    if (navigator.clipboard) await navigator.clipboard.writeText(asText(items, m));
+    cnt.textContent = ANSWER ? "The agent's answer service is not running — copied, paste into the chat"
+                             : "This report has no agent connection — copied, paste into the chat";
+    return;
+  }
   btn.disabled = true; cnt.textContent = "Sending…";
   try {
-    const r = await fetch("/__answers", {method: "POST", headers: {"Content-Type": "application/json", "X-Report-Token": served}, body: JSON.stringify({items, message: m})});
-    if (!r.ok) throw new Error(r.status);
+    const r = await fetch(ANSWER.url + "/answers", {method: "POST", headers: {"Content-Type": "application/json", "X-Report-Token": ANSWER.token}, body: JSON.stringify({items, message: m})});
+    if (!r.ok) throw new Error(String(r.status));
     const j = await r.json();
     localStorage.removeItem(store);
-    cnt.textContent = `Sent as prompt #${j.prompt} — the agent continues`; btn.textContent = "Sent"; msg.value = "";
-    forms().forEach(f => { f.querySelectorAll("input,textarea").forEach(x => x.disabled = true); });
+    btn.dataset.sent = "1"; btn.textContent = "Sent"; msg.value = ""; msg.disabled = true;
+    cnt.textContent = j.waiting ? "Delivered as prompt #" + j.prompt + " — the agent continues"
+                                : "Saved as prompt #" + j.prompt + " — the agent gets it as soon as it is free or with your next message";
+    forms().forEach(f => f.querySelectorAll("input,textarea").forEach(x => x.disabled = true));
   } catch (err) {
-    btn.disabled = false; cnt.textContent = "Not sent — the report server has stopped. Copy instead:"; btn.textContent = "Copy answers";
-    btn.onclick = () => navigator.clipboard?.writeText(asText(items, m));
+    btn.disabled = false; reachable = false; refresh();
+    cnt.textContent = "Could not reach the agent — press again to copy instead";
   }
 });
+ping().then(ok => { reachable = ok; refresh(); });
 restore(); refresh();
+
+// ── copy as Markdown: a button wherever there is something worth taking away ──
+// Markdown is produced from the rendered structure (headings, lists, key/value rows, emphasis, code, links).
+const ORDER = $$(".report").map(r => r.dataset.key);
+function mdOf(node) {
+  if (node.nodeType === 3) {
+    if (!node.nodeValue.trim()) {            // whitespace between block elements is layout, not text
+      const near = [node.previousSibling, node.nextSibling].find(x => x && x.nodeType === 1);
+      if (!near || /^(DIV|DL|UL|OL|P|SECTION|HEADER|FORM|LI|DT|DD|H[1-6])$/.test(near.tagName)) return "";
+    }
+    return node.nodeValue.replace(/\s+/g, " ");
+  }
+  if (node.nodeType !== 1) return "";
+  const el = node, tag = el.tagName.toLowerCase();
+  if (el.matches("form.answer")) {          // the question's options, not the inputs
+    const opts = $$(".choice", el).map(c => c.querySelector("input").value + (c.querySelector(".rec") ? " (recommended)" : ""));
+    return opts.length ? "\n- **Options:** " + opts.join(" / ") + "\n" : "";
+  }
+  if (["svg", "button", "form", "script", "style", "textarea", "input", "output"].includes(tag)) return "";
+  if (el.matches(".stamps,.pbadge,.copybtn,.zoom,.minimap,.flow,.flow-bar,.trail,.dots")) return "";
+  const kids = () => [...el.childNodes].map(mdOf).join("");
+  const inline = () => kids().replace(/\s+/g, " ").trim();
+  switch (tag) {
+    case "strong": case "b": { const t = inline(); return t ? "**" + t + "**" : ""; }
+    case "mark": { const t = inline(); return t ? "**" + t + "**" : ""; }
+    case "code": return "`" + el.textContent + "`";
+    case "a": { const t = inline(), h = el.getAttribute("href") || ""; return h && !h.startsWith("#") ? "[" + t + "](" + h + ")" : t; }
+    case "br": return "\n";
+    case "p": return inline() + "\n\n";
+    case "h2": return "## " + inline() + "\n\n";
+    case "h3": return "### " + inline() + "\n\n";
+    case "h4": return "#### " + inline() + "\n\n";
+    case "ul": return [...el.children].map(li => "- " + mdOf(li).trim().replace(/\n/g, "\n  ")).join("\n") + "\n\n";
+    case "ol": return [...el.children].map((li, i) => (el.matches(".stages-print") ? "- " : (i + 1) + ". ") + mdOf(li).trim().replace(/\n+/g, "\n  ")).join("\n") + "\n\n";
+    case "dl": {
+      const out = []; let k = null;
+      for (const c of el.children) { if (c.tagName === "DT") k = c.textContent.trim(); else out.push("- **" + k + ":** " + mdOf(c).trim().replace(/\n+/g, " ")); }
+      return out.join("\n") + "\n\n";
+    }
+    case "li": case "div": case "span": case "section": case "article": case "header": case "dd": {
+      if (el.matches("li.item")) {             // context source: [C1] [title](url) — note
+        const t = el.querySelector(".t"), n = el.querySelector(".n");
+        return "[" + el.querySelector(".tag").textContent.trim() + "] " + mdOf(t).trim() + (n ? " — " + mdOf(n).trim().replace(/\n+/g, "; ") : "");
+      }
+      if (el.matches(".tag")) return "[" + el.textContent.trim() + "] ";
+      if (el.matches(".num")) return el.textContent.trim() + " ";
+      if (el.matches(".k")) return "*" + el.textContent.trim() + "* ";
+      if (el.matches(".level")) return el.textContent.trim();
+      if (el.matches(".stages-print")) return kids();
+      const block = tag !== "span" && getComputedStyle(el).display !== "inline";
+      return block ? "\n" + kids() + "\n" : kids();
+    }
+    default: return kids();
+  }
+}
+const tidy = t => t.replace(/[ \t]+\n/g, "\n").replace(/\n{3,}/g, "\n\n").trim() + "\n";
+function sectionMd(sec) {
+  const h = $(":scope > h3", sec);
+  const clone = sec.cloneNode(true);
+  clone.querySelector(":scope > h3")?.remove();
+  const sp = clone.querySelector(".stages-print");
+  if (sp) { sp.style.display = "block"; }
+  const hc = h.cloneNode(true); hc.querySelectorAll(".stamps,.copybtn,svg").forEach(x => x.remove());
+  return "### " + hc.textContent.trim() + "\n\n" + mdOfHidden(clone);
+}
+function mdOfHidden(el) {                  // render off-screen so computed styles exist
+  const host = document.createElement("div"); host.style.cssText = "position:absolute;left:-99999px;top:0;width:800px";
+  host.appendChild(el); document.body.appendChild(host);
+  $$(".stages-print", el).forEach(x => x.style.display = "block");
+  const t = mdOf(el); host.remove(); return t;
+}
+function reportMd(art) {
+  const head = $(".r-head", art), num = art.dataset.num, title = art.dataset.title;
+  const trail = $$(".trail button", head).map(b => b.textContent.trim()).filter(Boolean).join(" › ");
+  const status = $(".r-head > span[title]", art)?.getAttribute("title") || "";
+  const ref = $(".r-head .ref", art);
+  let out = "## " + (num ? num + " " : "") + title + "\n\n";
+  const meta = [trail && "- **Where:** " + trail, status && "- **Status:** " + status, ref && "- **Link:** [" + ref.textContent.trim() + "](" + ref.href + ")"].filter(Boolean);
+  if (meta.length) out += meta.join("\n") + "\n\n";
+  for (const sec of $$(":scope > .sec", art)) out += sectionMd(sec) + "\n";
+  return tidy(out);
+}
+function cardMd(node) {
+  const title = $("h2", node).textContent.trim(), status = $(".nh > span[title]", node).getAttribute("title");
+  let out = "### " + title + "\n\n- **Status:** " + status + "\n";
+  const brief = $(".brief", node); if (brief) out += mdOf(brief.cloneNode(true)).trim().split("\n").filter(Boolean).map(l => l.startsWith("- ") ? l : "- " + l).join("\n") + "\n";
+  const w = $$(".waiting li", node);
+  if (w.length) out += "\n**Waiting on you:**\n" + w.map(li => "- " + li.title.split(" —")[0] + ": " + mdOf($("span", li)).trim()).join("\n") + "\n";
+  return tidy(out);
+}
+function stageMd(st) {
+  const num = $(".num", st).textContent.trim(), title = $("h4", st).textContent.trim();
+  const status = $(".h > span[title]", st).getAttribute("title");
+  let out = "#### " + num + " " + title + "\n\n- **Status:** " + status + "\n";
+  const d = $(".d", st), o = $(".o", st), w = $(".when", st);
+  if (d) out += "- **Done:** " + mdOf(d).trim().replace(/\n+/g, " ") + "\n";
+  if (o) out += "- **Outcome:** " + mdOf($(".rich", o)).trim().replace(/\n+/g, " ") + "\n";
+  if (w) out += "- **When:** " + mdOf($(".rich", w)).trim() + "\n";
+  const refs = $$(".refs .ref-chip", st).map(a => a.textContent.trim()); if (refs.length) out += "- **Uses:** " + refs.join(", ") + "\n";
+  return tidy(out);
+}
+function itemMd(el) { return tidy(mdOfHidden(el.cloneNode(true)).replace(/^\s*/, "- ").replace(/\n(?!$)/g, "\n  ")); }
+function allMd() {
+  const title = $(".bar h1").textContent.trim();
+  let out = "# " + title + "\n\n";
+  const reports = ORDER.map(k => document.getElementById("report-" + k)).filter(Boolean);
+  for (const a of reports) out += reportMd(a) + "\n";
+  return tidy(out);
+}
+
+const toast = document.createElement("div"); toast.className = "toast"; toast.setAttribute("role", "status"); document.body.appendChild(toast);
+let tt;
+async function copyMd(text, what) {
+  try { await navigator.clipboard.writeText(text); toast.textContent = what + " copied as Markdown"; }
+  catch (e) { toast.textContent = "Copy failed — the browser blocked the clipboard"; }
+  toast.classList.add("show"); clearTimeout(tt); tt = setTimeout(() => toast.classList.remove("show"), 1600);
+}
+function addCopy(host, kind, label) {
+  if ($(":scope > .copybtn", host)) return;
+  const b = document.createElement("button");
+  b.type = "button"; b.className = "copybtn cb-" + kind; b.dataset.copyKind = kind;
+  b.title = "Copy " + label + " as Markdown"; b.setAttribute("aria-label", b.title);
+  b.innerHTML = '<svg class="icon sm"><use href="#i-copy"/></svg>' + (kind === "report" || kind === "all" ? "<span>Copy</span>" : "");
+  host.appendChild(b);
+}
+function decorate(root) {
+  $$("#map .node", root).forEach(n => addCopy(n, "card", "this task"));
+  $$(".stage", root).forEach(n => addCopy(n, "stage", "this step"));
+  $$(".r-head", root).forEach(h => addCopy(h, "report", "this report"));
+  $$(".sec > h3", root).forEach(h => addCopy(h, "section", "this section"));
+  $$(".items > li, .claims > li, .results > li, .unchecked > li, .mine > li", root).forEach(li => addCopy(li, "item", "this item"));
+  $$(".rail li", root).forEach(li => addCopy(li, "prompt", "this prompt"));
+}
+decorate(document);
+addCopy($(".bar"), "all", "the whole report");
+$(".bar > .copybtn.cb-all").before($("#print-btn"));
+document.addEventListener("click", e => {
+  const b = e.target.closest(".copybtn"); if (!b) return;
+  e.preventDefault(); e.stopPropagation();
+  const k = b.dataset.copyKind;
+  if (k === "all") return copyMd(allMd(), "The whole report");
+  if (k === "card") return copyMd(cardMd(b.closest(".node")), "Task");
+  if (k === "stage") return copyMd(stageMd(b.closest(".stage")), "Step");
+  if (k === "report") return copyMd(reportMd(b.closest(".report")), "Report");
+  if (k === "section") return copyMd(tidy(sectionMd(b.closest(".sec"))), "Section");
+  if (k === "item") return copyMd(itemMd(b.closest("li")), "Item");
+  if (k === "prompt") { const li = b.closest("li"); return copyMd(tidy("> " + $(".pt", li).textContent.trim().replace(/\n/g, "\n> ") + "\n\n— prompt #" + $(".pn", li).textContent.trim() + ", " + $(".pa", li).textContent.trim()), "Prompt"); }
+}, true);
 const setBar = () => document.documentElement.style.setProperty("--bar-h", $(".bar").offsetHeight + "px");
 setBar(); addEventListener("resize", setBar);
 const hm = /^#task=(.+)$/.exec(location.hash); if (hm) open(decodeURIComponent(hm[1]));

@@ -41,8 +41,10 @@ icons, keyboard navigation, deep links (`#task=<id>`), and a print view that pri
 - **Prompts rail** — bind a Claude Code session (`track.py start`) and a `UserPromptSubmit` hook logs
   every prompt; each rebuild stamps the blocks that appeared or changed. Pick a prompt to see what
   it produced.
-- **Answer in the report** — decisions and manual steps have inputs; `track.py serve` serves the
-  report locally, and *Send to agent* hands the answers back to the session as the next prompt.
+- **Answer in the report** — decisions and manual steps have inputs; *Send to agent* posts them to
+  a local answer service, and the session picks them up as its next prompt (a background
+  `track.py wait`, or the Stop / UserPromptSubmit hooks).
+- **Copy as Markdown** — every report, card, section, item, step and prompt has a copy button.
 - **Search** — `/` or ⌘K, across every task and stage.
 - **Checks** — `verified` needs proof (`how`), finished work must say what was *not checked*,
   next steps are planned stages, and the build refuses anything that looks like a secret.
