@@ -2,15 +2,8 @@
   "meta": {
     "title": "Checkout reliability: week 45",
     "lang": "en",
-    "author": "Coding agent",
-    "audience": "For the engineering lead",
-    "period": {
-      "from": "2026-11-02",
-      "to": "2026-11-06"
-    },
     "generated": "2026-11-06 18:40"
   },
-  "summary": "- **Cause:** unbounded connection pool in payments client 4.0 (shipped in **2.14**) exhausts sockets under retries\n- **Impact:** checkout p95 **820 ms → 1.7 s**, **212** customers charged without an order\n- **Fix:** pool cap + backoff, PR ready for review\n- **Waiting on you:** 2 decisions, 2 manual steps",
   "tasks": [
     {
       "id": "latency",
@@ -28,40 +21,34 @@
       "context": [
         {
           "id": "C1",
-          "kind": "data",
           "title": "Checkout latency dashboard, Oct 26 – Nov 4",
           "url": "https://example.com/dash/checkout",
           "note": "p95 jumps at 14:05 on Nov 2, the deploy time of 2.14."
         },
         {
           "id": "C2",
-          "kind": "commit",
           "title": "2.14 diff: payments client upgraded 3.2 → 4.0",
           "url": "https://example.com/acme/shop/compare/v2.13...v2.14"
         },
         {
           "id": "C3",
-          "kind": "doc",
           "title": "payments-client 4.0 changelog",
           "url": "https://example.com/payments-client/CHANGELOG.md#400",
           "note": "\"maxConnections now defaults to unlimited\"."
         },
         {
           "id": "C4",
-          "kind": "log",
           "title": "Pod logs during the peak, 2026-11-03 19:00–19:30",
           "url": "https://example.com/logs/q/8812",
           "note": "3,140 × `EMFILE: too many open files`, all from the payments client."
         },
         {
           "id": "C5",
-          "kind": "chat",
           "title": "Support thread about double charges",
           "url": "https://example.com/support/t/5521"
         },
         {
           "id": "C6",
-          "kind": "file",
           "title": "src/payments/client.ts",
           "url": "https://example.com/acme/shop/blob/main/src/payments/client.ts#L18-L44"
         }
@@ -214,7 +201,8 @@
           "text": "Request provider-side logs for Nov 3, 19:00–19:30.",
           "why": "Only an account owner can open a ticket with the provider; it confirms the one open assumption."
         }
-      ]
+      ],
+      "brief": "Cause: client 4.0 dropped the connection limit\nProven by: load test"
     },
     {
       "id": "pool",
@@ -233,19 +221,16 @@
       "context": [
         {
           "id": "C1",
-          "kind": "file",
           "title": "src/payments/client.ts",
           "url": "https://example.com/acme/shop/blob/main/src/payments/client.ts"
         },
         {
           "id": "C2",
-          "kind": "doc",
           "title": "payments-client pool options",
           "url": "https://example.com/payments-client/docs/pool"
         },
         {
           "id": "C3",
-          "kind": "issue",
           "title": "Root cause analysis (ACME-412)",
           "url": "https://example.com/issues/ACME-412"
         }
@@ -351,7 +336,8 @@
           ]
         }
       ],
-      "actions": []
+      "actions": [],
+      "brief": "Limit: 50 connections per pod\nStatus: PR #1290 in review"
     },
     {
       "id": "replay",
@@ -365,20 +351,17 @@
       "context": [
         {
           "id": "C1",
-          "kind": "data",
           "title": "Provider payments without a matching order, Nov 2–5",
           "url": "https://example.com/sql/saved/931",
           "note": "212 rows, total $18,406."
         },
         {
           "id": "C2",
-          "kind": "code",
           "title": "Order creation service",
           "url": "https://example.com/acme/shop/blob/main/src/orders/create.ts"
         },
         {
           "id": "C3",
-          "kind": "chat",
           "title": "Support thread about double charges",
           "url": "https://example.com/support/t/5521"
         }
@@ -460,7 +443,8 @@
           "why": "Production write access is limited to on-call leads.",
           "command": "npm run replay-orders -- --from 2026-11-02 --to 2026-11-05 --out-of-stock=refund"
         }
-      ]
+      ],
+      "brief": "Affected: **212** customers, $18,406\nScript: ready, waits for a decision"
     },
     {
       "id": "alerts",
@@ -471,13 +455,11 @@
       "context": [
         {
           "id": "C1",
-          "kind": "doc",
           "title": "Alerting guidelines",
           "url": "https://example.com/wiki/alerting"
         },
         {
           "id": "C2",
-          "kind": "data",
           "title": "Timeout rate, last 30 days",
           "url": "https://example.com/dash/payments-timeouts"
         }
@@ -534,7 +516,8 @@
         }
       ],
       "approvals": [],
-      "actions": []
+      "actions": [],
+      "brief": "Timeouts: alert drafted\nPool: waits for the metric"
     },
     {
       "id": "runbook",
@@ -545,7 +528,6 @@
       "context": [
         {
           "id": "C1",
-          "kind": "doc",
           "title": "Payments runbook",
           "url": "https://example.com/wiki/runbooks/payments"
         }
@@ -557,7 +539,8 @@
       },
       "stages": [],
       "approvals": [],
-      "actions": []
+      "actions": [],
+      "brief": "Not started"
     }
   ],
   "links": [

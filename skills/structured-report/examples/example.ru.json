@@ -2,10 +2,8 @@
   "meta": {
     "title": "Надёжность оформления заказа: 45-я неделя",
     "lang": "ru",
-    "author": "Агент",
     "generated": "2026-11-06 18:40"
   },
-  "summary": "- **Причина:** платёжный клиент 4.0 (вышел в **2.14**) открывает соединения без лимита и исчерпывает сокеты при ретраях\n- **Последствия:** p95 оформления **820 мс → 1,7 с**, **212** клиентов списаны без заказа\n- **Исправление:** лимит пула + backoff, PR готов к ревью\n- **Ждёт вас:** 2 решения, 2 ручных шага",
   "tasks": [
     {
       "id": "latency",
@@ -23,40 +21,34 @@
       "context": [
         {
           "id": "C1",
-          "kind": "data",
           "title": "Дашборд задержки оформления, 26 окт – 4 ноя",
           "url": "https://example.com/dash/checkout",
           "note": "Скачок p95 в **14:05 2 ноября** — время выкладки 2.14"
         },
         {
           "id": "C2",
-          "kind": "commit",
           "title": "Diff 2.14: платёжный клиент 3.2 → 4.0",
           "url": "https://example.com/acme/shop/compare/v2.13...v2.14"
         },
         {
           "id": "C3",
-          "kind": "doc",
           "title": "Changelog платёжного клиента 4.0",
           "url": "https://example.com/payments-client/CHANGELOG.md#400",
           "note": "«maxConnections now defaults to unlimited»"
         },
         {
           "id": "C4",
-          "kind": "log",
           "title": "Логи подов в пик, 3 ноября 19:00–19:30",
           "url": "https://example.com/logs/q/8812",
           "note": "**3 140** ошибок `EMFILE: too many open files`, все из платёжного клиента"
         },
         {
           "id": "C5",
-          "kind": "chat",
           "title": "Тред поддержки о двойных списаниях",
           "url": "https://example.com/support/t/5521"
         },
         {
           "id": "C6",
-          "kind": "file",
           "title": "src/payments/client.ts",
           "url": "https://example.com/acme/shop/blob/main/src/payments/client.ts#L18-L44"
         }
@@ -209,7 +201,8 @@
           "text": "Запросить у провайдера логи за 3 ноября 19:00–19:30",
           "why": "Тикет провайдеру может открыть только владелец аккаунта; это закроет единственное непроверенное предположение"
         }
-      ]
+      ],
+      "brief": "Причина: лимит соединений снят в клиенте 4.0\nДоказано: нагрузочным тестом"
     },
     {
       "id": "pool",
@@ -228,19 +221,16 @@
       "context": [
         {
           "id": "C1",
-          "kind": "file",
           "title": "src/payments/client.ts",
           "url": "https://example.com/acme/shop/blob/main/src/payments/client.ts"
         },
         {
           "id": "C2",
-          "kind": "doc",
           "title": "Опции пула платёжного клиента",
           "url": "https://example.com/payments-client/docs/pool"
         },
         {
           "id": "C3",
-          "kind": "issue",
           "title": "Разбор причины (ACME-412)",
           "url": "https://example.com/issues/ACME-412"
         }
@@ -346,7 +336,8 @@
           ]
         }
       ],
-      "actions": []
+      "actions": [],
+      "brief": "Лимит: 50 соединений на под\nСтатус: PR #1290 на ревью"
     },
     {
       "id": "replay",
@@ -360,20 +351,17 @@
       "context": [
         {
           "id": "C1",
-          "kind": "data",
           "title": "Платежи провайдера без заказа, 2–5 ноября",
           "url": "https://example.com/sql/saved/931",
           "note": "**212** строк, сумма **$18 406**"
         },
         {
           "id": "C2",
-          "kind": "code",
           "title": "Сервис создания заказов",
           "url": "https://example.com/acme/shop/blob/main/src/orders/create.ts"
         },
         {
           "id": "C3",
-          "kind": "chat",
           "title": "Тред поддержки о двойных списаниях",
           "url": "https://example.com/support/t/5521"
         }
@@ -455,7 +443,8 @@
           "why": "Запись в прод есть только у дежурных лидов",
           "command": "npm run replay-orders -- --from 2026-11-02 --to 2026-11-05 --out-of-stock=refund"
         }
-      ]
+      ],
+      "brief": "Затронуто: **212** клиентов, $18 406\nСкрипт: готов, ждёт решения"
     },
     {
       "id": "alerts",
@@ -466,13 +455,11 @@
       "context": [
         {
           "id": "C1",
-          "kind": "doc",
           "title": "Правила алертинга",
           "url": "https://example.com/wiki/alerting"
         },
         {
           "id": "C2",
-          "kind": "data",
           "title": "Доля таймаутов за 30 дней",
           "url": "https://example.com/dash/payments-timeouts"
         }
@@ -529,7 +516,8 @@
         }
       ],
       "approvals": [],
-      "actions": []
+      "actions": [],
+      "brief": "Таймауты: черновик алерта\nПул: ждёт метрику"
     },
     {
       "id": "runbook",
@@ -540,7 +528,6 @@
       "context": [
         {
           "id": "C1",
-          "kind": "doc",
           "title": "Ранбук платежей",
           "url": "https://example.com/wiki/runbooks/payments"
         }
@@ -552,7 +539,8 @@
       },
       "stages": [],
       "approvals": [],
-      "actions": []
+      "actions": [],
+      "brief": "Не начато"
     }
   ],
   "links": [

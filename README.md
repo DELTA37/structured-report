@@ -5,8 +5,9 @@ tasks you can click into, where every claim says how it is known.
 
 ![Overview: tasks laid out as a graph, with a queue of what waits on the reader](docs/overview.png)
 
-**Overview** — a structured summary, a *Waiting on you* queue (every approval and manual step across
-all tasks), and the tasks laid out as a graph: arrows for dependencies, dashed lines for related work.
+**Work map** — the only thing on the first page, sized to the window: each task is a card with
+its status, a short brief, and what waits on the reader; arrows for dependencies, dashed lines for
+related work.
 
 **Task report** (click a task) — in a fixed order:
 
@@ -22,7 +23,9 @@ all tasks), and the tasks laid out as a graph: arrows for dependencies, dashed l
 | Needs your approval | decisions only the reader can make |
 | For you to do | steps only the reader can take, with copyable commands |
 
-Facts, conclusions and assumptions are drawn with different rules (solid, double, dashed) so a
+**Structure vs. content.** The template owns the structure — section names (always English),
+order, statuses and icons — and the agent supplies only content (any language) through
+`{{placeholders}}`. Facts, conclusions and assumptions are drawn with different rules (solid, double, dashed) so a
 reader can tell at a glance what was checked and what was guessed.
 
 <img src="docs/task.png" alt="Task report drawer with context, conclusions, assumptions, result and the stage flowchart" width="720">
@@ -62,7 +65,7 @@ open skills/structured-report/examples/example.html
 ```
 
 The data format is documented in [`references/schema.md`](skills/structured-report/references/schema.md).
-UI labels ship in English and Russian (`meta.lang`).
+Content can be in any language; structure labels stay English. See `examples/example.ru.json`.
 
 Requires Python 3.8+ (standard library only) and any modern browser.
 

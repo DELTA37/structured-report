@@ -6,11 +6,25 @@ description: "Turn a piece of finished (or paused) work into a structured, inter
 # Structured report
 
 Produce one self-contained HTML file (no network, no build step) that lets a busy reader
-1. see in seconds what is waiting on them, then
+1. see the whole work as a map of tasks, with what is waiting on them inside each task, then
 2. drill into any task and audit *how* the work was done and *why* each claim is believed.
 
-You write **data**, not HTML. `assets/template.html` renders it; `scripts/build.py` validates the
-data and embeds it.
+## Structure vs. content
+
+The report keeps two things apart, and so must you:
+
+- **Structure** belongs to the template (`assets/template.html`): the page layout, section names
+  (Problem, Task, Context, Conclusions, Assumptions, Result, Workflow, Needs approval, Your
+  actions), their order, statuses, and every icon. It is fixed and always in English. Icons mark
+  structure only — a section, a status, an approval or action — never what the content is about.
+- **Content** is yours: the JSON data, written in the user's language. `scripts/build.py`
+  validates it and fills the template's placeholders (`{{title}}`, `{{problem|rich}}`,
+  `{{#tasks}}…{{/tasks}}`). You never write HTML and never invent new sections; if something does
+  not fit a section, it does not belong in the report.
+
+The first page is only the **work map**: every task is a card with its status, title, a short
+`brief`, and the approvals/actions waiting on the reader. It fits the screen without scrolling.
+Clicking a card opens that task's full report.
 
 ## Workflow
 
@@ -35,8 +49,7 @@ data and embeds it.
 
 The report separates **how you know** each thing. Readers rely on this; never blur it.
 
-- **context** — sources you actually looked at. Each has a `kind` (file, url, doc, log, chat,
-  data, commit, issue, code, image), a short `title`, a **real** `url` (web URL, repo URL with
+- **context** — sources you actually looked at. Each has an `id` (C1, C2…), a short `title`, a **real** `url` (web URL, repo URL with
   line anchor, or `file:///abs/path` for local files) and an optional `note` with the specific
   fact you took from it, quoted or exact. Never invent URLs; leave `url` out if there is none.
 - **inferences** — conclusions you drew. Each lists `basis`: the context ids it rests on, and a
@@ -73,20 +86,22 @@ structure:
 - No paragraphs longer than two sentences. No subtitles, captions or intro lines: a section is
   its title plus the structured content.
 
-Field guidance: `summary` — 3–5 bullets `**Key:** value` (cause, impact, outcome, what waits on
-the reader). `problem` — key/value facts (where, since when, how much, who is affected). `goal` —
+Field guidance: `brief` — 1–3 `Key: value` lines for the map card (the state of the task in a
+glance; it must fit a 300 px card). `problem` — key/value facts (where, since when, how much, who is affected). `goal` —
 bullets of what done means. `result.summary` — key/value or bullets. Write for the reader, not
 about yourself: concrete numbers, real file and system names.
 
 ## Language
 
-Write the content in the user's language and set `meta.lang` (`en` and `ru` UI labels are built
-in; other codes fall back to English labels — add a dictionary to `L10N` in the template to
-support more).
+Write the content in the user's language and set `meta.lang` to its code (`ru`, `en`, …). Labels
+of the structure stay English — they are part of the template, not the content.
 
 ## Files
 
-- `assets/template.html` — the viewer (layered graph layout, drawer, print view, SVG icons).
-- `scripts/build.py` — validate + embed. `--check` validates only. Standard library only.
+- `assets/template.html` — the structure: markup with placeholders, styles, icons, and a small
+  script for graph layout and navigation only.
+- `scripts/build.py` — validates the content and renders the template (Mustache subset, see its
+  docstring). `--check` validates only; `--template` uses another template. Standard library only.
 - `references/schema.md` — every field, with types and limits.
-- `examples/example.json` — a complete example; build it to see the result.
+- `examples/example.json`, `examples/example.ru.json` — complete examples (English and Russian
+  content in the same English structure).

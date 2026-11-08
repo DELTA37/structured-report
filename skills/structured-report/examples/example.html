@@ -3,227 +3,185 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Structured report</title>
+<title>Checkout reliability: week 45</title>
+<!--
+  STRUCTURE lives in this file: section names, order, icons and layout are fixed and in English.
+  CONTENT comes from the report JSON through placeholders and may be in any language.
+  Filters: rich = structured text, md = inline text, json = data attribute, url = link target.
+-->
 <style>
 :root{
   --paper:#ECEEE9; --panel:#F8F9F6; --panel-2:#F1F3EF;
   --ink:#17262B; --ink-2:#4A5A60; --ink-3:#77878C;
   --rule:#C9D0CA; --dot:#C3CBC5;
   --marker:#F5D547; --marker-soft:#FBEFB0;
-  --cobalt:#2D4FD6;
-  --ok:#2F7A57; --warn:#A8761A; --bad:#B8432F; --idle:#77878C;
+  --cobalt:#2D4FD6; --ok:#2F7A57; --warn:#A8761A; --bad:#B8432F; --idle:#77878C;
   --display:"Avenir Next Condensed","Avenir Next","Segoe UI Variable Display","Bahnschrift","Helvetica Neue",system-ui,sans-serif;
   --text:"Avenir Next","Segoe UI Variable Text","Segoe UI","Helvetica Neue",system-ui,sans-serif;
-  --r-node:10px; --r-small:6px;
+  --r:10px; --r-s:6px;
 }
 *{box-sizing:border-box}
 html{background:var(--paper);color:var(--ink);font:15px/1.55 var(--text);font-feature-settings:"tnum" 1,"lnum" 1;-webkit-font-smoothing:antialiased}
-body{margin:0;overflow-x:hidden}
-.top > *,.map-wrap{min-width:0}
+body{margin:0}
 a{color:var(--cobalt);text-underline-offset:2px}
 :focus-visible{outline:2px solid var(--cobalt);outline-offset:2px}
-code{font:13px/1.4 ui-monospace,"SF Mono",Menlo,monospace;background:var(--panel-2);border:1px solid var(--rule);border-radius:4px;padding:0 4px}
+code{font:12.5px/1.4 ui-monospace,"SF Mono",Menlo,monospace;background:var(--panel-2);border:1px solid var(--rule);border-radius:4px;padding:0 4px}
 .icon{width:18px;height:18px;flex:none;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
 .icon.sm{width:15px;height:15px}
-.visually-hidden{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
 
-/* ── header ─────────────────────────────────────────── */
-.top{display:grid;grid-template-columns:minmax(0,1fr) minmax(280px,380px);gap:40px;padding:44px clamp(20px,5vw,64px) 28px;align-items:start}
-.top h1{font:600 clamp(30px,4vw,46px)/1.05 var(--display);letter-spacing:-.01em;margin:0 0 14px;max-width:22ch}
-.meta{display:flex;flex-wrap:wrap;gap:6px 18px;color:var(--ink-2);font-size:14px;margin:0 0 18px}
-.meta span{display:inline-flex;gap:6px;align-items:center}
-.summary{max-width:70ch;margin:0;font-size:16px}
-.rich p{margin:0 0 8px}
-.rich p:last-child{margin-bottom:0}
-.rich strong{font-weight:650;color:var(--ink)}
-.rich ul,.rich ol{margin:0 0 8px;padding:0;list-style:none;display:grid;gap:6px}
+/* structured text */
+.rich p{margin:0 0 8px} .rich p:last-child{margin:0}
+.rich strong{font-weight:650}
+.rich mark{background:linear-gradient(transparent 50%,var(--marker-soft) 50%);color:inherit;padding:0 1px}
+.rich ul,.rich ol{margin:0 0 8px;padding:0;list-style:none;display:grid;gap:5px}
 .rich ul:last-child,.rich ol:last-child{margin-bottom:0}
-.rich ul > li{position:relative;padding-left:18px}
+.rich ul > li{position:relative;padding-left:17px}
 .rich ul > li::before{content:"";position:absolute;left:3px;top:.62em;width:6px;height:6px;background:var(--ink);border-radius:1px;transform:rotate(45deg)}
 .rich ol{counter-reset:pt}
 .rich ol > li{position:relative;padding-left:26px;counter-increment:pt}
 .rich ol > li::before{content:counter(pt);position:absolute;left:0;top:.15em;width:18px;height:18px;border-radius:50%;border:1px solid var(--ink-2);font:600 11px/16px var(--display);text-align:center;color:var(--ink-2)}
-.rich .kv{display:grid;grid-template-columns:max-content 1fr;gap:4px 14px;margin:0 0 8px}
-.rich .kv dt{color:var(--ink-2)}
-.rich .kv dd{margin:0}
-.rich mark{background:linear-gradient(transparent 50%,var(--marker-soft) 50%);color:inherit;padding:0 1px}
-.tally{display:flex;gap:22px;margin-top:22px;flex-wrap:wrap}
-.tally div{display:flex;flex-direction:column}
-.tally b{font:600 28px/1 var(--display)}
-.tally span{color:var(--ink-2);font-size:13px}
+.kv{display:grid;grid-template-columns:max-content 1fr;gap:4px 14px;margin:0 0 8px}
+.kv:last-child{margin-bottom:0}
+.kv dt{color:var(--ink-2)} .kv dd{margin:0}
 
-.queue{background:var(--panel);border:1px solid var(--rule);border-radius:var(--r-node);padding:18px 18px 8px}
-.queue h2{font:600 19px/1.2 var(--display);margin:0 0 10px;display:flex;gap:8px;align-items:center}
-.queue p.hint{margin:0 0 12px;color:var(--ink-2);font-size:13px}
-.queue ul{list-style:none;margin:0;padding:0}
-.queue li{border-top:1px solid var(--rule)}
-.queue button{all:unset;display:grid;grid-template-columns:20px 1fr;gap:10px;padding:10px 2px;cursor:pointer;width:100%}
-.queue button:hover .q-text{background:linear-gradient(transparent 55%,var(--marker-soft) 55%)}
-.queue button:focus-visible{outline:2px solid var(--cobalt)}
-.q-text{font-size:14px}
-.q-task{display:flex;gap:5px;align-items:center;color:var(--ink-2);font-size:12.5px;margin-top:3px}
-.queue .empty{color:var(--ink-2);font-size:14px;padding:10px 0}
+/* status colours (template-defined statuses) */
+.st-done{color:var(--ok)} .st-in_progress,.st-partial{color:var(--warn)} .st-blocked,.st-failed{color:var(--bad)}
+.st-needs_review{color:var(--cobalt)} .st-planned,.st-skipped{color:var(--idle)}
 
-/* ── map ────────────────────────────────────────────── */
-.map-wrap{margin:8px clamp(12px,3vw,40px) 0;border-top:1px solid var(--rule)}
-.map-head{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:18px clamp(8px,2vw,24px) 8px;flex-wrap:wrap}
-.map-head h2{font:600 22px/1.2 var(--display);margin:0}
-.legend{display:flex;gap:18px;color:var(--ink-2);font-size:13px;flex-wrap:wrap}
+/* ── page 1: map only, never scrolls ─────────────────── */
+body.map-page{height:100vh;overflow:hidden;display:flex;flex-direction:column}
+.bar{display:flex;align-items:center;gap:24px;padding:14px clamp(16px,3vw,36px);border-bottom:1px solid var(--rule)}
+.bar h1{font:600 22px/1.15 var(--display);margin:0;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.legend{display:flex;gap:16px;color:var(--ink-2);font-size:13px;align-items:center}
 .legend span{display:inline-flex;align-items:center;gap:7px}
-.legend > span > svg{width:34px;height:10px}
-.map{overflow:auto;padding:24px clamp(8px,2vw,24px) 48px;
-  background-image:radial-gradient(var(--dot) 1px,transparent 1.2px);background-size:18px 18px}
-.graph{position:relative;margin:0 auto}
+.legend svg.line{width:30px;height:10px}
+.iconbtn{all:unset;cursor:pointer;width:36px;height:36px;display:grid;place-items:center;border-radius:8px;border:1px solid var(--rule);background:var(--panel);color:var(--ink)}
+.iconbtn:hover{border-color:var(--ink-3)} .iconbtn:focus-visible{outline:2px solid var(--cobalt)}
+.iconbtn[disabled]{opacity:.35;cursor:default}
+.map{flex:1;position:relative;overflow:hidden;background-image:radial-gradient(var(--dot) 1px,transparent 1.2px);background-size:18px 18px}
+.graph{position:absolute;left:0;top:0;transform-origin:0 0}
 .graph > svg{position:absolute;inset:0;overflow:visible;pointer-events:none}
 .edge{fill:none;stroke:var(--ink-2);stroke-width:1.5}
 .edge.related{stroke-dasharray:5 5;stroke:var(--ink-3)}
 .edge.blocks{stroke:var(--bad)}
 .edge-label{font:12px var(--text);fill:var(--ink-2);paint-order:stroke;stroke:var(--paper);stroke-width:5px}
 
-.node{position:absolute;text-align:left;font:inherit;color:inherit;cursor:pointer;
-  background:var(--panel);border:1px solid var(--rule);border-radius:var(--r-node);padding:14px 16px 12px;width:260px;
-  box-shadow:0 1px 0 var(--rule);transition:transform .15s ease,box-shadow .15s ease,border-color .15s}
-.node:hover{transform:translateY(-2px);border-color:var(--ink-3);box-shadow:0 6px 18px -10px rgba(23,38,43,.45)}
+.node{position:absolute;width:300px;text-align:left;font:inherit;color:inherit;cursor:pointer;
+  background:var(--panel);border:1px solid var(--rule);border-radius:var(--r);padding:14px 16px;
+  transition:border-color .15s,box-shadow .15s}
+.node:hover{border-color:var(--ink-3);box-shadow:0 8px 20px -14px rgba(23,38,43,.55)}
 .node[aria-current="true"]{border-color:var(--ink);box-shadow:0 0 0 2px var(--ink)}
 .node .nh{display:grid;grid-template-columns:20px 1fr;gap:8px;align-items:start}
 .node .nh .icon{width:20px;height:20px;margin-top:1px}
-.node h3{font:600 18px/1.2 var(--display);margin:0;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
-.node .goal{font-size:13px;color:var(--ink-2);margin:0 0 10px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-.node .flags{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px}
-.flag{display:inline-flex;align-items:center;gap:5px;font-size:12px;border-radius:999px;padding:2px 9px 2px 7px;background:var(--panel-2);border:1px solid var(--rule);color:var(--ink-2)}
-.flag.mine{background:var(--marker);border-color:#D9B92A;color:var(--ink)}
+.node h2{font:600 18px/1.2 var(--display);margin:0}
+.node .brief{font-size:13.5px;margin:10px 0 0;padding-top:10px;border-top:1px solid var(--rule)}
+.node .brief .kv{gap:2px 10px}
+.waiting{list-style:none;margin:10px 0 0;padding:0;display:grid;gap:6px}
+.waiting li{display:grid;grid-template-columns:16px 1fr;gap:8px;font-size:13px;line-height:1.4;padding:6px 8px;border-radius:var(--r-s);background:var(--marker-soft);border-left:4px solid var(--marker)}
+.waiting .icon{width:15px;height:15px;margin-top:1px}
 
-.s-done{color:var(--ok)} .s-in_progress{color:var(--warn)} .s-blocked,.s-failed{color:var(--bad)}
-.s-needs_review{color:var(--cobalt)} .s-planned,.s-skipped{color:var(--idle)} .s-partial{color:var(--warn)}
-
-/* ── drawer ─────────────────────────────────────────── */
+/* ── task report (drawer) ─────────────────────────────── */
 .scrim{position:fixed;inset:0;background:rgba(23,38,43,.28);opacity:0;pointer-events:none;transition:opacity .2s}
 .scrim.open{opacity:1;pointer-events:auto}
-.drawer{position:fixed;top:0;right:0;height:100%;width:min(860px,100%);background:var(--paper);border-left:1px solid var(--rule);
+.drawer{position:fixed;top:0;right:0;height:100%;width:min(880px,100%);background:var(--paper);border-left:1px solid var(--rule);
   transform:translateX(102%);transition:transform .28s cubic-bezier(.2,.7,.2,1);overflow:auto;box-shadow:-20px 0 40px -30px rgba(23,38,43,.6)}
-.drawer.open{transform:none}
-.drawer:focus{outline:none}
-.d-head{position:sticky;top:0;z-index:2;background:var(--paper);border-bottom:1px solid var(--rule);padding:18px 28px 14px;display:grid;grid-template-columns:1fr auto;gap:12px}
-.d-head h2{font:600 28px/1.1 var(--display);margin:0}
-.dh{display:grid;grid-template-columns:26px 1fr;gap:4px 10px;align-items:start}
-.dh > span .icon{width:24px;height:24px;margin-top:3px}
-.dh .ref{grid-column:2;display:inline-flex;gap:5px;align-items:center;font-size:13px;width:max-content}
-.d-head .st{display:flex;gap:8px;align-items:center;font-size:13px;color:var(--ink-2);flex-wrap:wrap}
-.iconbtn{all:unset;cursor:pointer;width:36px;height:36px;display:grid;place-items:center;border-radius:8px;border:1px solid var(--rule);background:var(--panel)}
-.iconbtn:hover{border-color:var(--ink-3)}
-.iconbtn:focus-visible{outline:2px solid var(--cobalt)}
-.d-nav{display:flex;gap:6px}
-.d-body{padding:8px 28px 64px}
+.drawer.open{transform:none} .drawer:focus{outline:none}
+.d-nav{position:sticky;top:0;z-index:3;display:flex;justify-content:flex-end;gap:6px;padding:12px 20px 0;height:0;overflow:visible}
+.report{padding:0 28px 64px}
+.r-head{position:sticky;top:0;z-index:2;background:var(--paper);border-bottom:1px solid var(--rule);padding:16px 140px 14px 0;display:grid;grid-template-columns:26px 1fr;gap:4px 10px;align-items:start}
+.r-head .icon{width:24px;height:24px;margin-top:3px}
+.r-head h2{font:600 28px/1.1 var(--display);margin:0}
+.r-head .ref{grid-column:2;display:inline-flex;gap:5px;align-items:center;font-size:13px;width:max-content}
+.r-head .ref .icon{width:15px;height:15px;margin:0}
 
-.sec{padding:22px 0 6px;border-bottom:1px solid var(--rule)}
+.sec{padding:22px 0 8px;border-bottom:1px solid var(--rule)}
 .sec:last-child{border-bottom:0}
 .sec > h3{display:flex;gap:10px;align-items:center;font:600 20px/1.2 var(--display);margin:0 0 12px}
-.sec > h3 .count{font:500 13px var(--text);color:var(--ink-3)}
-.sec > p,.sec .prose{max-width:72ch;margin:0 0 12px}
-.lead{font-size:16.5px}
+.sec .body{max-width:74ch;margin-bottom:12px}
+.lead{font-size:16px}
+.none{color:var(--ink-3);font-size:14px;margin:0 0 12px}
 
-.kind-legend{display:flex;gap:20px;flex-wrap:wrap;font-size:12.5px;color:var(--ink-2);margin:-4px 0 14px}
-.kind-legend span{display:inline-flex;gap:8px;align-items:center}
-.kind-legend i{display:inline-block;width:3px;height:16px}
-.k-evidence{border-left:3px solid var(--ink)}
-.k-inference{border-left:4px double var(--ink)}
-.k-assumption{border-left:3px dashed var(--ink-3)}
-.kind-legend i.k-evidence,.kind-legend i.k-inference,.kind-legend i.k-assumption{width:0}
+.items{list-style:none;margin:0 0 12px;padding:0;display:grid;gap:8px}
+.item{display:grid;grid-template-columns:44px 1fr;gap:10px;padding:10px 12px;background:var(--panel);border-radius:var(--r-s);transition:background .3s}
+.item.flash{background:var(--marker-soft)}
+.tag{font:600 12px/20px var(--display);height:20px;padding:0 6px;border-radius:4px;background:var(--ink);color:var(--panel);text-align:center;width:max-content;min-width:30px}
+.item .t{font-weight:600}
+.item .n{font-size:14px;margin-top:4px}
 
-.ctx{list-style:none;margin:0 0 12px;padding:0;display:grid;gap:8px}
-.ctx li{display:grid;grid-template-columns:22px 1fr;gap:10px;padding:8px 12px;background:var(--panel);border-radius:var(--r-small)}
-.ctx li:target{background:var(--marker-soft)}
-.ctx .t{font-weight:600}
-.ctx .n{color:var(--ink-2);font-size:14px}
-.ctx .id{color:var(--ink-3);font-size:12px;margin-left:6px}
+/* how each claim is known: line style is structure */
+.claims{list-style:none;margin:0 0 12px;padding:0;display:grid;gap:12px}
+.claim{padding:4px 0 4px 14px;max-width:78ch}
+.claim.inference{border-left:4px double var(--ink)}
+.claim.assumption{border-left:3px dashed var(--ink-3)}
+.claim .kv{margin-top:8px;font-size:14px}
+.ref-chip{display:inline-flex;font:600 12px/18px var(--display);padding:0 7px;border-radius:999px;border:1px solid var(--rule);background:var(--panel);color:var(--ink-2);text-decoration:none;margin-right:4px}
+a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
+.dots{display:inline-flex;gap:3px;align-items:center;margin-right:6px}
+.dots i{width:6px;height:6px;border-radius:50%;border:1px solid var(--ink-2)}
+.dots[data-n="3"] i,.dots[data-n="2"] i:nth-child(-n+2),.dots[data-n="1"] i:first-child{background:var(--ink-2)}
+.level{display:inline-block;font-size:12.5px;padding:0 8px;border-radius:999px;border:1px solid var(--rule)}
+.level.high{border-color:var(--bad);color:var(--bad)} .level.medium{border-color:var(--warn);color:var(--warn)}
 
-.claims{list-style:none;margin:0 0 12px;padding:0;display:grid;gap:10px}
-.claims li{padding:6px 0 6px 14px;max-width:76ch}
-.facts{display:grid;grid-template-columns:max-content 1fr;gap:4px 14px;margin:8px 0 0;font-size:14px}
-.facts dt{color:var(--ink-2)}
-.facts dd{margin:0}
-.risk{display:inline-block;font-size:12.5px;padding:0 8px;border-radius:999px;border:1px solid var(--rule)}
-.risk.r-high{border-color:var(--bad);color:var(--bad)} .risk.r-medium{border-color:var(--warn);color:var(--warn)}
-.chip{display:inline-flex;align-items:center;gap:4px;font-size:12.5px;padding:0 7px;border-radius:999px;border:1px solid var(--rule);background:var(--panel);color:var(--ink-2);text-decoration:none}
-a.chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
-.conf{display:inline-flex;gap:3px;align-items:center}
-.conf i{width:6px;height:6px;border-radius:50%;border:1px solid var(--ink-2)}
-.conf i.on{background:var(--ink-2)}
+.results{list-style:none;margin:0 0 12px;padding:0}
+.results li{display:grid;grid-template-columns:84px 1fr;gap:12px;padding:8px 0;border-top:1px solid var(--rule)}
+.results li:first-child{border-top:0}
+.results .k{font-size:12.5px;color:var(--ink-2);padding-top:2px}
+.results .v b{font:600 18px var(--display);margin-right:8px}
 
-.result-sum{font-size:16.5px;max-width:70ch;margin:0 0 14px}
-.result{list-style:none;margin:0 0 12px;padding:0;display:grid;gap:2px}
-.result li{display:grid;grid-template-columns:22px 110px 1fr;gap:10px;padding:8px 0;border-top:1px solid var(--rule);align-items:start}
-.result li:first-child{border-top:0}
-.result .k{color:var(--ink-2);font-size:13px;padding-top:1px}
-.metric{display:inline-flex;gap:8px;align-items:baseline}
-.metric b{font:600 18px var(--display)}
-
-.flow{overflow:auto;padding:16px 6px 20px;margin:0 -6px 8px;background-image:radial-gradient(var(--dot) 1px,transparent 1.2px);background-size:16px 16px;border-radius:var(--r-small)}
-.stage{position:absolute;background:var(--panel);border:1px solid var(--rule);border-radius:var(--r-node);padding:10px 12px;width:300px}
+.flow{position:relative;overflow:auto;padding:16px 6px 20px;margin:0 -6px 8px;background-image:radial-gradient(var(--dot) 1px,transparent 1.2px);background-size:16px 16px;border-radius:var(--r-s)}
+.flow .graph{position:relative}
+.stage{position:absolute;width:300px;background:var(--panel);border:1px solid var(--rule);border-radius:var(--r);padding:10px 12px}
 .stage .h{display:grid;grid-template-columns:auto 1fr auto;gap:8px;align-items:start}
 .stage .num{font:600 13px/1 var(--display);width:24px;height:24px;border-radius:50%;display:grid;place-items:center;background:var(--ink);color:var(--panel)}
 .stage h4{font:600 16px/1.25 var(--display);margin:2px 0 0}
 .stage .d{font-size:13.5px;margin:8px 0 0}
-.stage .o{font-size:13px;margin:8px 0 0;padding-top:8px;border-top:1px solid var(--rule);display:flex;gap:6px;color:var(--ink-2)}
+.stage .o{font-size:13px;margin:8px 0 0;padding-top:8px;border-top:1px solid var(--rule);display:grid;grid-template-columns:15px 1fr;gap:6px}
 .stage .o .icon{margin-top:2px}
-.stage .refs{display:flex;gap:4px;flex-wrap:wrap;margin-top:8px}
-.stage.st-failed{border-color:var(--bad)} .stage.st-skipped,.stage.st-planned{border-style:dashed} .stage.st-skipped{opacity:.65}
-.stage.st-partial,.stage.st-in_progress{border-color:var(--warn)}
+.stage .refs{margin-top:8px}
+.stage.s-failed{border-color:var(--bad)} .stage.s-skipped,.stage.s-planned{border-style:dashed} .stage.s-skipped{opacity:.65}
+.stage.s-partial,.stage.s-in_progress{border-color:var(--warn)}
+.stages-print{display:none}
 
-.mine-list{list-style:none;margin:0 0 12px;padding:0;display:grid;gap:10px}
-.mine-list li{display:grid;grid-template-columns:22px 1fr;gap:10px;padding:12px 14px;border-radius:var(--r-small);background:var(--panel);border-left:5px solid var(--marker)}
-.mine-list .t{font-weight:600}
-.mine-list .why{color:var(--ink-2);font-size:14px;margin-top:2px}
-.opts{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
-.opts span{font-size:13px;border:1px solid var(--rule);border-radius:999px;padding:1px 10px;background:var(--paper)}
-.cmd{display:flex;align-items:center;gap:8px;margin-top:8px}
+.mine{list-style:none;margin:0 0 12px;padding:0;display:grid;gap:10px}
+.mine li{display:grid;grid-template-columns:22px 1fr;gap:10px;padding:12px 14px;border-radius:var(--r-s);background:var(--panel);border-left:5px solid var(--marker)}
+.mine .t{font-weight:600}
+.mine .kv{margin-top:6px;font-size:14px}
+.opts{display:flex;gap:6px;flex-wrap:wrap}
+.opts span{font-size:13px;border:1px solid var(--rule);border-radius:999px;padding:0 10px;background:var(--paper)}
+.cmd{display:flex;align-items:center;gap:8px}
 .cmd code{flex:1;display:block;padding:6px 8px;overflow:auto;white-space:pre}
-.copy{all:unset;cursor:pointer;font-size:12.5px;color:var(--cobalt);display:inline-flex;gap:4px;align-items:center}
+.copy{all:unset;cursor:pointer;display:grid;place-items:center;width:28px;height:28px;border-radius:6px;color:var(--cobalt)}
 .copy:focus-visible{outline:2px solid var(--cobalt)}
-.none{color:var(--ink-3);font-size:14px;margin:0 0 12px}
 
-footer{padding:24px clamp(20px,5vw,64px) 40px;color:var(--ink-3);font-size:13px;border-top:1px solid var(--rule);margin-top:24px}
-
-#print-all{display:none}
-@media (max-width:820px){
-  .top{grid-template-columns:minmax(0,1fr);gap:24px}
-  .legend{gap:10px 14px}
-  .d-head,.d-body{padding-left:18px;padding-right:18px}
-  .result li{grid-template-columns:22px 1fr}.result .k{display:none}
-}
+.reports{display:none}
+@media (max-width:760px){.legend span{display:none} .report{padding:0 16px 48px} .r-head{padding-right:120px}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 @media print{
-  html{background:#fff;font-size:12px}
-  .queue button{cursor:auto}
-  .map,.map-wrap,.drawer,.scrim,.no-print{display:none!important}
-  #print-all{display:block}
-  #print-all .task-print{break-before:page;padding:0 0 12px}
-  #print-all .d-head{position:static;padding:0 0 10px}
-  #print-all .d-body{padding:0}
-  .sec{break-inside:avoid-page}
+  body.map-page{height:auto;overflow:visible;display:block;background:#fff}
+  .map,.legend,.drawer,.scrim,#print-btn{display:none!important}
+  .reports{display:block!important}
+  .reports .report{break-before:page;padding:0}
+  .reports .r-head{position:static;padding-right:0}
+  .reports .flow{display:none} .reports .stages-print{display:block}
 }
 </style>
 </head>
-<body>
+<body class="map-page">
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
   <defs>
-    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
-      <path d="M1 1 9 5 1 9" fill="none" stroke="#4A5A60" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-    </marker>
-    <marker id="arrow-bad" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
-      <path d="M1 1 9 5 1 9" fill="none" stroke="#B8432F" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-    </marker>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M1 1 9 5 1 9" fill="none" stroke="#4A5A60" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></marker>
+    <marker id="arrow-bad" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M1 1 9 5 1 9" fill="none" stroke="#B8432F" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></marker>
   </defs>
-  <!-- status -->
+  <!-- statuses -->
   <symbol id="i-done" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m8 12.5 2.8 2.8L16.5 9"/></symbol>
   <symbol id="i-in_progress" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor" stroke="none"/></symbol>
+  <symbol id="i-partial" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 9 9h-9z" fill="currentColor" stroke="none"/></symbol>
   <symbol id="i-blocked" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m6 18 12-12"/></symbol>
   <symbol id="i-failed" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m9 9 6 6m0-6-6 6"/></symbol>
   <symbol id="i-needs_review" viewBox="0 0 24 24"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/></symbol>
   <symbol id="i-planned" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" stroke-dasharray="3 3"/></symbol>
   <symbol id="i-skipped" viewBox="0 0 24 24"><path d="M5 6v12l9-6zM18 6v12"/></symbol>
-  <symbol id="i-partial" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 9 9h-9z" fill="currentColor" stroke="none"/></symbol>
   <!-- sections -->
   <symbol id="i-problem" viewBox="0 0 24 24"><path d="M12 3 2.5 20h19z"/><path d="M12 10v4.5M12 17.2v.1"/></symbol>
   <symbol id="i-goal" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.2" fill="currentColor"/></symbol>
@@ -234,1042 +192,688 @@ footer{padding:24px clamp(20px,5vw,64px) 40px;color:var(--ink-3);font-size:13px;
   <symbol id="i-flow" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="5" rx="1.2"/><rect x="14" y="16" width="7" height="5" rx="1.2"/><rect x="14" y="3" width="7" height="5" rx="1.2"/><path d="M10 5.5h4M17.5 8v8"/></symbol>
   <symbol id="i-approve" viewBox="0 0 24 24"><path d="M4 20h16"/><path d="M6.5 15.5 15 7l2.5 2.5L9 18H6.5z"/><path d="m13.5 8.5 2.5 2.5"/></symbol>
   <symbol id="i-action" viewBox="0 0 24 24"><path d="M9 11.5V5.5a1.5 1.5 0 0 1 3 0V11m0-1.5a1.5 1.5 0 0 1 3 0V11m0-.5a1.5 1.5 0 0 1 3 0v4c0 3.5-2.5 6-6 6h-1c-2 0-3.2-.8-4.5-2.4L4.3 15a1.5 1.5 0 0 1 2.4-1.8L9 15.5"/></symbol>
-  <symbol id="i-queue" viewBox="0 0 24 24"><path d="M4 6h11M4 12h11M4 18h7"/><path d="m16 17 2 2 3.5-4"/></symbol>
-  <!-- context kinds -->
-  <symbol id="i-file" viewBox="0 0 24 24"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4"/></symbol>
-  <symbol id="i-url" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.8 3 2.8 15 0 18M12 3c-2.8 3-2.8 15 0 18"/></symbol>
-  <symbol id="i-doc" viewBox="0 0 24 24"><path d="M5 4h10l4 4v12H5z"/><path d="M8.5 11h7M8.5 14h7M8.5 17h4"/></symbol>
-  <symbol id="i-log" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="1.5"/><path d="m7 9 3 3-3 3M12.5 15H17"/></symbol>
-  <symbol id="i-chat" viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z"/></symbol>
-  <symbol id="i-data" viewBox="0 0 24 24"><ellipse cx="12" cy="6" rx="7" ry="2.8"/><path d="M5 6v12c0 1.5 3.1 2.8 7 2.8s7-1.3 7-2.8V6M5 12c0 1.5 3.1 2.8 7 2.8s7-1.3 7-2.8"/></symbol>
-  <symbol id="i-commit" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.5"/><path d="M2.5 12h6M15.5 12h6"/></symbol>
-  <symbol id="i-issue" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="2" fill="currentColor"/></symbol>
-  <symbol id="i-code" viewBox="0 0 24 24"><path d="m8 7-5 5 5 5M16 7l5 5-5 5M13.5 5l-3 14"/></symbol>
-  <symbol id="i-image" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="1.5"/><circle cx="9" cy="10" r="1.6"/><path d="m21 16-5-5-9 8"/></symbol>
-  <!-- result kinds -->
-  <symbol id="i-added" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M12 8v8M8 12h8"/></symbol>
-  <symbol id="i-changed" viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16z"/></symbol>
-  <symbol id="i-removed" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M8 12h8"/></symbol>
-  <symbol id="i-fixed" viewBox="0 0 24 24"><path d="M14.5 6.5a4 4 0 0 0-5.3 5.3L4 17v3h3l5.2-5.2a4 4 0 0 0 5.3-5.3L15 12l-3-3z"/></symbol>
-  <symbol id="i-verified" viewBox="0 0 24 24"><path d="M12 3 5 6v5c0 4.5 3 8 7 10 4-2 7-5.5 7-10V6z"/><path d="m9 12 2.2 2.2L15.5 10"/></symbol>
-  <symbol id="i-metric" viewBox="0 0 24 24"><path d="M4 20V4M4 20h16"/><path d="m7 15 4-4 3 3 5-6"/></symbol>
-  <symbol id="i-decision" viewBox="0 0 24 24"><path d="M12 3v6M12 9l-6 6M12 9l6 6"/><circle cx="6" cy="18" r="2.5"/><circle cx="18" cy="18" r="2.5"/></symbol>
-  <!-- ui -->
+  <symbol id="i-outcome" viewBox="0 0 24 24"><path d="M5 12h12M13 7l5 5-5 5"/></symbol>
+  <!-- controls -->
   <symbol id="i-close" viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></symbol>
   <symbol id="i-prev" viewBox="0 0 24 24"><path d="m15 5-7 7 7 7"/></symbol>
   <symbol id="i-next" viewBox="0 0 24 24"><path d="m9 5 7 7-7 7"/></symbol>
   <symbol id="i-link" viewBox="0 0 24 24"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></symbol>
-  <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="1.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/></symbol>
-  <symbol id="i-author" viewBox="0 0 24 24"><circle cx="12" cy="8.5" r="3.5"/><path d="M5 20c1-4 4-5.5 7-5.5s6 1.5 7 5.5"/></symbol>
   <symbol id="i-print" viewBox="0 0 24 24"><path d="M7 9V3.5h10V9M7 17H4.5V9h15v8H17"/><rect x="7" y="14" width="10" height="6.5"/></symbol>
   <symbol id="i-copy" viewBox="0 0 24 24"><rect x="8" y="8" width="12" height="12" rx="1.5"/><path d="M16 8V4H4v12h4"/></symbol>
-  <symbol id="i-outcome" viewBox="0 0 24 24"><path d="M5 12h12M13 7l5 5-5 5"/></symbol>
 </svg>
 
-<header class="top">
-  <div>
-    <h1 id="title"></h1>
-    <div class="summary rich" id="summary"></div>
+<!-- ═══ Page 1 — Work map ═══════════════════════════════════════════════════ -->
+<header class="bar">
+  <h1>Checkout reliability: week 45</h1>
+  <div class="legend">
+    <span><svg class="line" viewBox="0 0 30 10"><path d="M1 5h26" stroke="#4A5A60" stroke-width="1.5" marker-end="url(#arrow)"/></svg>Depends on</span>
+    <span><svg class="line" viewBox="0 0 30 10"><path d="M1 5h28" stroke="#77878C" stroke-width="1.5" stroke-dasharray="5 5"/></svg>Related</span>
+    
   </div>
-  <aside class="queue" id="queue" aria-labelledby="queue-h"></aside>
+  <button class="iconbtn" id="print-btn" title="Print all tasks" aria-label="Print all tasks"><svg class="icon"><use href="#i-print"/></svg></button>
 </header>
 
-<section class="map-wrap" aria-labelledby="map-h">
-  <div class="map-head">
-    <h2 id="map-h"></h2>
-    <div class="legend" id="legend"></div>
+<main class="map" id="map" aria-label="Work map">
+  <div class="graph" id="graph" data-edges="[{&quot;from&quot;: &quot;latency&quot;, &quot;to&quot;: &quot;pool&quot;, &quot;kind&quot;: &quot;depends&quot;, &quot;label&quot;: null}, {&quot;from&quot;: &quot;latency&quot;, &quot;to&quot;: &quot;replay&quot;, &quot;kind&quot;: &quot;depends&quot;, &quot;label&quot;: null}, {&quot;from&quot;: &quot;pool&quot;, &quot;to&quot;: &quot;alerts&quot;, &quot;kind&quot;: &quot;depends&quot;, &quot;label&quot;: &quot;needs the metric&quot;}, {&quot;from&quot;: &quot;runbook&quot;, &quot;to&quot;: &quot;replay&quot;, &quot;kind&quot;: &quot;related&quot;, &quot;label&quot;: null}, {&quot;from&quot;: &quot;runbook&quot;, &quot;to&quot;: &quot;alerts&quot;, &quot;kind&quot;: &quot;related&quot;, &quot;label&quot;: null}]">
+    
+    <button class="node" type="button" data-task="latency" aria-label="Find why checkout p95 doubled after 2.14 — Done">
+      <div class="nh"><span class="st-done" title="Done"><svg class="icon"><use href="#i-done"/></svg></span><h2>Find why checkout p95 doubled after 2.14</h2></div>
+      <div class="brief rich"><dl class="kv"><dt>Cause</dt><dd>client 4.0 dropped the connection limit</dd><dt>Proven by</dt><dd>load test</dd></dl></div>
+      <ul class="waiting">
+        
+        <li title="Your action"><svg class="icon"><use href="#i-action"/></svg><span>Request provider-side logs for Nov 3, 19:00–19:30.</span></li>
+      </ul>
+    </button>
+    
+    <button class="node" type="button" data-task="pool" aria-label="Cap connections in the payments client — Needs review">
+      <div class="nh"><span class="st-needs_review" title="Needs review"><svg class="icon"><use href="#i-needs_review"/></svg></span><h2>Cap connections in the payments client</h2></div>
+      <div class="brief rich"><dl class="kv"><dt>Limit</dt><dd>50 connections per pod</dd><dt>Status</dt><dd>PR #1290 in review</dd></dl></div>
+      <ul class="waiting">
+        <li title="Needs approval"><svg class="icon"><use href="#i-approve"/></svg><span>Merge PR #1290 and ship it as 2.14.1 today.</span></li>
+        
+      </ul>
+    </button>
+    
+    <button class="node" type="button" data-task="replay" aria-label="Replay orders that failed during the incident — Blocked">
+      <div class="nh"><span class="st-blocked" title="Blocked"><svg class="icon"><use href="#i-blocked"/></svg></span><h2>Replay orders that failed during the incident</h2></div>
+      <div class="brief rich"><dl class="kv"><dt>Affected</dt><dd><strong>212</strong> customers, $18,406</dd><dt>Script</dt><dd>ready, waits for a decision</dd></dl></div>
+      <ul class="waiting">
+        <li title="Needs approval"><svg class="icon"><use href="#i-approve"/></svg><span>What to do with the 7 orders whose items are out of stock.</span></li>
+        <li title="Your action"><svg class="icon"><use href="#i-action"/></svg><span>Run the replay in production after you decide.</span></li>
+      </ul>
+    </button>
+    
+    <button class="node" type="button" data-task="alerts" aria-label="Alert on provider timeouts and pool saturation — In progress">
+      <div class="nh"><span class="st-in_progress" title="In progress"><svg class="icon"><use href="#i-in_progress"/></svg></span><h2>Alert on provider timeouts and pool saturation</h2></div>
+      <div class="brief rich"><dl class="kv"><dt>Timeouts</dt><dd>alert drafted</dd><dt>Pool</dt><dd>waits for the metric</dd></dl></div>
+      
+    </button>
+    
+    <button class="node" type="button" data-task="runbook" aria-label="Update the payments incident runbook — Planned">
+      <div class="nh"><span class="st-planned" title="Planned"><svg class="icon"><use href="#i-planned"/></svg></span><h2>Update the payments incident runbook</h2></div>
+      <div class="brief rich"><p>Not started</p></div>
+      
+    </button>
+    
   </div>
-  <div class="map" id="map"><div class="graph" id="graph"></div></div>
-</section>
+</main>
 
-<footer id="footer"></footer>
-
+<!-- ═══ Task reports — one per task, shown in the drawer ═══════════════════ -->
 <div class="scrim" id="scrim"></div>
-<aside class="drawer" id="drawer" role="dialog" aria-modal="true" aria-labelledby="d-title" tabindex="-1"></aside>
-<div id="print-all"></div>
+<aside class="drawer" id="drawer" role="dialog" aria-modal="true" tabindex="-1" aria-label="Task report">
+  <nav class="d-nav">
+    <button class="iconbtn" data-nav="-1" title="Previous task (Alt+←)" aria-label="Previous task"><svg class="icon"><use href="#i-prev"/></svg></button>
+    <button class="iconbtn" data-nav="1" title="Next task (Alt+→)" aria-label="Next task"><svg class="icon"><use href="#i-next"/></svg></button>
+    <button class="iconbtn" data-close title="Close (Esc)" aria-label="Close"><svg class="icon"><use href="#i-close"/></svg></button>
+  </nav>
+  <div id="slot"></div>
+</aside>
 
-<script type="application/json" id="report-data">{
- "meta": {
-  "title": "Checkout reliability: week 45",
-  "lang": "en",
-  "author": "Coding agent",
-  "audience": "For the engineering lead",
-  "period": {
-   "from": "2026-11-02",
-   "to": "2026-11-06"
-  },
-  "generated": "2026-11-06 18:40"
- },
- "summary": "- **Cause:** unbounded connection pool in payments client 4.0 (shipped in **2.14**) exhausts sockets under retries\n- **Impact:** checkout p95 **820 ms → 1.7 s**, **212** customers charged without an order\n- **Fix:** pool cap + backoff, PR ready for review\n- **Waiting on you:** 2 decisions, 2 manual steps",
- "tasks": [
-  {
-   "id": "latency",
-   "title": "Find why checkout p95 doubled after 2.14",
-   "status": "done",
-   "ref": {
-    "label": "ACME-412",
-    "url": "https://example.com/issues/ACME-412"
-   },
-   "problem": "Since: release 2.14, Nov 2 14:05\nLatency: checkout p95 **820 ms → 1.7 s**\nTimeouts: **0.9%** of payment attempts\nCustomers: charged without an order (support reports)",
-   "goal": [
-    "Find the root cause **with evidence**",
-    "Say what to change to get p95 back to the pre-2.14 level"
-   ],
-   "context": [
-    {
-     "id": "C1",
-     "kind": "data",
-     "title": "Checkout latency dashboard, Oct 26 – Nov 4",
-     "url": "https://example.com/dash/checkout",
-     "note": "p95 jumps at 14:05 on Nov 2, the deploy time of 2.14."
-    },
-    {
-     "id": "C2",
-     "kind": "commit",
-     "title": "2.14 diff: payments client upgraded 3.2 → 4.0",
-     "url": "https://example.com/acme/shop/compare/v2.13...v2.14"
-    },
-    {
-     "id": "C3",
-     "kind": "doc",
-     "title": "payments-client 4.0 changelog",
-     "url": "https://example.com/payments-client/CHANGELOG.md#400",
-     "note": "\"maxConnections now defaults to unlimited\"."
-    },
-    {
-     "id": "C4",
-     "kind": "log",
-     "title": "Pod logs during the peak, 2026-11-03 19:00–19:30",
-     "url": "https://example.com/logs/q/8812",
-     "note": "3,140 × `EMFILE: too many open files`, all from the payments client."
-    },
-    {
-     "id": "C5",
-     "kind": "chat",
-     "title": "Support thread about double charges",
-     "url": "https://example.com/support/t/5521"
-    },
-    {
-     "id": "C6",
-     "kind": "file",
-     "title": "src/payments/client.ts",
-     "url": "https://example.com/acme/shop/blob/main/src/payments/client.ts#L18-L44"
-    }
-   ],
-   "inferences": [
-    {
-     "text": "The regression starts exactly with the 2.14 deploy, so it is caused by a change inside 2.14, not by traffic.",
-     "basis": [
-      "C1",
-      "C2"
-     ],
-     "confidence": "high"
-    },
-    {
-     "text": "The payments client opens a new socket per retry and never caps them; under retries the pod runs out of file descriptors.",
-     "basis": [
-      "C3",
-      "C4",
-      "C6"
-     ],
-     "confidence": "high"
-    },
-    {
-     "text": "Double charges happen when the provider accepts a payment but our side times out before writing the order.",
-     "basis": [
-      "C4",
-      "C5"
-     ],
-     "confidence": "medium"
-    }
-   ],
-   "assumptions": [
-    {
-     "text": "The provider itself was healthy during the incident.",
-     "why": "Their status page shows no incident, but we have no provider-side metrics.",
-     "verify": "Ask the provider for request logs for Nov 3, 19:00–19:30.",
-     "risk": "medium"
-    }
-   ],
-   "result": {
-    "summary": "Root cause: unbounded connections in payments client 4.0\nConfirmed by: load test at 3× peak",
-    "items": [
-     {
-      "kind": "decision",
-      "text": "Cap the pool at 50 connections per pod and add jittered backoff."
-     },
-     {
-      "kind": "verified",
-      "text": "Load test with the cap: no `EMFILE` errors at 3× peak traffic.",
-      "ref": {
-       "label": "load test #77",
-       "url": "https://example.com/ci/load/77"
-      }
-     },
-     {
-      "kind": "metric",
-      "value": "780 ms",
-      "text": "p95 in the load test with the cap (was 1.7 s)"
-     },
-     {
-      "kind": "doc",
-      "text": "Incident timeline written up.",
-      "ref": {
-       "label": "timeline",
-       "url": "https://example.com/wiki/incidents/2026-11-03"
-      }
-     }
-    ]
-   },
-   "stages": [
-    {
-     "id": "s1",
-     "title": "Confirm the regression",
-     "detail": "Compared p95 per hour for two weeks around the release.",
-     "outcome": "Step change at the 2.14 deploy.",
-     "uses": [
-      "C1"
-     ]
-    },
-    {
-     "id": "s2",
-     "title": "Diff the release",
-     "detail": "Listed every dependency and config change in 2.14.",
-     "outcome": "One risky change: payments client 3.2 → 4.0.",
-     "uses": [
-      "C2"
-     ]
-    },
-    {
-     "id": "s3",
-     "title": "Read the error logs",
-     "detail": "Grouped errors during the evening peak by message and source.",
-     "outcome": "`EMFILE` from the payments client dominates.",
-     "uses": [
-      "C4"
-     ]
-    },
-    {
-     "id": "s4",
-     "title": "Check the client changelog",
-     "detail": "Looked for behaviour changes in 4.0.",
-     "outcome": "Pool limit default changed to unlimited.",
-     "uses": [
-      "C3",
-      "C6"
-     ]
-    },
-    {
-     "id": "s5",
-     "title": "Reproduce under load",
-     "detail": "Ran the checkout load test with and without a pool cap.",
-     "outcome": "Cap removes the errors and restores latency."
-    },
-    {
-     "id": "s6",
-     "title": "Write it up",
-     "detail": "Root cause, evidence and the proposed fix in the issue.",
-     "outcome": "Handed over to the fix task."
-    }
-   ],
-   "flow": [
-    {
-     "from": "s1",
-     "to": "s2"
-    },
-    {
-     "from": "s1",
-     "to": "s3"
-    },
-    {
-     "from": "s2",
-     "to": "s4"
-    },
-    {
-     "from": "s3",
-     "to": "s4"
-    },
-    {
-     "from": "s4",
-     "to": "s5"
-    },
-    {
-     "from": "s5",
-     "to": "s6"
-    }
-   ],
-   "approvals": [],
-   "actions": [
-    {
-     "text": "Request provider-side logs for Nov 3, 19:00–19:30.",
-     "why": "Only an account owner can open a ticket with the provider; it confirms the one open assumption."
-    }
-   ]
-  },
-  {
-   "id": "pool",
-   "title": "Cap connections in the payments client",
-   "status": "needs_review",
-   "ref": {
-    "label": "PR #1290",
-    "url": "https://example.com/acme/shop/pull/1290"
-   },
-   "problem": "Payments client opens **unlimited sockets** → file descriptors run out under retries.",
-   "goal": [
-    "Limit the connection pool",
-    "Add backoff to retries",
-    "Keep payment semantics unchanged"
-   ],
-   "context": [
-    {
-     "id": "C1",
-     "kind": "file",
-     "title": "src/payments/client.ts",
-     "url": "https://example.com/acme/shop/blob/main/src/payments/client.ts"
-    },
-    {
-     "id": "C2",
-     "kind": "doc",
-     "title": "payments-client pool options",
-     "url": "https://example.com/payments-client/docs/pool"
-    },
-    {
-     "id": "C3",
-     "kind": "issue",
-     "title": "Root cause analysis (ACME-412)",
-     "url": "https://example.com/issues/ACME-412"
-    }
-   ],
-   "inferences": [
-    {
-     "text": "50 connections per pod covers peak with 2× headroom: peak is ~22 concurrent payment calls per pod.",
-     "basis": [
-      "C3"
-     ],
-     "confidence": "medium"
-    }
-   ],
-   "assumptions": [
-    {
-     "text": "Idempotency keys are already sent on every retry, so backoff cannot create duplicate charges.",
-     "why": "The code path sets the key, but I did not see it in provider logs.",
-     "verify": "Check one retried request in the provider dashboard for the same idempotency key.",
-     "risk": "high"
-    }
-   ],
-   "result": {
-    "summary": "PR **#1290** ready:\n- pool cap\n- jittered exponential backoff\n- pool saturation metric",
-    "items": [
-     {
-      "kind": "changed",
-      "text": "`maxConnections: 50`, `queueTimeout: 2s` in the client factory.",
-      "ref": {
-       "label": "client.ts",
-       "url": "https://example.com/acme/shop/pull/1290/files"
-      }
-     },
-     {
-      "kind": "added",
-      "text": "Backoff 100 ms → 1.6 s with full jitter, 4 attempts max."
-     },
-     {
-      "kind": "added",
-      "text": "Metric `payments_pool_in_use`."
-     },
-     {
-      "kind": "verified",
-      "text": "Unit tests pass; the load test from ACME-412 passes with this branch."
-     }
-    ]
-   },
-   "stages": [
-    {
-     "id": "a",
-     "title": "Pick limits",
-     "detail": "Derived the pool size from peak concurrency.",
-     "outcome": "50 per pod, 2 s queue timeout.",
-     "uses": [
-      "C3"
-     ]
-    },
-    {
-     "id": "b",
-     "title": "Implement cap and backoff",
-     "detail": "Configured the pool; wrapped retries in a backoff helper.",
-     "uses": [
-      "C1",
-      "C2"
-     ]
-    },
-    {
-     "id": "c",
-     "title": "Add saturation metric",
-     "detail": "Exported in-use connections per pod."
-    },
-    {
-     "id": "d",
-     "title": "Test",
-     "detail": "Unit tests and the incident load test.",
-     "outcome": "Green."
-    }
-   ],
-   "flow": [
-    {
-     "from": "a",
-     "to": "b"
-    },
-    {
-     "from": "b",
-     "to": "c"
-    },
-    {
-     "from": "b",
-     "to": "d"
-    },
-    {
-     "from": "c",
-     "to": "d"
-    }
-   ],
-   "approvals": [
-    {
-     "text": "Merge PR #1290 and ship it as 2.14.1 today.",
-     "why": "Every evening peak until then repeats the incident.",
-     "options": [
-      "Ship today",
-      "Ship with Monday's release"
-     ]
-    }
-   ],
-   "actions": []
-  },
-  {
-   "id": "replay",
-   "title": "Replay orders that failed during the incident",
-   "status": "blocked",
-   "problem": "Affected: **212** customers, **$18,406**\nState: charged by the provider, no order on our side\nCause: our timeout fired after the provider accepted the payment",
-   "goal": [
-    "Create the missing orders from provider records",
-    "Charge nobody twice"
-   ],
-   "context": [
-    {
-     "id": "C1",
-     "kind": "data",
-     "title": "Provider payments without a matching order, Nov 2–5",
-     "url": "https://example.com/sql/saved/931",
-     "note": "212 rows, total $18,406."
-    },
-    {
-     "id": "C2",
-     "kind": "code",
-     "title": "Order creation service",
-     "url": "https://example.com/acme/shop/blob/main/src/orders/create.ts"
-    },
-    {
-     "id": "C3",
-     "kind": "chat",
-     "title": "Support thread about double charges",
-     "url": "https://example.com/support/t/5521"
-    }
-   ],
-   "inferences": [
-    {
-     "text": "All 212 payments are captured and none was refunded, so creating orders is safe; no new charges are needed.",
-     "basis": [
-      "C1"
-     ],
-     "confidence": "high"
-    }
-   ],
-   "assumptions": [
-    {
-     "text": "Stock for the affected items is still available.",
-     "why": "Not checked per item yet; 9 SKUs are low-stock.",
-     "verify": "Dry run of the replay script reports stock per order.",
-     "risk": "medium"
-    }
-   ],
-   "result": {
-    "summary": "Script: written, dry-run on staging\nProduction run: waits for your decision",
-    "items": [
-     {
-      "kind": "added",
-      "text": "`scripts/replay-orders.ts` with `--dry-run` and an idempotent order key."
-     },
-     {
-      "kind": "verified",
-      "text": "Staging dry run: 212 orders, 0 duplicates, 7 items out of stock."
-     }
-    ]
-   },
-   "stages": [
-    {
-     "id": "r1",
-     "title": "Find affected payments",
-     "detail": "Joined provider captures with orders by payment id.",
-     "outcome": "212 payments without orders.",
-     "uses": [
-      "C1"
-     ]
-    },
-    {
-     "id": "r2",
-     "title": "Write replay script",
-     "detail": "Creates orders through the normal service with an idempotent key.",
-     "uses": [
-      "C2"
-     ]
-    },
-    {
-     "id": "r3",
-     "title": "Dry run on staging",
-     "outcome": "7 orders hit out-of-stock items."
-    },
-    {
-     "id": "r4",
-     "title": "Run in production",
-     "status": "planned",
-     "detail": "Waiting for the out-of-stock decision."
-    }
-   ],
-   "approvals": [
-    {
-     "text": "What to do with the 7 orders whose items are out of stock.",
-     "why": "This changes what customers receive, so it is a business decision.",
-     "options": [
-      "Refund those 7",
-      "Backorder and email customers",
-      "Substitute a similar item"
-     ]
-    }
-   ],
-   "actions": [
-    {
-     "text": "Run the replay in production after you decide.",
-     "why": "Production write access is limited to on-call leads.",
-     "command": "npm run replay-orders -- --from 2026-11-02 --to 2026-11-05 --out-of-stock=refund"
-    }
-   ]
-  },
-  {
-   "id": "alerts",
-   "title": "Alert on provider timeouts and pool saturation",
-   "status": "in_progress",
-   "problem": "Detected by: support, **2 hours** after start\nAlerts fired: none",
-   "goal": "Page on-call **within 5 minutes** when payment timeouts or pool saturation rise.",
-   "context": [
-    {
-     "id": "C1",
-     "kind": "doc",
-     "title": "Alerting guidelines",
-     "url": "https://example.com/wiki/alerting"
-    },
-    {
-     "id": "C2",
-     "kind": "data",
-     "title": "Timeout rate, last 30 days",
-     "url": "https://example.com/dash/payments-timeouts"
-    }
-   ],
-   "inferences": [
-    {
-     "text": "A threshold of 0.3% timeouts over 5 minutes would have fired 9 minutes into the incident and never in the previous 30 days.",
-     "basis": [
-      "C2"
-     ],
-     "confidence": "medium"
-    }
-   ],
-   "assumptions": [],
-   "result": {
-    "summary": "Timeout alert: drafted\nSaturation alert: waits for the metric from the pool fix",
-    "items": [
-     {
-      "kind": "added",
-      "text": "Alert rule `PaymentsTimeoutRate > 0.3% for 5m` (not deployed)."
-     }
-    ]
-   },
-   "stages": [
-    {
-     "id": "x1",
-     "title": "Backtest thresholds",
-     "uses": [
-      "C2"
-     ],
-     "outcome": "0.3% / 5 min."
-    },
-    {
-     "id": "x2",
-     "title": "Timeout alert",
-     "status": "partial",
-     "detail": "Rule written, routing to on-call not set."
-    },
-    {
-     "id": "x3",
-     "title": "Saturation alert",
-     "status": "planned",
-     "detail": "Needs `payments_pool_in_use` in production."
-    }
-   ],
-   "flow": [
-    {
-     "from": "x1",
-     "to": "x2"
-    },
-    {
-     "from": "x1",
-     "to": "x3"
-    }
-   ],
-   "approvals": [],
-   "actions": []
-  },
-  {
-   "id": "runbook",
-   "title": "Update the payments incident runbook",
-   "status": "planned",
-   "problem": "The runbook lacks:\n- connection exhaustion\n- how to replay orders",
-   "goal": "Add both, so the next on-call can act without this week's investigation.",
-   "context": [
-    {
-     "id": "C1",
-     "kind": "doc",
-     "title": "Payments runbook",
-     "url": "https://example.com/wiki/runbooks/payments"
-    }
-   ],
-   "inferences": [],
-   "assumptions": [],
-   "result": {
-    "summary": "Not started."
-   },
-   "stages": [],
-   "approvals": [],
-   "actions": []
-  }
- ],
- "links": [
-  {
-   "from": "pool",
-   "to": "latency",
-   "kind": "depends"
-  },
-  {
-   "from": "replay",
-   "to": "latency",
-   "kind": "depends"
-  },
-  {
-   "from": "alerts",
-   "to": "pool",
-   "kind": "depends",
-   "label": "needs the metric"
-  },
-  {
-   "from": "runbook",
-   "to": "replay",
-   "kind": "related"
-  },
-  {
-   "from": "runbook",
-   "to": "alerts",
-   "kind": "related"
-  }
- ]
-}</script>
+<div class="reports" id="reports">
+
+<article class="report" id="report-latency" data-task="latency" data-flow="[{&quot;from&quot;: &quot;s1&quot;, &quot;to&quot;: &quot;s2&quot;}, {&quot;from&quot;: &quot;s1&quot;, &quot;to&quot;: &quot;s3&quot;}, {&quot;from&quot;: &quot;s2&quot;, &quot;to&quot;: &quot;s4&quot;}, {&quot;from&quot;: &quot;s3&quot;, &quot;to&quot;: &quot;s4&quot;}, {&quot;from&quot;: &quot;s4&quot;, &quot;to&quot;: &quot;s5&quot;}, {&quot;from&quot;: &quot;s5&quot;, &quot;to&quot;: &quot;s6&quot;}]">
+  <header class="r-head">
+    <span class="st-done" title="Done"><svg class="icon"><use href="#i-done"/></svg></span>
+    <h2>Find why checkout p95 doubled after 2.14</h2>
+    <a class="ref" href="https://example.com/issues/ACME-412" target="_blank" rel="noopener"><svg class="icon sm"><use href="#i-link"/></svg>ACME-412</a>
+  </header>
+
+  <section class="sec"><h3><svg class="icon"><use href="#i-problem"/></svg>Problem</h3>
+    <div class="body rich lead"><dl class="kv"><dt>Since</dt><dd>release 2.14, Nov 2 14:05</dd><dt>Latency</dt><dd>checkout p95 <strong>820 ms → 1.7 s</strong></dd><dt>Timeouts</dt><dd><strong>0.9%</strong> of payment attempts</dd><dt>Customers</dt><dd>charged without an order (support reports)</dd></dl></div></section>
+
+  <section class="sec"><h3><svg class="icon"><use href="#i-goal"/></svg>Task</h3>
+    <div class="body rich"><ul><li>Find the root cause <strong>with evidence</strong></li><li>Say what to change to get p95 back to the pre-2.14 level</li></ul></div></section>
+
+  <section class="sec"><h3><svg class="icon"><use href="#i-context"/></svg>Context</h3>
+    <ul class="items">
+      <li class="item" id="ctx-C1"><span class="tag">C1</span><div>
+        <a class="t" href="https://example.com/dash/checkout" target="_blank" rel="noopener">Checkout latency dashboard, Oct 26 – Nov 4</a>
+        <div class="n rich"><p>p95 jumps at 14:05 on Nov 2, the deploy time of 2.14.</p></div>
+      </div></li>
+      <li class="item" id="ctx-C2"><span class="tag">C2</span><div>
+        <a class="t" href="https://example.com/acme/shop/compare/v2.13...v2.14" target="_blank" rel="noopener">2.14 diff: payments client upgraded 3.2 → 4.0</a>
+        
+      </div></li>
+      <li class="item" id="ctx-C3"><span class="tag">C3</span><div>
+        <a class="t" href="https://example.com/payments-client/CHANGELOG.md#400" target="_blank" rel="noopener">payments-client 4.0 changelog</a>
+        <div class="n rich"><p>&quot;maxConnections now defaults to unlimited&quot;.</p></div>
+      </div></li>
+      <li class="item" id="ctx-C4"><span class="tag">C4</span><div>
+        <a class="t" href="https://example.com/logs/q/8812" target="_blank" rel="noopener">Pod logs during the peak, 2026-11-03 19:00–19:30</a>
+        <div class="n rich"><p>3,140 × <code>EMFILE: too many open files</code>, all from the payments client.</p></div>
+      </div></li>
+      <li class="item" id="ctx-C5"><span class="tag">C5</span><div>
+        <a class="t" href="https://example.com/support/t/5521" target="_blank" rel="noopener">Support thread about double charges</a>
+        
+      </div></li>
+      <li class="item" id="ctx-C6"><span class="tag">C6</span><div>
+        <a class="t" href="https://example.com/acme/shop/blob/main/src/payments/client.ts#L18-L44" target="_blank" rel="noopener">src/payments/client.ts</a>
+        
+      </div></li>
+    </ul></section>
+
+  <section class="sec"><h3><svg class="icon"><use href="#i-inference"/></svg>Conclusions</h3>
+    <ul class="claims">
+      <li class="claim inference"><div class="rich"><p>The regression starts exactly with the 2.14 deploy, so it is caused by a change inside 2.14, not by traffic.</p></div>
+        <dl class="kv">
+          <dt>Based on</dt><dd><a class="ref-chip" href="#ctx-C1" data-ctx="C1">C1</a><a class="ref-chip" href="#ctx-C2" data-ctx="C2">C2</a></dd>
+          <dt>Confidence</dt><dd><span class="dots" data-n="3"><i></i><i></i><i></i></span>high</dd>
+        </dl></li>
+      <li class="claim inference"><div class="rich"><p>The payments client opens a new socket per retry and never caps them; under retries the pod runs out of file descriptors.</p></div>
+        <dl class="kv">
+          <dt>Based on</dt><dd><a class="ref-chip" href="#ctx-C3" data-ctx="C3">C3</a><a class="ref-chip" href="#ctx-C4" data-ctx="C4">C4</a><a class="ref-chip" href="#ctx-C6" data-ctx="C6">C6</a></dd>
+          <dt>Confidence</dt><dd><span class="dots" data-n="3"><i></i><i></i><i></i></span>high</dd>
+        </dl></li>
+      <li class="claim inference"><div class="rich"><p>Double charges happen when the provider accepts a payment but our side times out before writing the order.</p></div>
+        <dl class="kv">
+          <dt>Based on</dt><dd><a class="ref-chip" href="#ctx-C4" data-ctx="C4">C4</a><a class="ref-chip" href="#ctx-C5" data-ctx="C5">C5</a></dd>
+          <dt>Confidence</dt><dd><span class="dots" data-n="2"><i></i><i></i><i></i></span>medium</dd>
+        </dl></li>
+    </ul></section>
+
+  <section class="sec"><h3><svg class="icon"><use href="#i-assumption"/></svg>Assumptions</h3>
+    <ul class="claims">
+      <li class="claim assumption"><div class="rich"><p>The provider itself was healthy during the incident.</p></div>
+        <dl class="kv">
+          <dt>Why assumed</dt><dd class="rich"><p>Their status page shows no incident, but we have no provider-side metrics.</p></dd>
+          <dt>How to verify</dt><dd class="rich"><p>Ask the provider for request logs for Nov 3, 19:00–19:30.</p></dd>
+          <dt>Risk if wrong</dt><dd><span class="level medium">medium</span></dd>
+        </dl></li>
+    </ul></section>
+
+  <section class="sec"><h3><svg class="icon"><use href="#i-result"/></svg>Result</h3>
+    <div class="body rich lead"><dl class="kv"><dt>Root cause</dt><dd>unbounded connections in payments client 4.0</dd><dt>Confirmed by</dt><dd>load test at 3× peak</dd></dl></div>
+    <ul class="results">
+      <li><span class="k">decision</span><div class="v">Cap the pool at 50 connections per pod and add jittered backoff.</div></li>
+      <li><span class="k">verified</span><div class="v">Load test with the cap: no <code>EMFILE</code> errors at 3× peak traffic. <a class="ref-chip" href="https://example.com/ci/load/77" target="_blank" rel="noopener">load test #77</a></div></li>
+      <li><span class="k">metric</span><div class="v"><b>780 ms</b>p95 in the load test with the cap (was 1.7 s)</div></li>
+      <li><span class="k">doc</span><div class="v">Incident timeline written up. <a class="ref-chip" href="https://example.com/wiki/incidents/2026-11-03" target="_blank" rel="noopener">timeline</a></div></li>
+    </ul></section>
+
+  <section class="sec"><h3><svg class="icon"><use href="#i-flow"/></svg>Workflow</h3>
+    <div class="flow"><div class="graph">
+      <div class="stage s-done" data-id="s1">
+        <div class="h"><span class="num">1</span><h4>Confirm the regression</h4><span class="st-done" title="Done"><svg class="icon sm"><use href="#i-done"/></svg></span></div>
+        <div class="d rich"><p>Compared p95 per hour for two weeks around the release.</p></div>
+        <div class="o"><svg class="icon sm"><use href="#i-outcome"/></svg><div class="rich"><p>Step change at the 2.14 deploy.</p></div></div>
+        <div class="refs"><a class="ref-chip" href="#ctx-C1" data-ctx="C1">C1</a></div>
+      </div>
+      <div class="stage s-done" data-id="s2">
+        <div class="h"><span class="num">2</span><h4>Diff the release</h4><span class="st-done" title="Done"><svg class="icon sm"><use href="#i-done"/></svg></span></div>
+        <div class="d rich"><p>Listed every dependency and config change in 2.14.</p></div>
+        <div class="o"><svg class="icon sm"><use href="#i-outcome"/></svg><div class="rich"><p><strong>One risky change:</strong> payments client 3.2 → 4.0.</p></div></div>
+        <div class="refs"><a class="ref-chip" href="#ctx-C2" data-ctx="C2">C2</a></div>
+      </div>
+      <div class="stage s-done" data-id="s3">
+        <div class="h"><span class="num">3</span><h4>Read the error logs</h4><span class="st-done" title="Done"><svg class="icon sm"><use href="#i-done"/></svg></span></div>
+        <div class="d rich"><p>Grouped errors during the evening peak by message and source.</p></div>
+        <div class="o"><svg class="icon sm"><use href="#i-outcome"/></svg><div class="rich"><p><code>EMFILE</code> from the payments client dominates.</p></div></div>
+        <div class="refs"><a class="ref-chip" href="#ctx-C4" data-ctx="C4">C4</a></div>
+      </div>
+      <div class="stage s-done" data-id="s4">
+        <div class="h"><span class="num">4</span><h4>Check the client changelog</h4><span class="st-done" title="Done"><svg class="icon sm"><use href="#i-done"/></svg></span></div>
+        <div class="d rich"><p>Looked for behaviour changes in 4.0.</p></div>
+        <div class="o"><svg class="icon sm"><use href="#i-outcome"/></svg><div class="rich"><p>Pool limit default changed to unlimited.</p></div></div>
+        <div class="refs"><a class="ref-chip" href="#ctx-C3" data-ctx="C3">C3</a><a class="ref-chip" href="#ctx-C6" data-ctx="C6">C6</a></div>
+      </div>
+      <div class="stage s-done" data-id="s5">
+        <div class="h"><span class="num">5</span><h4>Reproduce under load</h4><span class="st-done" title="Done"><svg class="icon sm"><use href="#i-done"/></svg></span></div>
+        <div class="d rich"><p>Ran the checkout load test with and without a pool cap.</p></div>
+        <div class="o"><svg class="icon sm"><use href="#i-outcome"/></svg><div class="rich"><p>Cap removes the errors and restores latency.</p></div></div>
+        
+      </div>
+      <div class="stage s-done" data-id="s6">
+        <div class="h"><span class="num">6</span><h4>Write it up</h4><span class="st-done" title="Done"><svg class="icon sm"><use href="#i-done"/></svg></span></div>
+        <div class="d rich"><p>Root cause, evidence and the proposed fix in the issue.</p></div>
+        <div class="o"><svg class="icon sm"><use href="#i-outcome"/></svg><div class="rich"><p>Handed over to the fix task.</p></div></div>
+        
+      </div>
+    </div></div>
+    <ol class="stages-print"><li><strong>Confirm the regression</strong> — Done<div class="rich"><p>Compared p95 per hour for two weeks around the release.</p></div><div class="rich">→ <p>Step change at the 2.14 deploy.</p></div></li><li><strong>Diff the release</strong> — Done<div class="rich"><p>Listed every dependency and config change in 2.14.</p></div><div class="rich">→ <p><strong>One risky change:</strong> payments client 3.2 → 4.0.</p></div></li><li><strong>Read the error logs</strong> — Done<div class="rich"><p>Grouped errors during the evening peak by message and source.</p></div><div class="rich">→ <p><code>EMFILE</code> from the payments client dominates.</p></div></li><li><strong>Check the client changelog</strong> — Done<div class="rich"><p>Looked for behaviour changes in 4.0.</p></div><div class="rich">→ <p>Pool limit default changed to unlimited.</p></div></li><li><strong>Reproduce under load</strong> — Done<div class="rich"><p>Ran the checkout load test with and without a pool cap.</p></div><div class="rich">→ <p>Cap removes the errors and restores latency.</p></div></li><li><strong>Write it up</strong> — Done<div class="rich"><p>Root cause, evidence and the proposed fix in the issue.</p></div><div class="rich">→ <p>Handed over to the fix task.</p></div></li></ol>
+    </section>
+
+  <section class="sec"><h3><svg class="icon"><use href="#i-approve"/></svg>Needs approval</h3>
+    <p class="none">—</p></section>
+
+  <section class="sec"><h3><svg class="icon"><use href="#i-action"/></svg>Your actions</h3>
+    <ul class="mine">
+      <li><svg class="icon"><use href="#i-action"/></svg><div><div class="t">Request provider-side logs for Nov 3, 19:00–19:30.</div>
+        <dl class="kv"><dt>Why you</dt><dd class="rich"><p>Only an account owner can open a ticket with the provider; it confirms the one open assumption.</p></dd></dl>
+      </div></li>
+    </ul></section>
+</article>
+
+<article class="report" id="report-pool" data-task="pool" data-flow="[{&quot;from&quot;: &quot;a&quot;, &quot;to&quot;: &quot;b&quot;}, {&quot;from&quot;: &quot;b&quot;, &quot;to&quot;: &quot;c&quot;}, {&quot;from&quot;: &quot;b&quot;, &quot;to&quot;: &quot;d&quot;}, {&quot;from&quot;: &quot;c&quot;, &quot;to&quot;: &quot;d&quot;}]">
+  <header class="r-head">
+    <span class="st-needs_review" title="Needs review"><svg class="icon"><use href="#i-needs_review"/></svg></span>
+    <h2>Cap connections in the payments client</h2>
+    <a class="ref" href="https://example.com/acme/shop/pull/1290" target="_blank" rel="noopener"><svg class="icon sm"><use href="#i-link"/></svg>PR #1290</a>
+  </header>
+
+  <section class="sec"><h3><svg class="icon"><use href="#i-problem"/></svg>Problem</h3>
+    <div class="body rich lead"><p>Payments client opens <strong>unlimited sockets</strong> → file descriptors run out under retries.</p></div></section>
+
+  <section class="sec"><h3><svg class="icon"><use href="#i-goal"/></svg>Task</h3>
+    <div class="body rich"><ul><li>Limit the connection pool</li><li>Add backoff to retries</li><li>Keep payment semantics unchanged</li></ul></div></section>
+
+  <section class="sec"><h3><svg class="icon"><use href="#i-context"/></svg>Context</h3>
+    <ul class="items">
+      <li class="item" id="ctx-C1"><span class="tag">C1</span><div>
+        <a class="t" href="https://example.com/acme/shop/blob/main/src/payments/client.ts" target="_blank" rel="noopener">src/payments/client.ts</a>
+        
+      </div></li>
+      <li class="item" id="ctx-C2"><span class="tag">C2</span><div>
+        <a class="t" href="https://example.com/payments-client/docs/pool" target="_blank" rel="noopener">payments-client pool options</a>
+        
+      </div></li>
+      <li class="item" id="ctx-C3"><span class="tag">C3</span><div>
+        <a class="t" href="https://example.com/issues/ACME-412" target="_blank" rel="noopener">Root cause analysis (ACME-412)</a>
+        
+      </div></li>
+    </ul></section>
+
+  <section class="sec"><h3><svg class="icon"><use href="#i-inference"/></svg>Conclusions</h3>
+    <ul class="claims">
+      <li class="claim inference"><div class="rich"><p>50 connections per pod covers peak with 2× headroom: peak is ~22 concurrent payment calls per pod.</p></div>
+        <dl class="kv">
+          <dt>Based on</dt><dd><a class="ref-chip" href="#ctx-C3" data-ctx="C3">C3</a></dd>
+          <dt>Confidence</dt><dd><span class="dots" data-n="2"><i></i><i></i><i></i></span>medium</dd>
+        </dl></li>
+    </ul></section>
+
+  <section class="sec"><h3><svg class="icon"><use href="#i-assumption"/></svg>Assumptions</h3>
+    <ul class="claims">
+      <li class="claim assumption"><div class="rich"><p>Idempotency keys are already sent on every retry, so backoff cannot create duplicate charges.</p></div>
+        <dl class="kv">
+          <dt>Why assumed</dt><dd class="rich"><p>The code path sets the key, but I did not see it in provider logs.</p></dd>
+          <dt>How to verify</dt><dd class="rich"><p>Check one retried request in the provider dashboard for the same idempotency key.</p></dd>
+          <dt>Risk if wrong</dt><dd><span class="level high">high</span></dd>
+        </dl></li>
+    </ul></section>
+
+  <section class="sec"><h3><svg class="icon"><use href="#i-result"/></svg>Result</h3>
+    <div class="body rich lead"><p>PR <strong>#1290</strong> ready:</p><ul><li>pool cap</li><li>jittered exponential backoff</li><li>pool saturation metric</li></ul></div>
+    <ul class="results">
+      <li><span class="k">changed</span><div class="v"><code>maxConnections: 50</code>, <code>queueTimeout: 2s</code> in the client factory. <a class="ref-chip" href="https://example.com/acme/shop/pull/1290/files" target="_blank" rel="noopener">client.ts</a></div></li>
+      <li><span class="k">added</span><div class="v">Backoff 100 ms → 1.6 s with full jitter, 4 attempts max.</div></li>
+      <li><span class="k">added</span><div class="v">Metric <code>payments_pool_in_use</code>.</div></li>
+      <li><span class="k">verified</span><div class="v">Unit tests pass; the load test from ACME-412 passes with this branch.</div></li>
+    </ul></section>
+
+  <section class="sec"><h3><svg class="icon"><use href="#i-flow"/></svg>Workflow</h3>
+    <div class="flow"><div class="graph">
+      <div class="stage s-done" data-id="a">
+        <div class="h"><span class="num">1</span><h4>Pick limits</h4><span class="st-done" title="Done"><svg class="icon sm"><use href="#i-done"/></svg></span></div>
+        <div class="d rich"><p>Derived the pool size from peak concurrency.</p></div>
+        <div class="o"><svg class="icon sm"><use href="#i-outcome"/></svg><div class="rich"><p>50 per pod, 2 s queue timeout.</p></div></div>
+        <div class="refs"><a class="ref-chip" href="#ctx-C3" data-ctx="C3">C3</a></div>
+      </div>
+      <div class="stage s-done" data-id="b">
+        <div class="h"><span class="num">2</span><h4>Implement cap and backoff</h4><span class="st-done" title="Done"><svg class="icon sm"><use href="#i-done"/></svg></span></div>
+        <div class="d rich"><p>Configured the pool; wrapped retries in a backoff helper.</p></div>
+        
+        <div class="refs"><a class="ref-chip" href="#ctx-C1" data-ctx="C1">C1</a><a class="ref-chip" href="#ctx-C2" data-ctx="C2">C2</a></div>
+      </div>
+      <div class="stage s-done" data-id="c">
+        <div class="h"><span class="num">3</span><h4>Add saturation metric</h4><span class="st-done" title="Done"><svg class="icon sm"><use href="#i-done"/></svg></span></div>
+        <div class="d rich"><p>Exported in-use connections per pod.</p></div>
+        
+        
+      </div>
+      <div class="stage s-done" data-id="d">
+        <div class="h"><span class="num">4</span><h4>Test</h4><span class="st-done" title="Done"><svg class="icon sm"><use href="#i-done"/></svg></span></div>
+        <div class="d rich"><p>Unit tests and the incident load test.</p></div>
+        <div class="o"><svg class="icon sm"><use href="#i-outcome"/></svg><div class="rich"><p>Green.</p></div></div>
+        
+      </div>
+    </div></div>
+    <ol class="stages-print"><li><strong>Pick limits</strong> — Done<div class="rich"><p>Derived the pool size from peak concurrency.</p></div><div class="rich">→ <p>50 per pod, 2 s queue timeout.</p></div></li><li><strong>Implement cap and backoff</strong> — Done<div class="rich"><p>Configured the pool; wrapped retries in a backoff helper.</p></div></li><li><strong>Add saturation metric</strong> — Done<div class="rich"><p>Exported in-use connections per pod.</p></div></li><li><strong>Test</strong> — Done<div class="rich"><p>Unit tests and the incident load test.</p></div><div class="rich">→ <p>Green.</p></div></li></ol>
+    </section>
+
+  <section class="sec"><h3><svg class="icon"><use href="#i-approve"/></svg>Needs approval</h3>
+    <ul class="mine">
+      <li><svg class="icon"><use href="#i-approve"/></svg><div><div class="t">Merge PR #1290 and ship it as 2.14.1 today.</div>
+        <dl class="kv"><dt>Why you</dt><dd class="rich"><p>Every evening peak until then repeats the incident.</p></dd><dt>Options</dt><dd class="opts"><span>Ship today</span><span>Ship with Monday&#x27;s release</span></dd></dl>
+      </div></li>
+    </ul></section>
+
+  <section class="sec"><h3><svg class="icon"><use href="#i-action"/></svg>Your actions</h3>
+    <p class="none">—</p></section>
+</article>
+
+<article class="report" id="report-replay" data-task="replay" data-flow="[{&quot;from&quot;: &quot;r1&quot;, &quot;to&quot;: &quot;r2&quot;}, {&quot;from&quot;: &quot;r2&quot;, &quot;to&quot;: &quot;r3&quot;}, {&quot;from&quot;: &quot;r3&quot;, &quot;to&quot;: &quot;r4&quot;}]">
+  <header class="r-head">
+    <span class="st-blocked" title="Blocked"><svg class="icon"><use href="#i-blocked"/></svg></span>
+    <h2>Replay orders that failed during the incident</h2>
+    
+  </header>
+
+  <section class="sec"><h3><svg class="icon"><use href="#i-problem"/></svg>Problem</h3>
+    <div class="body rich lead"><dl class="kv"><dt>Affected</dt><dd><strong>212</strong> customers, <strong>$18,406</strong></dd><dt>State</dt><dd>charged by the provider, no order on our side</dd><dt>Cause</dt><dd>our timeout fired after the provider accepted the payment</dd></dl></div></section>
+
+  <section class="sec"><h3><svg class="icon"><use href="#i-goal"/></svg>Task</h3>
+    <div class="body rich"><ul><li>Create the missing orders from provider records</li><li>Charge nobody twice</li></ul></div></section>
+
+  <section class="sec"><h3><svg class="icon"><use href="#i-context"/></svg>Context</h3>
+    <ul class="items">
+      <li class="item" id="ctx-C1"><span class="tag">C1</span><div>
+        <a class="t" href="https://example.com/sql/saved/931" target="_blank" rel="noopener">Provider payments without a matching order, Nov 2–5</a>
+        <div class="n rich"><p>212 rows, total $18,406.</p></div>
+      </div></li>
+      <li class="item" id="ctx-C2"><span class="tag">C2</span><div>
+        <a class="t" href="https://example.com/acme/shop/blob/main/src/orders/create.ts" target="_blank" rel="noopener">Order creation service</a>
+        
+      </div></li>
+      <li class="item" id="ctx-C3"><span class="tag">C3</span><div>
+        <a class="t" href="https://example.com/support/t/5521" target="_blank" rel="noopener">Support thread about double charges</a>
+        
+      </div></li>
+    </ul></section>
+
+  <section class="sec"><h3><svg class="icon"><use href="#i-inference"/></svg>Conclusions</h3>
+    <ul class="claims">
+      <li class="claim inference"><div class="rich"><p>All 212 payments are captured and none was refunded, so creating orders is safe; no new charges are needed.</p></div>
+        <dl class="kv">
+          <dt>Based on</dt><dd><a class="ref-chip" href="#ctx-C1" data-ctx="C1">C1</a></dd>
+          <dt>Confidence</dt><dd><span class="dots" data-n="3"><i></i><i></i><i></i></span>high</dd>
+        </dl></li>
+    </ul></section>
+
+  <section class="sec"><h3><svg class="icon"><use href="#i-assumption"/></svg>Assumptions</h3>
+    <ul class="claims">
+      <li class="claim assumption"><div class="rich"><p>Stock for the affected items is still available.</p></div>
+        <dl class="kv">
+          <dt>Why assumed</dt><dd class="rich"><p>Not checked per item yet; 9 SKUs are low-stock.</p></dd>
+          <dt>How to verify</dt><dd class="rich"><p>Dry run of the replay script reports stock per order.</p></dd>
+          <dt>Risk if wrong</dt><dd><span class="level medium">medium</span></dd>
+        </dl></li>
+    </ul></section>
+
+  <section class="sec"><h3><svg class="icon"><use href="#i-result"/></svg>Result</h3>
+    <div class="body rich lead"><dl class="kv"><dt>Script</dt><dd>written, dry-run on staging</dd><dt>Production run</dt><dd>waits for your decision</dd></dl></div>
+    <ul class="results">
+      <li><span class="k">added</span><div class="v"><code>scripts/replay-orders.ts</code> with <code>--dry-run</code> and an idempotent order key.</div></li>
+      <li><span class="k">verified</span><div class="v">Staging dry run: 212 orders, 0 duplicates, 7 items out of stock.</div></li>
+    </ul></section>
+
+  <section class="sec"><h3><svg class="icon"><use href="#i-flow"/></svg>Workflow</h3>
+    <div class="flow"><div class="graph">
+      <div class="stage s-done" data-id="r1">
+        <div class="h"><span class="num">1</span><h4>Find affected payments</h4><span class="st-done" title="Done"><svg class="icon sm"><use href="#i-done"/></svg></span></div>
+        <div class="d rich"><p>Joined provider captures with orders by payment id.</p></div>
+        <div class="o"><svg class="icon sm"><use href="#i-outcome"/></svg><div class="rich"><p>212 payments without orders.</p></div></div>
+        <div class="refs"><a class="ref-chip" href="#ctx-C1" data-ctx="C1">C1</a></div>
+      </div>
+      <div class="stage s-done" data-id="r2">
+        <div class="h"><span class="num">2</span><h4>Write replay script</h4><span class="st-done" title="Done"><svg class="icon sm"><use href="#i-done"/></svg></span></div>
+        <div class="d rich"><p>Creates orders through the normal service with an idempotent key.</p></div>
+        
+        <div class="refs"><a class="ref-chip" href="#ctx-C2" data-ctx="C2">C2</a></div>
+      </div>
+      <div class="stage s-done" data-id="r3">
+        <div class="h"><span class="num">3</span><h4>Dry run on staging</h4><span class="st-done" title="Done"><svg class="icon sm"><use href="#i-done"/></svg></span></div>
+        
+        <div class="o"><svg class="icon sm"><use href="#i-outcome"/></svg><div class="rich"><p>7 orders hit out-of-stock items.</p></div></div>
+        
+      </div>
+      <div class="stage s-planned" data-id="r4">
+        <div class="h"><span class="num">4</span><h4>Run in production</h4><span class="st-planned" title="Planned"><svg class="icon sm"><use href="#i-planned"/></svg></span></div>
+        <div class="d rich"><p>Waiting for the out-of-stock decision.</p></div>
+        
+        
+      </div>
+    </div></div>
+    <ol class="stages-print"><li><strong>Find affected payments</strong> — Done<div class="rich"><p>Joined provider captures with orders by payment id.</p></div><div class="rich">→ <p>212 payments without orders.</p></div></li><li><strong>Write replay script</strong> — Done<div class="rich"><p>Creates orders through the normal service with an idempotent key.</p></div></li><li><strong>Dry run on staging</strong> — Done<div class="rich"></div><div class="rich">→ <p>7 orders hit out-of-stock items.</p></div></li><li><strong>Run in production</strong> — Planned<div class="rich"><p>Waiting for the out-of-stock decision.</p></div></li></ol>
+    </section>
+
+  <section class="sec"><h3><svg class="icon"><use href="#i-approve"/></svg>Needs approval</h3>
+    <ul class="mine">
+      <li><svg class="icon"><use href="#i-approve"/></svg><div><div class="t">What to do with the 7 orders whose items are out of stock.</div>
+        <dl class="kv"><dt>Why you</dt><dd class="rich"><p>This changes what customers receive, so it is a business decision.</p></dd><dt>Options</dt><dd class="opts"><span>Refund those 7</span><span>Backorder and email customers</span><span>Substitute a similar item</span></dd></dl>
+      </div></li>
+    </ul></section>
+
+  <section class="sec"><h3><svg class="icon"><use href="#i-action"/></svg>Your actions</h3>
+    <ul class="mine">
+      <li><svg class="icon"><use href="#i-action"/></svg><div><div class="t">Run the replay in production after you decide.</div>
+        <dl class="kv"><dt>Why you</dt><dd class="rich"><p>Production write access is limited to on-call leads.</p></dd><dt>Command</dt><dd class="cmd"><code>npm run replay-orders -- --from 2026-11-02 --to 2026-11-05 --out-of-stock=refund</code><button class="copy" data-copy="npm run replay-orders -- --from 2026-11-02 --to 2026-11-05 --out-of-stock=refund" title="Copy" aria-label="Copy command"><svg class="icon sm"><use href="#i-copy"/></svg></button></dd></dl>
+      </div></li>
+    </ul></section>
+</article>
+
+<article class="report" id="report-alerts" data-task="alerts" data-flow="[{&quot;from&quot;: &quot;x1&quot;, &quot;to&quot;: &quot;x2&quot;}, {&quot;from&quot;: &quot;x1&quot;, &quot;to&quot;: &quot;x3&quot;}]">
+  <header class="r-head">
+    <span class="st-in_progress" title="In progress"><svg class="icon"><use href="#i-in_progress"/></svg></span>
+    <h2>Alert on provider timeouts and pool saturation</h2>
+    
+  </header>
+
+  <section class="sec"><h3><svg class="icon"><use href="#i-problem"/></svg>Problem</h3>
+    <div class="body rich lead"><dl class="kv"><dt>Detected by</dt><dd>support, <strong>2 hours</strong> after start</dd><dt>Alerts fired</dt><dd>none</dd></dl></div></section>
+
+  <section class="sec"><h3><svg class="icon"><use href="#i-goal"/></svg>Task</h3>
+    <div class="body rich"><p>Page on-call <strong>within 5 minutes</strong> when payment timeouts or pool saturation rise.</p></div></section>
+
+  <section class="sec"><h3><svg class="icon"><use href="#i-context"/></svg>Context</h3>
+    <ul class="items">
+      <li class="item" id="ctx-C1"><span class="tag">C1</span><div>
+        <a class="t" href="https://example.com/wiki/alerting" target="_blank" rel="noopener">Alerting guidelines</a>
+        
+      </div></li>
+      <li class="item" id="ctx-C2"><span class="tag">C2</span><div>
+        <a class="t" href="https://example.com/dash/payments-timeouts" target="_blank" rel="noopener">Timeout rate, last 30 days</a>
+        
+      </div></li>
+    </ul></section>
+
+  <section class="sec"><h3><svg class="icon"><use href="#i-inference"/></svg>Conclusions</h3>
+    <ul class="claims">
+      <li class="claim inference"><div class="rich"><p>A threshold of 0.3% timeouts over 5 minutes would have fired 9 minutes into the incident and never in the previous 30 days.</p></div>
+        <dl class="kv">
+          <dt>Based on</dt><dd><a class="ref-chip" href="#ctx-C2" data-ctx="C2">C2</a></dd>
+          <dt>Confidence</dt><dd><span class="dots" data-n="2"><i></i><i></i><i></i></span>medium</dd>
+        </dl></li>
+    </ul></section>
+
+  <section class="sec"><h3><svg class="icon"><use href="#i-assumption"/></svg>Assumptions</h3>
+    <p class="none">—</p></section>
+
+  <section class="sec"><h3><svg class="icon"><use href="#i-result"/></svg>Result</h3>
+    <div class="body rich lead"><dl class="kv"><dt>Timeout alert</dt><dd>drafted</dd><dt>Saturation alert</dt><dd>waits for the metric from the pool fix</dd></dl></div>
+    <ul class="results">
+      <li><span class="k">added</span><div class="v">Alert rule <code>PaymentsTimeoutRate &gt; 0.3% for 5m</code> (not deployed).</div></li>
+    </ul></section>
+
+  <section class="sec"><h3><svg class="icon"><use href="#i-flow"/></svg>Workflow</h3>
+    <div class="flow"><div class="graph">
+      <div class="stage s-done" data-id="x1">
+        <div class="h"><span class="num">1</span><h4>Backtest thresholds</h4><span class="st-done" title="Done"><svg class="icon sm"><use href="#i-done"/></svg></span></div>
+        
+        <div class="o"><svg class="icon sm"><use href="#i-outcome"/></svg><div class="rich"><p>0.3% / 5 min.</p></div></div>
+        <div class="refs"><a class="ref-chip" href="#ctx-C2" data-ctx="C2">C2</a></div>
+      </div>
+      <div class="stage s-partial" data-id="x2">
+        <div class="h"><span class="num">2</span><h4>Timeout alert</h4><span class="st-partial" title="Partly done"><svg class="icon sm"><use href="#i-partial"/></svg></span></div>
+        <div class="d rich"><p>Rule written, routing to on-call not set.</p></div>
+        
+        
+      </div>
+      <div class="stage s-planned" data-id="x3">
+        <div class="h"><span class="num">3</span><h4>Saturation alert</h4><span class="st-planned" title="Planned"><svg class="icon sm"><use href="#i-planned"/></svg></span></div>
+        <div class="d rich"><p>Needs <code>payments_pool_in_use</code> in production.</p></div>
+        
+        
+      </div>
+    </div></div>
+    <ol class="stages-print"><li><strong>Backtest thresholds</strong> — Done<div class="rich"></div><div class="rich">→ <p>0.3% / 5 min.</p></div></li><li><strong>Timeout alert</strong> — Partly done<div class="rich"><p>Rule written, routing to on-call not set.</p></div></li><li><strong>Saturation alert</strong> — Planned<div class="rich"><p>Needs <code>payments_pool_in_use</code> in production.</p></div></li></ol>
+    </section>
+
+  <section class="sec"><h3><svg class="icon"><use href="#i-approve"/></svg>Needs approval</h3>
+    <p class="none">—</p></section>
+
+  <section class="sec"><h3><svg class="icon"><use href="#i-action"/></svg>Your actions</h3>
+    <p class="none">—</p></section>
+</article>
+
+<article class="report" id="report-runbook" data-task="runbook" data-flow="[]">
+  <header class="r-head">
+    <span class="st-planned" title="Planned"><svg class="icon"><use href="#i-planned"/></svg></span>
+    <h2>Update the payments incident runbook</h2>
+    
+  </header>
+
+  <section class="sec"><h3><svg class="icon"><use href="#i-problem"/></svg>Problem</h3>
+    <div class="body rich lead"><p>The runbook lacks:</p><ul><li>connection exhaustion</li><li>how to replay orders</li></ul></div></section>
+
+  <section class="sec"><h3><svg class="icon"><use href="#i-goal"/></svg>Task</h3>
+    <div class="body rich"><p>Add both, so the next on-call can act without this week&#x27;s investigation.</p></div></section>
+
+  <section class="sec"><h3><svg class="icon"><use href="#i-context"/></svg>Context</h3>
+    <ul class="items">
+      <li class="item" id="ctx-C1"><span class="tag">C1</span><div>
+        <a class="t" href="https://example.com/wiki/runbooks/payments" target="_blank" rel="noopener">Payments runbook</a>
+        
+      </div></li>
+    </ul></section>
+
+  <section class="sec"><h3><svg class="icon"><use href="#i-inference"/></svg>Conclusions</h3>
+    <p class="none">—</p></section>
+
+  <section class="sec"><h3><svg class="icon"><use href="#i-assumption"/></svg>Assumptions</h3>
+    <p class="none">—</p></section>
+
+  <section class="sec"><h3><svg class="icon"><use href="#i-result"/></svg>Result</h3>
+    <div class="body rich lead"><p>Not started.</p></div>
+    </section>
+
+  <section class="sec"><h3><svg class="icon"><use href="#i-flow"/></svg>Workflow</h3>
+    
+    <p class="none">—</p></section>
+
+  <section class="sec"><h3><svg class="icon"><use href="#i-approve"/></svg>Needs approval</h3>
+    <p class="none">—</p></section>
+
+  <section class="sec"><h3><svg class="icon"><use href="#i-action"/></svg>Your actions</h3>
+    <p class="none">—</p></section>
+</article>
+
+</div>
+
 <script>
+/* Behaviour only: graph layout, drawer, navigation. No content is created here. */
 (() => {
 "use strict";
-const DATA = JSON.parse(document.getElementById("report-data").textContent);
-const meta = DATA.meta || {};
-const LANG = (meta.lang || "en").slice(0, 2);
+const $ = (s, r = document) => r.querySelector(s), $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 
-const L10N = {
-  en: {
-    tasks: "Tasks", map: "Map of work", queue: "Waiting on you", queueHint: "Decisions to make and things only you can do, across all tasks.",
-    queueEmpty: "Nothing is waiting on you.", depends: "depends on", related: "related", blocks: "blocks",
-    problem: "Problem", goal: "Task", context: "Context gathered", inferences: "What I concluded", assumptions: "What I assumed",
-    result: "Result", flow: "How the work went", approvals: "Needs your approval", actions: "For you to do",
-    evidence: "fact from the context", inference: "conclusion drawn from facts", assumption: "assumption, not verified",
-    basis: "Based on", confidence: "Confidence", verify: "How to check", risk: "Risk if wrong", why: "Why",
-    options: "Options", outcome: "Outcome", copy: "Copy", copied: "Copied", none: "None.",
-    close: "Close", prev: "Previous task", next: "Next task", print: "Print all", generated: "Generated",
-    approvalsN: n => `${n} to approve`, actionsN: n => `${n} for you`, done: "done",
-    stepsN: n => `${n} ${n === 1 ? "step" : "steps"}`, sourcesN: n => `${n} ${n === 1 ? "source" : "sources"}`,
-    high: "high", medium: "medium", low: "low", open: "Open",
-    status: {done:"Done", in_progress:"In progress", blocked:"Blocked", needs_review:"Needs review", planned:"Planned", failed:"Failed", skipped:"Skipped", partial:"Partly done"},
-    kinds: {added:"Added", changed:"Changed", removed:"Removed", fixed:"Fixed", verified:"Verified", metric:"Measured", doc:"Documented", decision:"Decided"},
-  },
-  ru: {
-    tasks: "Задачи", map: "Карта работы", queue: "Ждёт вас", queueHint: "Что нужно согласовать и что можете сделать только вы — по всем задачам.",
-    queueEmpty: "От вас ничего не требуется.", depends: "зависит от", related: "связаны", blocks: "блокирует",
-    problem: "Проблема", goal: "Задача", context: "Собранный контекст", inferences: "Что я вывел", assumptions: "Что я предположил",
-    result: "Результат", flow: "Ход работы", approvals: "Нужно ваше согласование", actions: "Сделать вам",
-    evidence: "факт из контекста", inference: "вывод из фактов", assumption: "предположение, не проверено",
-    basis: "Основание", confidence: "Уверенность", verify: "Как проверить", risk: "Риск, если неверно", why: "Зачем",
-    options: "Варианты", outcome: "Итог", copy: "Копировать", copied: "Скопировано", none: "Нет.",
-    close: "Закрыть", prev: "Предыдущая задача", next: "Следующая задача", print: "Печать всего", generated: "Сформирован",
-    approvalsN: n => `согласовать: ${n}`, actionsN: n => `вам: ${n}`, done: "готово",
-    stepsN: n => `этапов: ${n}`, sourcesN: n => `источников: ${n}`,
-    high: "высокая", medium: "средняя", low: "низкая", open: "Открыть",
-    status: {done:"Готово", in_progress:"В работе", blocked:"Заблокировано", needs_review:"Ждёт проверки", planned:"Запланировано", failed:"Не удалось", skipped:"Пропущено", partial:"Частично"},
-    kinds: {added:"Добавлено", changed:"Изменено", removed:"Удалено", fixed:"Исправлено", verified:"Проверено", metric:"Измерено", doc:"Описано", decision:"Решено"},
-  },
-};
-const T = Object.assign({}, L10N.en, L10N[LANG] || {});
-T.status = Object.assign({}, L10N.en.status, (L10N[LANG] || {}).status);
-T.kinds = Object.assign({}, L10N.en.kinds, (L10N[LANG] || {}).kinds);
-document.documentElement.lang = LANG;
-
-// ── helpers ───────────────────────────────────────────
-const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-const safeUrl = u => /^(https?:|mailto:|file:|\.{0,2}\/|#)/i.test(u || "") ? u : null;
-function md(s) {
-  let h = esc(s);
-  h = h.replace(/`([^`]+)`/g, "<code>$1</code>");
-  h = h.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
-  h = h.replace(/==([^=]+)==/g, "<mark>$1</mark>");
-  h = h.replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, (m, t, u) => {
-    const url = safeUrl(u.replace(/&amp;/g, "&"));
-    return url ? `<a href="${esc(url)}" target="_blank" rel="noopener">${t}</a>` : t;
-  });
-  return h;
-}
-// Block structure: "- item" lists, "1. item" numbered, "Key: value" lines (when 2+ in a row) → key/value grid,
-// blank line → new paragraph. Arrays render as bullet lists.
-function rich(v) {
-  if (v == null || v === "") return "";
-  if (Array.isArray(v)) return `<ul>${v.map(x => `<li>${md(x)}</li>`).join("")}</ul>`;
-  const lines = String(v).split("\n");
-  let out = "", buf = [], mode = null;
-  const flush = () => {
-    if (!buf.length) return;
-    if (mode === "ul") out += `<ul>${buf.map(x => `<li>${md(x)}</li>`).join("")}</ul>`;
-    else if (mode === "ol") out += `<ol>${buf.map(x => `<li>${md(x)}</li>`).join("")}</ol>`;
-    else if (mode === "kv") out += buf.length > 1
-      ? `<dl class="kv">${buf.map(([k, x]) => `<dt>${md(k)}</dt><dd>${md(x)}</dd>`).join("")}</dl>`
-      : `<p><strong>${md(buf[0][0])}:</strong> ${md(buf[0][1])}</p>`;
-    else out += `<p>${buf.map(md).join("<br>")}</p>`;
-    buf = []; mode = null;
-  };
-  for (const raw of lines) {
-    const line = raw.trim();
-    let m, kind, item;
-    if (!line) { flush(); continue; }
-    if ((m = /^[-•*]\s+(.*)$/.exec(line))) { kind = "ul"; item = m[1]; }
-    else if ((m = /^\d+[.)]\s+(.*)$/.exec(line))) { kind = "ol"; item = m[1]; }
-    else if ((m = /^([^:`*\[]{2,28}):\s+(.+)$/.exec(line))) { kind = "kv"; item = [m[1], m[2]]; }
-    else { kind = "p"; item = line; }
-    if (mode && mode !== kind) flush();
-    mode = kind; buf.push(item);
-  }
-  flush();
-  return out;
-}
-const icon = (id, cls = "") => `<svg class="icon ${cls}" aria-hidden="true"><use href="#i-${id}"/></svg>`;
-const KNOWN_ICON = id => !!document.getElementById("i-" + id);
-const ico = (id, fallback, cls) => icon(KNOWN_ICON(id) ? id : fallback, cls);
-const arr = x => Array.isArray(x) ? x : [];
-const tasks = arr(DATA.tasks);
-const byId = Object.fromEntries(tasks.map(t => [t.id, t]));
-
-function statusBadge(st) {
-  const s = st || "planned";
-  return `<span class="s-${esc(s)}" style="display:inline-flex">${ico(s, "planned", "sm")}</span><span>${esc(T.status[s] || s)}</span>`;
-}
-function link(ref, cls = "") {
-  if (!ref) return "";
-  if (typeof ref === "string") ref = {label: ref, url: ref};
-  const url = safeUrl(ref.url);
-  const label = esc(ref.label || ref.url);
-  return url ? `<a class="${cls}" href="${esc(url)}" target="_blank" rel="noopener">${icon("link", "sm")}${label}</a>` : `<span class="${cls}">${label}</span>`;
-}
-function conf(level) {
-  const n = {high: 3, medium: 2, low: 1}[level] || 0;
-  if (!n) return "";
-  return `<span class="conf" title="${esc(T.confidence)}: ${esc(T[level])}">${[1,2,3].map(i => `<i class="${i <= n ? "on" : ""}"></i>`).join("")}<span>&nbsp;${esc(T[level])}</span></span>`;
-}
-
-// ── layered graph layout (Sugiyama-lite) ──────────────
-// nodes: [{id,w,h}], edges: [{from,to,kind}] ; kind "related" does not order layers.
-function layout(nodes, edges, dir, gapMain, gapCross) {
-  const ids = nodes.map(n => n.id), idx = Object.fromEntries(ids.map((id, i) => [id, i]));
+// ── layered layout (Sugiyama-lite) ──
+function layout(sizes, edges, dir, gapMain, gapCross) {
+  const ids = sizes.map(n => n.id), idx = Object.fromEntries(ids.map((id, i) => [id, i]));
   const E = edges.filter(e => e.from in idx && e.to in idx && e.from !== e.to);
-  const ordering = E.filter(e => e.kind !== "related");
-  // break cycles: DFS, drop back edges
   const out = ids.map(() => []);
-  ordering.forEach(e => out[idx[e.from]].push(idx[e.to]));
+  E.filter(e => e.kind !== "related").forEach(e => out[idx[e.from]].push(idx[e.to]));
   const state = ids.map(() => 0), dag = ids.map(() => []);
   const visit = u => { state[u] = 1; for (const v of out[u]) { if (state[v] === 1) continue; dag[u].push(v); if (!state[v]) visit(v); } state[u] = 2; };
   ids.forEach((_, i) => { if (!state[i]) visit(i); });
-  // longest path layering
   const layer = ids.map(() => 0), indeg = ids.map(() => 0);
   dag.forEach(vs => vs.forEach(v => indeg[v]++));
   const q = ids.map((_, i) => i).filter(i => !indeg[i]);
   while (q.length) { const u = q.shift(); for (const v of dag[u]) { layer[v] = Math.max(layer[v], layer[u] + 1); if (!--indeg[v]) q.push(v); } }
-  // isolated nodes connected only by "related": keep next to their partner
+  const free = i => !dag[i].length && !dag.some(vs => vs.includes(i));
   E.filter(e => e.kind === "related").forEach(e => {
     const a = idx[e.from], b = idx[e.to];
-    const free = i => !dag[i].length && !dag.some(vs => vs.includes(i));
     if (free(b) && !free(a)) layer[b] = layer[a]; else if (free(a) && !free(b)) layer[a] = layer[b];
   });
-  const L = Math.max(0, ...layer) + 1;
-  let rows = Array.from({length: L}, () => []);
+  const rows = Array.from({length: Math.max(0, ...layer) + 1}, () => []);
   ids.forEach((_, i) => rows[layer[i]].push(i));
-  // if everything sits in one layer and there are many nodes, wrap into a grid
   const nbr = ids.map(() => []);
   E.forEach(e => { nbr[idx[e.from]].push(idx[e.to]); nbr[idx[e.to]].push(idx[e.from]); });
-  // barycenter sweeps
-  const pos = ids.map(() => 0);
-  const setPos = () => rows.forEach(r => r.forEach((n, k) => pos[n] = k));
+  const pos = ids.map(() => 0), setPos = () => rows.forEach(r => r.forEach((n, k) => pos[n] = k));
   setPos();
   for (let it = 0; it < 6; it++) {
-    const range = it % 2 ? [...rows.keys()].reverse() : [...rows.keys()];
-    for (const li of range) {
+    for (const li of (it % 2 ? [...rows.keys()].reverse() : [...rows.keys()])) {
       const bc = n => { const ns = nbr[n].filter(m => layer[m] !== li); return ns.length ? ns.reduce((s, m) => s + pos[m], 0) / ns.length : pos[n]; };
-      rows[li].sort((a, b) => bc(a) - bc(b));
-      setPos();
+      rows[li].sort((a, b) => bc(a) - bc(b)); setPos();
     }
   }
-  // coordinates
   const main = dir === "LR" ? "w" : "h", cross = dir === "LR" ? "h" : "w";
-  const sizes = nodes;
-  const layerMain = rows.map(r => Math.max(0, ...r.map(n => sizes[n][main])));
-  const layerCross = rows.map(r => r.reduce((s, n) => s + sizes[n][cross], 0) + gapCross * Math.max(0, r.length - 1));
-  const maxCross = Math.max(0, ...layerCross);
-  const P = {};
+  const lMain = rows.map(r => Math.max(0, ...r.map(n => sizes[n][main])));
+  const lCross = rows.map(r => r.reduce((s, n) => s + sizes[n][cross], 0) + gapCross * Math.max(0, r.length - 1));
+  const maxCross = Math.max(0, ...lCross), P = {};
   let m = 0;
   rows.forEach((r, li) => {
-    let c = (maxCross - layerCross[li]) / 2;
+    let c = (maxCross - lCross[li]) / 2;
     r.forEach(n => {
-      const s = sizes[n];
-      const mainOff = m + (layerMain[li] - s[main]) / 2;
-      P[ids[n]] = dir === "LR" ? {x: mainOff, y: c, w: s.w, h: s.h, layer: li} : {x: c, y: mainOff, w: s.w, h: s.h, layer: li};
+      const s = sizes[n], mo = m + (lMain[li] - s[main]) / 2;
+      P[ids[n]] = dir === "LR" ? {x: mo, y: c, w: s.w, h: s.h, layer: li} : {x: c, y: mo, w: s.w, h: s.h, layer: li};
       c += s[cross] + gapCross;
     });
-    m += layerMain[li] + gapMain;
+    m += lMain[li] + gapMain;
   });
-  const width = dir === "LR" ? m - gapMain : maxCross, height = dir === "LR" ? maxCross : m - gapMain;
-  return {P, width: Math.max(width, 0), height: Math.max(height, 0), edges: E};
+  return {P, width: dir === "LR" ? m - gapMain : maxCross, height: dir === "LR" ? maxCross : m - gapMain, edges: E};
 }
-
-function edgePath(a, b, dir, kind) {
-  // returns [path d, label point]
+function edgePath(a, b, dir) {
   if (dir === "LR") {
-    if (b.layer > a.layer) {
-      const x1 = a.x + a.w, y1 = a.y + a.h / 2, x2 = b.x - 2, y2 = b.y + b.h / 2, dx = Math.max(40, (x2 - x1) / 2);
+    if (b.layer !== a.layer) {
+      const fw = b.layer > a.layer;
+      const x1 = fw ? a.x + a.w : a.x, y1 = a.y + a.h / 2, x2 = fw ? b.x - 2 : b.x + b.w + 2, y2 = b.y + b.h / 2, dx = Math.max(40, Math.abs(x2 - x1) / 2) * (fw ? 1 : -1);
       return [`M${x1},${y1} C${x1 + dx},${y1} ${x2 - dx},${y2} ${x2},${y2}`, [(x1 + x2) / 2, (y1 + y2) / 2]];
     }
-    if (b.layer < a.layer) {
-      const x1 = a.x, y1 = a.y + a.h / 2, x2 = b.x + b.w + 2, y2 = b.y + b.h / 2, dx = Math.max(40, (x1 - x2) / 2);
-      return [`M${x1},${y1} C${x1 - dx},${y1} ${x2 + dx},${y2} ${x2},${y2}`, [(x1 + x2) / 2, (y1 + y2) / 2]];
-    }
-    const top = a.y < b.y ? a : b, bot = a.y < b.y ? b : a;
-    const x = top.x + top.w / 2, y1 = top.y + top.h, y2 = bot.y - 2;
-    const d = a === top ? `M${x},${y1} L${x},${y2}` : `M${x},${y2} L${x},${y1 + 2}`;
-    return [d, [x + 8, (y1 + y2) / 2]];
+    const top = a.y < b.y ? a : b, bot = a.y < b.y ? b : a, x = top.x + top.w / 2, y1 = top.y + top.h, y2 = bot.y - 2;
+    return [a === top ? `M${x},${y1} L${x},${y2}` : `M${x},${y2} L${x},${y1 + 2}`, [x + 8, (y1 + y2) / 2]];
   }
-  // TB
   if (b.layer > a.layer) {
     const x1 = a.x + a.w / 2, y1 = a.y + a.h, x2 = b.x + b.w / 2, y2 = b.y - 2, dy = Math.max(24, (y2 - y1) / 2);
     return [`M${x1},${y1} C${x1},${y1 + dy} ${x2},${y2 - dy} ${x2},${y2}`, [(x1 + x2) / 2, (y1 + y2) / 2]];
   }
-  // back edge / loop: route along the right side
-  const x1 = a.x + a.w, y1 = a.y + a.h / 2, x2 = b.x + b.w + 2, y2 = b.y + b.h / 2, bulge = Math.max(x1, x2) + 46;
-  return [`M${x1},${y1} C${bulge},${y1} ${bulge},${y2} ${x2},${y2}`, [bulge - 8, (y1 + y2) / 2]];
+  const x1 = a.x + a.w, y1 = a.y + a.h / 2, x2 = b.x + b.w + 2, y2 = b.y + b.h / 2, bx = Math.max(x1, x2) + 46;
+  return [`M${x1},${y1} C${bx},${y1} ${bx},${y2} ${x2},${y2}`, [bx - 8, (y1 + y2) / 2]];
 }
-
-function drawGraph(host, items, edges, dir, opts) {
-  host.innerHTML = "";
-  const els = items.map(it => { const el = it.el; host.appendChild(el); return el; });
-  const sizes = els.map((el, i) => ({id: items[i].id, w: el.offsetWidth, h: el.offsetHeight}));
-  const g = layout(sizes, edges, dir, opts.gapMain, opts.gapCross);
-  const pad = opts.pad || 0;
-  els.forEach((el, i) => { const p = g.P[items[i].id]; el.style.left = (p.x + pad) + "px"; el.style.top = (p.y + pad) + "px"; });
+// Positions the existing children of `host` and draws the edges between them.
+function arrange(host, sel, key, edges, dir, o) {
+  host.querySelector(":scope > svg")?.remove();
+  const els = $$(sel, host);
+  const sizes = els.map(el => ({id: el.getAttribute(key), w: el.offsetWidth, h: el.offsetHeight}));
+  const g = layout(sizes, edges, dir, o.gapMain, o.gapCross), pad = o.pad;
+  els.forEach((el, i) => { const p = g.P[sizes[i].id]; el.style.left = p.x + pad + "px"; el.style.top = p.y + pad + "px"; });
   const W = g.width + pad * 2 + (dir === "TB" ? 60 : 0), H = g.height + pad * 2;
   host.style.width = W + "px"; host.style.height = H + "px";
-  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-  svg.setAttribute("width", W); svg.setAttribute("height", H);
   let s = "";
   for (const e of g.edges) {
-    const a = {...g.P[e.from]}, b = {...g.P[e.to]};
-    a.x += pad; a.y += pad; b.x += pad; b.y += pad;
-    const [d, lp] = edgePath(a, b, dir, e.kind);
-    const kind = e.kind === "related" ? "related" : e.kind === "blocks" ? "blocks" : "";
-    const mk = kind === "related" ? "" : ` marker-end="url(#${kind === "blocks" ? "arrow-bad" : "arrow"})"`;
-    s += `<path class="edge ${kind}" d="${d}"${mk}/>`;
+    const a = {...g.P[e.from]}, b = {...g.P[e.to]}; a.x += pad; a.y += pad; b.x += pad; b.y += pad;
+    const [d, lp] = edgePath(a, b, dir), k = e.kind === "related" || e.kind === "blocks" ? e.kind : "";
+    s += `<path class="edge ${k}" d="${d}"${k === "related" ? "" : ` marker-end="url(#${k === "blocks" ? "arrow-bad" : "arrow"})"`}/>`;
     if (e.label) s += `<text class="edge-label" x="${lp[0]}" y="${lp[1] - 9}" text-anchor="middle">${esc(e.label)}</text>`;
   }
-  svg.innerHTML = s;
+  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg.setAttribute("width", W); svg.setAttribute("height", H); svg.innerHTML = s;
   host.prepend(svg);
+  return {W, H};
 }
 
-// ── overview ──────────────────────────────────────────
-const all = (k) => tasks.flatMap(t => arr(t[k]).map((x, i) => ({t, x, i})));
-const approvals = all("approvals"), actions = all("actions");
-
-document.title = meta.title || "Structured report";
-document.getElementById("title").textContent = meta.title || "Report";
-document.getElementById("summary").innerHTML = rich(DATA.summary || "");
-
-const qItems = [...approvals.map(a => ({...a, kind: "approve"})), ...actions.map(a => ({...a, kind: "action"}))];
-document.getElementById("queue").innerHTML =
-  `<h2 id="queue-h">${icon("queue")}${esc(T.queue)}</h2>` +
-  (qItems.length ? `<ul>${qItems.map(q => `<li><button data-task="${esc(q.t.id)}" data-sec="${q.kind === "approve" ? "approvals" : "actions"}">${icon(q.kind)}<span><span class="q-text">${md(q.x.text)}</span><span class="q-task">${icon("issue", "sm")}${esc(q.t.title)}</span></span></button></li>`).join("")}</ul>`
-    : `<p class="empty">${esc(T.queueEmpty)}</p>`);
-
-document.getElementById("map-h").textContent = T.map;
-document.getElementById("legend").innerHTML =
-  `<span><svg viewBox="0 0 34 10"><path d="M1 5h30" stroke="#4A5A60" stroke-width="1.5" marker-end="url(#arrow)"/></svg>${esc(T.depends)}</span>` +
-  `<span><svg viewBox="0 0 34 10"><path d="M1 5h32" stroke="#77878C" stroke-width="1.5" stroke-dasharray="5 5"/></svg>${esc(T.related)}</span>` +
-  (arr(DATA.links).some(l => l.kind === "blocks") ? `<span><svg viewBox="0 0 34 10"><path d="M1 5h30" stroke="#B8432F" stroke-width="1.5" marker-end="url(#arrow-bad)"/></svg>${esc(T.blocks)}</span>` : "") +
-  `<button class="iconbtn no-print" id="print-btn" title="${esc(T.print)}" aria-label="${esc(T.print)}">${icon("print")}</button>`;
-
-function nodeEl(t) {
-  const b = document.createElement("button");
-  b.className = "node"; b.type = "button"; b.dataset.task = t.id;
-  const na = arr(t.approvals).length, nc = arr(t.actions).length;
-  b.setAttribute("aria-label", `${t.title} — ${T.status[t.status] || t.status || ""}`);
-  b.innerHTML = `<div class="nh"><span class="s-${esc(t.status || "planned")}" title="${esc(T.status[t.status] || "")}">${ico(t.status || "planned", "planned")}</span><h3>${esc(t.title)}</h3></div>` +
-    ((na || nc) ? `<div class="flags">${na ? `<span class="flag mine">${icon("approve", "sm")}${esc(T.approvals)}</span>` : ""}${nc ? `<span class="flag mine">${icon("action", "sm")}${esc(T.actions)}</span>` : ""}</div>` : "");
-  return b;
-}
-// "A depends on B" is drawn B → A (prerequisite first)
-const mapEdges = arr(DATA.links).map(l => l.kind === "depends" ? {from: l.to, to: l.from, kind: "depends", label: l.label} : {from: l.from, to: l.to, kind: l.kind || "related", label: l.label});
+// ── page 1: fit the whole map into the viewport (no scrolling) ──
+const map = $("#map"), graph = $("#graph");
+const mapEdges = JSON.parse(graph.dataset.edges || "[]");
+const labelled = mapEdges.some(e => e.label);
 function drawMap() {
-  const labelled = mapEdges.some(e => e.label);
-  drawGraph(document.getElementById("graph"), tasks.map(t => ({id: t.id, el: nodeEl(t)})), mapEdges, "LR", {gapMain: labelled ? 150 : 96, gapCross: 44, pad: 8});
+  graph.style.transform = "none";
+  const {W, H} = arrange(graph, ":scope > .node", "data-task", mapEdges, "LR", {gapMain: labelled ? 150 : 100, gapCross: 40, pad: 24});
+  const cw = map.clientWidth, ch = map.clientHeight, s = Math.min(1.15, cw / W, ch / H);
+  graph.style.transform = `translate(${Math.max(0, (cw - W * s) / 2)}px, ${Math.max(0, (ch - H * s) / 2)}px) scale(${s})`;
 }
 drawMap();
-document.getElementById("footer").textContent = `${T.generated}: ${meta.generated || new Date().toISOString().slice(0, 16).replace("T", " ")}`;
+let rt; addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(drawMap, 120); });
 
-// ── task report ───────────────────────────────────────
-function section(id, iconId, title, body) {
-  return `<section class="sec" id="sec-${id}"><h3>${icon(iconId)}${esc(title)}</h3>${body}</section>`;
-}
-const noneP = () => `<p class="none">${esc(T.none)}</p>`;
-
-function taskHTML(t, forPrint) {
-  const ctx = arr(t.context);
-  const ctxIds = new Set(ctx.map(c => c.id));
-  const refChips = ids => arr(ids).filter(id => ctxIds.has(id)).map(id => {
-    const c = ctx.find(x => x.id === id);
-    return `<a class="chip" href="#ctx-${esc(t.id)}-${esc(id)}" data-ctx="${esc(id)}" title="${esc(c.title)}">${ico(c.kind, "doc", "sm")}${esc(id)}</a>`;
-  }).join("");
-
-  let h = "";
-  h += section("problem", "problem", T.problem, `<div class="prose rich lead">${rich(t.problem)}</div>`);
-  h += section("goal", "goal", T.goal, `<div class="prose rich">${rich(t.goal)}</div>`);
-
-  h += section("context", "context", T.context, ctx.length ? `<ul class="ctx">${ctx.map(c => {
-    const url = safeUrl(c.url);
-    const title = url ? `<a class="t" href="${esc(url)}" target="_blank" rel="noopener">${esc(c.title)}</a>` : `<span class="t">${esc(c.title)}</span>`;
-    return `<li id="ctx-${esc(t.id)}-${esc(c.id)}" class="k-evidence">${ico(c.kind, "doc")}<div>${title}<span class="id">${esc(c.id)}</span>${c.note ? `<div class="n rich">${rich(c.note)}</div>` : ""}</div></li>`;
-  }).join("")}</ul>` : noneP());
-
-  const inf = arr(t.inferences);
-  h += section("inferences", "inference", T.inferences, inf.length ? `<ul class="claims">${inf.map(x => `<li class="k-inference"><div class="rich">${rich(x.text)}</div><dl class="facts">${arr(x.basis).length ? `<dt>${esc(T.basis)}</dt><dd>${refChips(x.basis)}</dd>` : ""}${x.confidence ? `<dt>${esc(T.confidence)}</dt><dd>${conf(x.confidence)}</dd>` : ""}</dl></li>`).join("")}</ul>` : noneP());
-
-  const asm = arr(t.assumptions);
-  h += section("assumptions", "assumption", T.assumptions, asm.length ? `<ul class="claims">${asm.map(x => `<li class="k-assumption"><div class="rich">${rich(x.text)}</div><dl class="facts">${x.why ? `<dt>${esc(T.why)}</dt><dd class="rich">${rich(x.why)}</dd>` : ""}${x.verify ? `<dt>${esc(T.verify)}</dt><dd class="rich">${rich(x.verify)}</dd>` : ""}${x.risk ? `<dt>${esc(T.risk)}</dt><dd><span class="risk r-${esc(x.risk)}">${esc(T[x.risk] || x.risk)}</span></dd>` : ""}</dl></li>`).join("")}</ul>` : noneP());
-
-  const res = t.result || {};
-  const items = arr(res.items);
-  h += section("result", "result", T.result, (res.summary ? `<div class="result-sum rich">${rich(res.summary)}</div>` : "") + (items.length ? `<ul class="result">${items.map(r => {
-    const body = r.kind === "metric" && r.value != null
-      ? `<span class="metric"><b>${esc(r.value)}</b><span>${md(r.text || "")}</span></span>` : md(r.text || "");
-    return `<li>${ico(r.kind, "changed")}<span class="k">${esc(T.kinds[r.kind] || r.kind || "")}</span><div>${body}${r.ref ? ` ${link(r.ref, "chip")}` : ""}</div></li>`;
-  }).join("")}</ul>` : (res.summary ? "" : noneP())));
-
-  const st = arr(t.stages);
-  if (forPrint) {
-    h += section("flow", "flow", T.flow, st.length ? `<ol>${st.map(s => `<li><strong>${esc(s.title)}</strong><div class="rich">${rich(s.detail)}</div>${s.outcome ? `<div class="rich"><strong>${esc(T.outcome)}:</strong> ${md(s.outcome)}</div>` : ""}</li>`).join("")}</ol>` : noneP());
-  } else {
-    h += section("flow", "flow", T.flow, st.length ? `<div class="flow"><div class="graph" id="flow-graph"></div></div>` : noneP());
-  }
-
-  const ap = arr(t.approvals);
-  h += section("approvals", "approve", T.approvals, ap.length ? `<ul class="mine-list">${ap.map(a => `<li>${icon("approve")}<div><div class="t">${md(a.text)}</div>${a.why ? `<div class="why rich">${rich(a.why)}</div>` : ""}${arr(a.options).length ? `<div class="opts">${arr(a.options).map(o => `<span>${esc(o)}</span>`).join("")}</div>` : ""}</div></li>`).join("")}</ul>` : noneP());
-
-  const ac = arr(t.actions);
-  h += section("actions", "action", T.actions, ac.length ? `<ul class="mine-list">${ac.map(a => `<li>${icon("action")}<div><div class="t">${md(a.text)}</div>${a.why ? `<div class="why rich">${rich(a.why)}</div>` : ""}${a.command ? `<div class="cmd"><code>${esc(a.command)}</code>${forPrint ? "" : `<button class="copy" data-copy="${esc(a.command)}">${icon("copy", "sm")}${esc(T.copy)}</button>`}</div>` : ""}</div></li>`).join("")}</ul>` : noneP());
-  return h;
-}
-
-function headHTML(t, withNav) {
-  const i = tasks.indexOf(t);
-  return `<div class="dh"><span class="s-${esc(t.status || "planned")}" title="${esc(T.status[t.status] || "")}">${ico(t.status || "planned", "planned")}</span><h2 id="d-title">${esc(t.title)}</h2>${t.ref && safeUrl(t.ref.url) ? `<a class="ref" href="${esc(safeUrl(t.ref.url))}" target="_blank" rel="noopener">${icon("link", "sm")}${esc(t.ref.label || t.ref.url)}</a>` : ""}</div>` +
-    (withNav ? `<div class="d-nav"><button class="iconbtn" data-nav="${i - 1}" ${i ? "" : "disabled"} title="${esc(T.prev)}" aria-label="${esc(T.prev)}">${icon("prev")}</button><button class="iconbtn" data-nav="${i + 1}" ${i < tasks.length - 1 ? "" : "disabled"} title="${esc(T.next)}" aria-label="${esc(T.next)}">${icon("next")}</button><button class="iconbtn" data-close title="${esc(T.close)}" aria-label="${esc(T.close)}">${icon("close")}</button></div>` : "");
-}
-
-function stageEl(s, n, t) {
-  const el = document.createElement("div");
-  el.className = `stage st-${s.status || "done"}`;
-  const ctxIds = new Set(arr(t.context).map(c => c.id));
-  const refs = arr(s.uses).filter(id => ctxIds.has(id));
-  el.innerHTML = `<div class="h"><span class="num">${n}</span><h4>${esc(s.title)}</h4><span class="s-${esc(s.status || "done")}" title="${esc(T.status[s.status || "done"] || "")}">${ico(s.status || "done", "done", "sm")}</span></div>` +
-    (s.detail ? `<div class="d rich">${rich(s.detail)}</div>` : "") +
-    (s.outcome ? `<div class="o">${icon("outcome", "sm")}<span>${md(s.outcome)}</span></div>` : "") +
-    (refs.length ? `<div class="refs">${refs.map(id => `<a class="chip" href="#ctx-${esc(t.id)}-${esc(id)}" data-ctx="${esc(id)}">${ico((arr(t.context).find(c => c.id === id) || {}).kind, "doc", "sm")}${esc(id)}</a>`).join("")}</div>` : "");
-  return el;
-}
-
-const drawer = document.getElementById("drawer"), scrim = document.getElementById("scrim");
+// ── drawer ──
+const drawer = $("#drawer"), scrim = $("#scrim"), slot = $("#slot"), reports = $("#reports");
+const order = $$(".report", reports).map(r => r.dataset.task);
 let current = null, lastFocus = null;
-function openTask(id, sec) {
-  const t = byId[id]; if (!t) return;
+function open(id) {
+  const art = document.getElementById("report-" + id); if (!art) return;
   if (!current) lastFocus = document.activeElement;
-  current = id;
-  drawer.innerHTML = `<div class="d-head">${headHTML(t, true)}</div><div class="d-body">${taskHTML(t, false)}</div>`;
+  if (current) reports.appendChild(document.getElementById("report-" + current));
+  slot.appendChild(art); current = id;
   drawer.classList.add("open"); scrim.classList.add("open");
-  document.querySelectorAll(".node").forEach(n => n.setAttribute("aria-current", n.dataset.task === id ? "true" : "false"));
-  const st = arr(t.stages);
-  if (st.length) {
-    const flow = arr(t.flow).length ? arr(t.flow) : st.slice(1).map((s, k) => ({from: st[k].id, to: s.id}));
-    drawGraph(document.getElementById("flow-graph"), st.map((s, k) => ({id: s.id, el: stageEl(s, k + 1, t)})), flow.map(f => ({...f, kind: "depends"})), "TB", {gapMain: 46, gapCross: 28, pad: 6});
-  }
-  if (location.hash !== "#task=" + id) history.replaceState(null, "", "#task=" + encodeURIComponent(id));
-  if (sec) { const s = drawer.querySelector("#sec-" + sec); if (s) s.scrollIntoView({block: "start"}); }
-  else drawer.scrollTop = 0;
-  drawer.focus({preventScroll: true});
+  $$(".node").forEach(n => n.setAttribute("aria-current", String(n.dataset.task === id)));
+  const fg = $(".flow > .graph", art);
+  if (fg) arrange(fg, ":scope > .stage", "data-id", JSON.parse(art.dataset.flow || "[]").map(e => ({...e, kind: "depends"})), "TB", {gapMain: 46, gapCross: 28, pad: 6});
+  const i = order.indexOf(id);
+  $('[data-nav="-1"]', drawer).disabled = i <= 0;
+  $('[data-nav="1"]', drawer).disabled = i >= order.length - 1;
+  history.replaceState(null, "", "#task=" + encodeURIComponent(id));
+  drawer.scrollTop = 0; drawer.focus({preventScroll: true});
 }
-function closeTask() {
+function close() {
   if (!current) return;
+  reports.appendChild(document.getElementById("report-" + current)); current = null;
   drawer.classList.remove("open"); scrim.classList.remove("open");
-  document.querySelectorAll(".node").forEach(n => n.setAttribute("aria-current", "false"));
-  current = null;
+  $$(".node").forEach(n => n.setAttribute("aria-current", "false"));
   history.replaceState(null, "", location.pathname + location.search);
-  if (lastFocus) lastFocus.focus();
+  lastFocus?.focus();
 }
-
+const step = d => { const i = order.indexOf(current) + d; if (order[i]) open(order[i]); };
 document.addEventListener("click", e => {
-  const node = e.target.closest("[data-task]");
-  if (node) { openTask(node.dataset.task, node.dataset.sec); return; }
-  if (e.target.closest("[data-close]") || e.target === scrim) { closeTask(); return; }
-  const nav = e.target.closest("[data-nav]");
-  if (nav && tasks[+nav.dataset.nav]) { openTask(tasks[+nav.dataset.nav].id); return; }
+  const node = e.target.closest(".node"); if (node) return open(node.dataset.task);
+  if (e.target.closest("[data-close]") || e.target === scrim) return close();
+  const nav = e.target.closest("[data-nav]"); if (nav) return step(+nav.dataset.nav);
   const cp = e.target.closest("[data-copy]");
-  if (cp) { navigator.clipboard?.writeText(cp.dataset.copy).then(() => { cp.lastChild.textContent = T.copied; setTimeout(() => cp.lastChild.textContent = T.copy, 1400); }); return; }
+  if (cp) { navigator.clipboard?.writeText(cp.dataset.copy); cp.style.color = "var(--ok)"; setTimeout(() => cp.style.color = "", 1200); return; }
   const chip = e.target.closest("a[data-ctx]");
-  if (chip && current) { e.preventDefault(); const el = drawer.querySelector(chip.getAttribute("href")); if (el) { drawer.querySelectorAll(".ctx li").forEach(li => li.style.background = ""); el.scrollIntoView({block: "center", behavior: "smooth"}); el.style.background = "var(--marker-soft)"; } }
-  if (e.target.closest("#print-btn")) window.print();
+  if (chip && current) {
+    e.preventDefault();
+    const el = slot.querySelector(`[id="ctx-${chip.dataset.ctx}"]`);
+    if (el) { $$(".item.flash", slot).forEach(x => x.classList.remove("flash")); el.classList.add("flash"); el.scrollIntoView({block: "center", behavior: "smooth"}); }
+  }
+  if (e.target.closest("#print-btn")) print();
 });
 document.addEventListener("keydown", e => {
   if (!current) return;
-  if (e.key === "Escape") closeTask();
-  if (e.target.closest && e.target.closest("input,textarea")) return;
-  const i = tasks.findIndex(t => t.id === current);
-  if (e.key === "ArrowRight" && e.altKey && tasks[i + 1]) openTask(tasks[i + 1].id);
-  if (e.key === "ArrowLeft" && e.altKey && tasks[i - 1]) openTask(tasks[i - 1].id);
+  if (e.key === "Escape") close();
+  if (e.altKey && e.key === "ArrowRight") step(1);
+  if (e.altKey && e.key === "ArrowLeft") step(-1);
 });
-window.addEventListener("beforeprint", () => {
-  document.getElementById("print-all").innerHTML = tasks.map(t => `<article class="task-print"><div class="d-head">${headHTML(t, false)}</div><div class="d-body">${taskHTML(t, true)}</div></article>`).join("");
-});
-let rt; window.addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(drawMap, 150); });
-const m = /^#task=(.+)$/.exec(location.hash);
-if (m) openTask(decodeURIComponent(m[1]));
+addEventListener("beforeprint", () => { if (current) close(); });
+const m = /^#task=(.+)$/.exec(location.hash); if (m) open(decodeURIComponent(m[1]));
 })();
 </script>
 </body>

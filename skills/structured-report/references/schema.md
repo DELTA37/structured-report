@@ -17,27 +17,21 @@ Everything is HTML-escaped.
 {
   "meta": {
     "title": "string, required — what the report covers",
-    "lang": "en | ru (default en) — UI labels",
-    "author": "who did the work",
-    "audience": "who it is for",
-    "period": {"from": "YYYY-MM-DD", "to": "YYYY-MM-DD"},
-    "generated": "YYYY-MM-DD HH:MM (default: now)"
+    "lang": "language code of the content (html lang attribute); labels stay English"
   },
-  "summary": "2–4 sentences: headline result, then what waits on the reader",
 
   "tasks": [{
     "id": "string, unique, used in links and URLs (#task=<id>)",
     "title": "string, required",
     "status": "done | in_progress | blocked | needs_review | planned | failed | partial",
     "ref": {"label": "ISSUE-1", "url": "https://…"},          // optional tracker / PR link
-    "tags": ["short", "labels"],
+    "brief": "1–3 `Key: value` lines shown on the map card",
 
     "problem": "required — what is wrong, for whom, how it shows",
     "goal": "required — what done means",
 
     "context": [{
       "id": "C1 — unique within the task",
-      "kind": "file | url | doc | log | chat | data | commit | issue | code | image",
       "title": "required",
       "url": "https://… | file:///abs/path | relative/path — only if real",
       "note": "the specific fact taken from this source"
@@ -100,8 +94,15 @@ Warnings: task without context or stages, inference without basis, assumption wi
 
 ## Viewer behaviour
 
-- Overview: header, summary, counters, the "Waiting on you" queue (all approvals and actions
-  across tasks), and the task graph laid out in layers left → right by `depends`/`blocks`.
-- Click a task (or a queue item) → drawer with the full report; `#task=<id>` deep-links to it;
-  Esc closes; Alt+←/→ moves between tasks.
-- Print / Save as PDF prints every task in full, one per page, with stages as a numbered list.
+- Page 1 is the work map only and never scrolls: the task graph (left → right by `depends` /
+  `blocks`, dashed for `related`) is scaled to fit the window. Each card: status icon, title,
+  `brief` (falls back to `result.summary`), and the task's approvals and actions.
+- Click a card → drawer with the task report in the template's fixed section order;
+  `#task=<id>` deep-links to it; Esc closes; Alt+←/→ moves between tasks.
+- Print / Save as PDF prints every task report, one per page, with stages as a numbered list.
+
+## Template placeholders
+
+See the docstring of `scripts/build.py`. The template receives the JSON plus derived fields:
+`status_label`, `waiting` (task has approvals or actions), `flow_edges` (stages chained when
+`flow` is omitted), `confidence_dots`, top-level `edges` and `has_blocks`.
