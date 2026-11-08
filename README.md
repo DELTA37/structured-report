@@ -7,7 +7,8 @@ tasks you can click into, where every claim says how it is known.
 
 **Work map** — the only thing on the first page, sized to the window: each task is a card with
 its status, a short brief, and what waits on the reader; arrows for dependencies, dashed lines for
-related work.
+related work. Large maps behave like a canvas: drag or two-finger scroll to move, pinch
+or Ctrl/⌘+scroll to zoom, a minimap to jump around.
 
 **Task report** (click a task) — in a fixed order:
 

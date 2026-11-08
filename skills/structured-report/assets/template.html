@@ -58,8 +58,17 @@ body.map-page{height:100vh;overflow:hidden;display:flex;flex-direction:column}
 .iconbtn{all:unset;cursor:pointer;width:36px;height:36px;display:grid;place-items:center;border-radius:8px;border:1px solid var(--rule);background:var(--panel);color:var(--ink)}
 .iconbtn:hover{border-color:var(--ink-3)} .iconbtn:focus-visible{outline:2px solid var(--cobalt)}
 .iconbtn[disabled]{opacity:.35;cursor:default}
-.map{flex:1;position:relative;overflow:hidden;background-image:radial-gradient(var(--dot) 1px,transparent 1.2px);background-size:18px 18px}
+.map{flex:1;position:relative;overflow:hidden;touch-action:none;cursor:grab;background-image:radial-gradient(var(--dot) 1px,transparent 1.2px);background-size:18px 18px}
 .graph{position:absolute;left:0;top:0;transform-origin:0 0}
+.map.dragging{cursor:grabbing} .map.dragging .node{cursor:grabbing}
+.map.animate .graph{transition:transform .25s cubic-bezier(.2,.7,.2,1)}
+.zoom{position:absolute;left:16px;bottom:16px;display:flex;gap:4px;z-index:2}
+.zoom .iconbtn{width:34px;height:34px}
+.zoom output{min-width:52px;height:34px;display:grid;place-items:center;font-size:12.5px;color:var(--ink-2);background:var(--panel);border:1px solid var(--rule);border-radius:8px}
+.minimap{position:absolute;right:16px;bottom:16px;z-index:2;background:rgba(248,249,246,.92);border:1px solid var(--rule);border-radius:8px;cursor:pointer;touch-action:none}
+.minimap[hidden]{display:none}
+.minimap rect.n{fill:var(--rule)} .minimap rect.n.mine{fill:var(--marker)}
+.minimap rect.vp{fill:rgba(45,79,214,.08);stroke:var(--cobalt);stroke-width:1.5}
 .graph > svg{position:absolute;inset:0;overflow:visible;pointer-events:none}
 .edge{fill:none;stroke:var(--ink-2);stroke-width:1.5}
 .edge.related{stroke-dasharray:5 5;stroke:var(--ink-3)}
@@ -157,6 +166,7 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
 @media (max-width:760px){.legend span{display:none} .report{padding:0 16px 48px} .r-head{padding-right:120px}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 @media print{
+  .zoom,.minimap{display:none!important}
   body.map-page{height:auto;overflow:visible;display:block;background:#fff}
   .map,.legend,.drawer,.scrim,#print-btn{display:none!important}
   .reports{display:block!important}
@@ -199,6 +209,9 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
   <symbol id="i-next" viewBox="0 0 24 24"><path d="m9 5 7 7-7 7"/></symbol>
   <symbol id="i-link" viewBox="0 0 24 24"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></symbol>
   <symbol id="i-print" viewBox="0 0 24 24"><path d="M7 9V3.5h10V9M7 17H4.5V9h15v8H17"/><rect x="7" y="14" width="10" height="6.5"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-minus" viewBox="0 0 24 24"><path d="M5 12h14"/></symbol>
+  <symbol id="i-fit" viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></symbol>
   <symbol id="i-copy" viewBox="0 0 24 24"><rect x="8" y="8" width="12" height="12" rx="1.5"/><path d="M16 8V4H4v12h4"/></symbol>
 </svg>
 
@@ -226,6 +239,13 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
     </button>
     {{/tasks}}
   </div>
+  <div class="zoom" aria-label="Zoom">
+    <button class="iconbtn" data-zoom="out" title="Zoom out (−)" aria-label="Zoom out"><svg class="icon"><use href="#i-minus"/></svg></button>
+    <output id="zoom-level" aria-live="polite">100%</output>
+    <button class="iconbtn" data-zoom="in" title="Zoom in (+)" aria-label="Zoom in"><svg class="icon"><use href="#i-plus"/></svg></button>
+    <button class="iconbtn" data-zoom="fit" title="Show everything (0)" aria-label="Show everything"><svg class="icon"><use href="#i-fit"/></svg></button>
+  </div>
+  <svg class="minimap" id="minimap" hidden aria-hidden="true"></svg>
 </main>
 
 <!-- ═══ Task reports — one per task, shown in the drawer ═══════════════════ -->
@@ -320,6 +340,7 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
 /* Behaviour only: graph layout, drawer, navigation. No content is created here. */
 (() => {
 "use strict";
+let current = null;
 const $ = (s, r = document) => r.querySelector(s), $$ = (s, r = document) => [...r.querySelectorAll(s)];
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 
@@ -408,23 +429,126 @@ function arrange(host, sel, key, edges, dir, o) {
   return {W, H};
 }
 
-// ── page 1: fit the whole map into the viewport (no scrolling) ──
-const map = $("#map"), graph = $("#graph");
+// ── page 1: the work map is a canvas — pan, zoom, minimap; the page itself never scrolls ──
+const map = $("#map"), graph = $("#graph"), mini = $("#minimap"), zl = $("#zoom-level");
 const mapEdges = JSON.parse(graph.dataset.edges || "[]");
 const labelled = mapEdges.some(e => e.label);
+const READABLE = 0.72, MIN = 0.2, MAX = 1.6;
+let G = {W: 0, H: 0}, V = {x: 0, y: 0, s: 1};
+const clampS = s => Math.min(MAX, Math.max(MIN, s));
+function clampV() {                       // keep at least a strip of the graph on screen
+  const cw = map.clientWidth, ch = map.clientHeight, k = 120;
+  V.x = Math.min(cw - k, Math.max(k - G.W * V.s, V.x));
+  V.y = Math.min(ch - k, Math.max(k - G.H * V.s, V.y));
+}
+function apply(animate) {
+  clampV();
+  map.classList.toggle("animate", !!animate);
+  graph.style.transform = `translate(${V.x}px, ${V.y}px) scale(${V.s})`;
+  zl.textContent = Math.round(V.s * 100) + "%";
+  drawMini();
+}
+const fitScale = () => Math.min(1, (map.clientWidth - 32) / G.W, (map.clientHeight - 32) / G.H);
+function fit(animate) {
+  V.s = clampS(fitScale());
+  V.x = (map.clientWidth - G.W * V.s) / 2; V.y = (map.clientHeight - G.H * V.s) / 2;
+  apply(animate);
+}
+function home() {                          // everything if readable, otherwise start readable at the first tasks
+  if (fitScale() >= READABLE) return fit();
+  V.s = READABLE;
+  V.x = 24; V.y = Math.max(24, (map.clientHeight - G.H * V.s) / 2);
+  if (G.H * V.s > map.clientHeight) {      // tall: align with the first column's centre
+    const first = $$(":scope > .node", graph).sort((a, b) => a.offsetLeft - b.offsetLeft)[0];
+    if (first) V.y = map.clientHeight / 2 - (first.offsetTop + first.offsetHeight / 2) * V.s;
+  }
+  apply();
+}
+function zoomAt(f, cx, cy, animate) {
+  const s = clampS(V.s * f), k = s / V.s;
+  V.x = cx - (cx - V.x) * k; V.y = cy - (cy - V.y) * k; V.s = s;
+  apply(animate);
+}
+function centreOn(gx, gy, animate) { V.x = map.clientWidth / 2 - gx * V.s; V.y = map.clientHeight / 2 - gy * V.s; apply(animate); }
+function reveal(el) {                      // bring a card fully into view
+  const pad = 40, x1 = V.x + el.offsetLeft * V.s, y1 = V.y + el.offsetTop * V.s;
+  const x2 = x1 + el.offsetWidth * V.s, y2 = y1 + el.offsetHeight * V.s, cw = map.clientWidth, ch = map.clientHeight;
+  if (x1 >= pad && y1 >= pad && x2 <= cw - pad && y2 <= ch - pad) return;
+  centreOn(el.offsetLeft + el.offsetWidth / 2, el.offsetTop + el.offsetHeight / 2, true);
+}
+
+// minimap
+let M = {k: 1};
+function drawMini() {
+  const show = G.W * V.s > map.clientWidth + 2 || G.H * V.s > map.clientHeight + 2;
+  mini.toggleAttribute("hidden", !show); if (!show) return;
+  const k = Math.min(200 / G.W, 150 / G.H), w = G.W * k, h = G.H * k;
+  M = {k};
+  mini.setAttribute("width", w); mini.setAttribute("height", h); mini.setAttribute("viewBox", `0 0 ${w} ${h}`);
+  let s = "";
+  for (const n of $$(":scope > .node", graph))
+    s += `<rect class="n${n.querySelector(".waiting") ? " mine" : ""}" x="${n.offsetLeft * k}" y="${n.offsetTop * k}" width="${n.offsetWidth * k}" height="${n.offsetHeight * k}" rx="2"/>`;
+  const vx = -V.x / V.s * k, vy = -V.y / V.s * k, vw = map.clientWidth / V.s * k, vh = map.clientHeight / V.s * k;
+  s += `<rect class="vp" x="${vx}" y="${vy}" width="${vw}" height="${vh}" rx="3"/>`;
+  mini.innerHTML = s;
+}
+const miniTo = e => { const r = mini.getBoundingClientRect(); centreOn((e.clientX - r.left) / M.k, (e.clientY - r.top) / M.k); };
+mini.addEventListener("pointerdown", e => { e.stopPropagation(); mini.setPointerCapture(e.pointerId); miniTo(e); });
+mini.addEventListener("pointermove", e => { if (mini.hasPointerCapture(e.pointerId)) miniTo(e); });
+
+// drag to pan (a short click on a card still opens it)
+let drag = null, suppressClick = false;
+map.addEventListener("pointerdown", e => {
+  if (e.button !== 0 || e.target.closest(".zoom,.minimap")) return;
+  drag = {x: e.clientX, y: e.clientY, vx: V.x, vy: V.y, id: e.pointerId, moved: false};
+});
+map.addEventListener("pointermove", e => {
+  if (!drag || e.pointerId !== drag.id) return;
+  const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+  if (!drag.moved && Math.hypot(dx, dy) < 5) return;
+  if (!drag.moved) { drag.moved = true; map.classList.add("dragging"); map.setPointerCapture(e.pointerId); }
+  V.x = drag.vx + dx; V.y = drag.vy + dy; apply();
+});
+const endDrag = () => { if (drag?.moved) { suppressClick = true; setTimeout(() => suppressClick = false, 0); } drag = null; map.classList.remove("dragging"); };
+map.addEventListener("pointerup", endDrag); map.addEventListener("pointercancel", endDrag);
+map.addEventListener("click", e => { if (suppressClick) { e.stopPropagation(); e.preventDefault(); } }, true);
+
+// trackpad / wheel: two-finger scroll pans, pinch or Ctrl/⌘+wheel zooms at the pointer
+map.addEventListener("wheel", e => {
+  e.preventDefault();
+  const r = map.getBoundingClientRect();
+  if (e.ctrlKey || e.metaKey) zoomAt(Math.exp(-e.deltaY * (e.deltaMode ? 0.05 : 0.0025) * 4), e.clientX - r.left, e.clientY - r.top);
+  else { const k = e.deltaMode ? 30 : 1; V.x -= (e.shiftKey ? e.deltaY : e.deltaX) * k; V.y -= (e.shiftKey ? 0 : e.deltaY) * k; apply(); }
+}, {passive: false});
+map.addEventListener("dblclick", e => { if (!e.target.closest(".node,.zoom,.minimap")) fit(true); });
+document.addEventListener("click", e => {
+  const z = e.target.closest("[data-zoom]"); if (!z) return;
+  const cx = map.clientWidth / 2, cy = map.clientHeight / 2;
+  if (z.dataset.zoom === "in") zoomAt(1.25, cx, cy, true);
+  if (z.dataset.zoom === "out") zoomAt(0.8, cx, cy, true);
+  if (z.dataset.zoom === "fit") fit(true);
+});
+map.addEventListener("focusin", e => { const n = e.target.closest(".node"); if (n) reveal(n); });
+document.addEventListener("keydown", e => {
+  if (current || e.target.closest?.("input,textarea")) return;
+  const step = 80, cx = map.clientWidth / 2, cy = map.clientHeight / 2;
+  const act = {ArrowLeft: () => (V.x += step, apply(true)), ArrowRight: () => (V.x -= step, apply(true)),
+    ArrowUp: () => (V.y += step, apply(true)), ArrowDown: () => (V.y -= step, apply(true)),
+    "+": () => zoomAt(1.25, cx, cy, true), "=": () => zoomAt(1.25, cx, cy, true), "-": () => zoomAt(0.8, cx, cy, true), "0": () => fit(true)}[e.key];
+  if (act && !e.altKey && !e.metaKey && !e.ctrlKey) { e.preventDefault(); act(); }
+});
+
 function drawMap() {
   graph.style.transform = "none";
-  const {W, H} = arrange(graph, ":scope > .node", "data-task", mapEdges, "LR", {gapMain: labelled ? 150 : 100, gapCross: 40, pad: 24});
-  const cw = map.clientWidth, ch = map.clientHeight, s = Math.min(1.15, cw / W, ch / H);
-  graph.style.transform = `translate(${Math.max(0, (cw - W * s) / 2)}px, ${Math.max(0, (ch - H * s) / 2)}px) scale(${s})`;
+  G = arrange(graph, ":scope > .node", "data-task", mapEdges, "LR", {gapMain: labelled ? 150 : 100, gapCross: 40, pad: 24});
 }
-drawMap();
-let rt; addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(drawMap, 120); });
+drawMap(); home();
+let rt; addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(() => { apply(); }, 120); });
 
 // ── drawer ──
 const drawer = $("#drawer"), scrim = $("#scrim"), slot = $("#slot"), reports = $("#reports");
 const order = $$(".report", reports).map(r => r.dataset.task);
-let current = null, lastFocus = null;
+let lastFocus = null;
 function open(id) {
   const art = document.getElementById("report-" + id); if (!art) return;
   if (!current) lastFocus = document.activeElement;

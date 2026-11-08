@@ -94,8 +94,13 @@ Warnings: task without context or stages, inference without basis, assumption wi
 
 ## Viewer behaviour
 
-- Page 1 is the work map only and never scrolls: the task graph (left → right by `depends` /
-  `blocks`, dashed for `related`) is scaled to fit the window. Each card: status icon, title,
+- Page 1 is the work map only; the page never scrolls — the map is a canvas. It opens showing
+  everything when that stays readable (≥ 72 %), otherwise at 72 % from the first tasks. Move by
+  dragging, two-finger scroll / wheel or arrow keys; zoom with pinch, Ctrl/⌘+wheel, `+` `−`, or the
+  buttons; `0`, the fit button or a double-click on empty space shows everything. A minimap
+  (approvals/actions in yellow) appears when the graph does not fit; click or drag it to move.
+  Tabbing to a card brings it into view. Layout: left → right by `depends` / `blocks`, dashed
+  for `related`. Each card: status icon, title,
   `brief` (falls back to `result.summary`), and the task's approvals and actions.
 - Click a card → drawer with the task report in the template's fixed section order;
   `#task=<id>` deep-links to it; Esc closes; Alt+←/→ moves between tasks.
