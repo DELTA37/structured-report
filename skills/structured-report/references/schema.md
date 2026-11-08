@@ -78,7 +78,10 @@ Everything is HTML-escaped.
     "unchecked": [{"text": "what was not checked or done", "why": "why not"}],   // [] = checked everything
 
     "approvals": [{"text": "required — the question", "why": "why it is the reader's call",
-                   "options": ["A", "B"], "recommend": "A — one of the options", "due": "decide by"}],
+                   "options": ["A", "B", "C"],             // the reader may always give their own answer instead
+                   "multi": false,                         // true → any that apply (checkboxes)
+                   "recommend": "A",                       // one of the options; a list when multi
+                   "due": "decide by"}],                   // the open questions of a node are asked as a series
     "actions":   [{"text": "required", "why": "…", "command": "exact command", "due": "by when"}]
   }],
 
@@ -141,7 +144,8 @@ Written by `scripts/track.py` (prompts, answers) and `build.py` (block stamps) �
 {
   "prompts": [{"id": "p3", "n": 3, "at": "2026-11-05 17:05", "kind": "prompt | answer", "text": "…"}],
   "blocks":  {"replay#problem": {"hash": "…", "since": "p3", "changed": ["p5"]}},   // node key # section
-  "answers": {"replay#a0": {"choice": "B", "done": null, "comment": "…", "prompt": "p6"}},
+  "answers": {"replay#a0": {"choice": "B", "other": null, "prompt": "p6"},      // choice: a list for multi
+              "replay#a1": {"choice": null, "other": "the reader's own answer", "prompt": "p6"}},
   "token": "…"          // lets the report post answers to the local answer service; never share the journal
 }
 ```

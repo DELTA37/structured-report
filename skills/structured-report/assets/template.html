@@ -198,6 +198,39 @@ body.at-prompt #map .node:not(.p-new):not(.p-changed),body.at-prompt .stage:not(
 .send button:focus-visible{outline:2px solid var(--cobalt);outline-offset:2px}
 .opts .rec{font:600 11px var(--display);padding:0 6px;border-radius:8px;background:var(--marker);color:var(--ink);font-style:normal}
 
+.quiz{margin:4px 0 14px;border-radius:var(--r);background:var(--panel);border:1px solid var(--rule);border-left:5px solid var(--marker);overflow:hidden}
+.quiz-head{display:flex;align-items:center;gap:14px;padding:12px 16px 0}
+.qcount{font:600 13px var(--display);color:var(--ink-2);white-space:nowrap}
+.qbar{flex:1;height:4px;border-radius:2px;background:var(--panel-2);overflow:hidden}
+.qbar i{display:block;height:100%;background:var(--ink);transition:width .25s cubic-bezier(.2,.7,.2,1)}
+.quiz form.q{padding:14px 16px 4px;display:grid;gap:10px;animation:qin .22s ease}
+.quiz form.q[hidden]{display:none}
+@keyframes qin{from{transform:translateX(10px)}to{transform:none}}
+.qt{font:600 18px/1.3 var(--display)}
+.quiz .choices{display:grid;gap:6px}
+.quiz .choice span{display:flex;align-items:center;gap:10px;border-radius:9px;padding:9px 12px;font-size:14.5px;background:var(--paper)}
+.quiz .choice kbd{font:600 11px/18px var(--display);min-width:20px;text-align:center;border-radius:5px;border:1px solid var(--rule);color:var(--ink-3);background:var(--panel)}
+.quiz .choice input:checked + span kbd{border-color:rgba(255,255,255,.35);color:var(--panel);background:transparent}
+.quiz .choice input[type=checkbox] + span::after{content:"";margin-left:auto;width:16px;height:16px;border-radius:4px;border:1.5px solid var(--ink-3)}
+.quiz .choice input[type=checkbox]:checked + span::after{border-color:var(--panel);background:var(--panel);box-shadow:inset 0 0 0 3px var(--ink)}
+.quiz .choice input[type=radio] + span::after{content:"";margin-left:auto;width:16px;height:16px;border-radius:50%;border:1.5px solid var(--ink-3)}
+.quiz .choice input[type=radio]:checked + span::after{border-color:var(--panel);box-shadow:inset 0 0 0 4px var(--ink),inset 0 0 0 9px var(--panel)}
+.quiz .choice.other span{color:var(--ink-2);font-style:italic}
+.quiz .choice.other input:checked + span{font-style:normal}
+.quiz .hint{font-size:12.5px;color:var(--ink-3)}
+.quiz textarea.own{font:14px/1.45 var(--text);color:var(--ink);background:#fff;border:1px solid var(--rule);border-radius:8px;padding:8px 10px;resize:vertical;min-height:60px}
+.quiz textarea.own:focus{outline:none;border-color:var(--ink);box-shadow:0 0 0 3px rgba(45,79,214,.12)}
+.quiz-nav{display:flex;align-items:center;gap:12px;padding:10px 16px 14px}
+.quiz-nav .note{flex:1;font-size:13px;color:var(--ink-2)}
+.quiz-nav button{all:unset;cursor:pointer;font:600 14px var(--text);padding:8px 14px;border-radius:9px;border:1px solid var(--rule);background:var(--paper);color:var(--ink)}
+.quiz-nav .qnext{margin-left:auto}
+.quiz-nav .qnext.primary{background:var(--ink);color:var(--panel);border-color:var(--ink)}
+.quiz-nav button:disabled{cursor:default;opacity:.45}
+.quiz-nav button[hidden]{display:none}
+.quiz-nav button:focus-visible{outline:2px solid var(--cobalt);outline-offset:2px}
+.quiz.sent{border-left-color:var(--ok)}
+.sent-msg{display:flex;gap:10px;align-items:center;padding:14px 16px;font-size:14.5px;color:var(--ok)}
+
 /* ── copy as Markdown ─────────────────────────────────── */
 .copybtn{all:unset;box-sizing:border-box;cursor:pointer;display:inline-flex;align-items:center;gap:5px;color:var(--ink-3);border-radius:6px;
   height:26px;min-width:26px;justify-content:center;padding:0 5px;transition:opacity .15s,color .15s,background .15s}
@@ -333,7 +366,7 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 @media print{
   body.map-page{height:auto;overflow:visible;display:block;background:#fff}
-  #map,.drawer,.scrim,#print-btn,.zoom,.minimap,.search,.rail,.send,.answer{display:none!important}
+  #map,.drawer,.scrim,#print-btn,.zoom,.minimap,.search,.rail,.quiz,.answer{display:none!important}
   .reports{display:block!important}
   .reports .report{break-before:page;padding:0}
   .reports .r-head{position:static;padding-right:0}
@@ -532,21 +565,26 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
   </section>{{/children?}}
 
   {{#approvals?}}<section class="sec{{#answerable}} asks{{/answerable}}" id="sec-approvals" data-block="{{key}}#approvals"><h3><svg class="icon"><use href="#i-approve"/></svg>Needs approval</h3>
-    <ul class="mine">{{#approvals}}
+    {{#has_listed}}<ul class="mine">{{#approvals}}{{#listed}}
       <li{{#answered}} class="is-answered"{{/answered}}><svg class="icon"><use href="#i-approve"/></svg><div><div class="t">{{text|md}}</div>
-        <dl class="kv">{{#why?}}<dt>Why you</dt><dd class="rich">{{why|rich}}</dd>{{/why?}}{{#due?}}<dt>Decide by</dt><dd>{{due}}</dd>{{/due?}}</dl>
-        {{#answered}}<div class="answered"><span class="pn">#{{n}}</span><span><strong>{{choice}}</strong>{{#comment?}} — {{comment}}{{/comment?}}</span></div>{{/answered}}
-        {{#answerable}}{{^answered}}<form class="answer" data-akey="{{akey}}" data-type="approval" data-question="{{text}}">
-          {{#opts?}}<div class="choices" role="radiogroup" aria-label="Your decision">{{#opts}}<label class="choice"><input type="radio" name="{{akey}}" value="{{text}}"><span>{{text}}{{#rec}} <i class="rec">Recommended</i>{{/rec}}</span></label>{{/opts}}</div>{{/opts?}}
-          <textarea rows="1" placeholder="{{#opts?}}Comment (optional){{/opts?}}{{^opts}}Your answer{{/opts}}" aria-label="Comment"></textarea>
-        </form>{{/answered}}{{/answerable}}
-        {{^answerable}}{{#opts?}}<dl class="kv"><dt>Options</dt><dd class="opts">{{#opts}}<span>{{text}}{{#rec}} <i class="rec">Recommended</i>{{/rec}}</span>{{/opts}}</dd></dl>{{/opts?}}{{/answerable}}
-      </div></li>{{/approvals}}
-    </ul>
-    {{#answerable}}<div class="send">
-      <textarea rows="1" placeholder="Message to the agent (optional)" aria-label="Message to the agent"></textarea>
-      <div class="send-row"><span class="note" aria-live="polite"></span><button type="button" disabled>Send to agent</button></div>
-    </div>{{/answerable}}</section>{{/approvals?}}
+        <dl class="kv">{{#why?}}<dt>Why you</dt><dd class="rich">{{why|rich}}</dd>{{/why?}}{{#due?}}<dt>Decide by</dt><dd>{{due}}</dd>{{/due?}}{{^answered}}{{#opts?}}<dt>{{#multi}}Options (any){{/multi}}{{^multi}}Options (one){{/multi}}</dt><dd class="opts">{{#opts}}<span>{{text}}{{#rec}} <i class="rec">Recommended</i>{{/rec}}</span>{{/opts}}</dd>{{/opts?}}{{/answered}}</dl>
+        {{#answered}}<div class="answered"><span class="pn">#{{n}}</span><span>{{answer_text}}</span></div>{{/answered}}
+      </div></li>{{/listed}}{{/approvals}}
+    </ul>{{/has_listed}}
+    {{#has_asked}}<div class="quiz" data-count="{{asked_count}}">
+      <div class="quiz-head"><span class="qcount">Question <b class="qi">1</b> of {{asked_count}}</span><div class="qbar" aria-hidden="true"><i></i></div></div>
+      {{#approvals}}{{#asked}}<form class="answer q" data-akey="{{akey}}" data-question="{{text}}"{{#multi}} data-multi="1"{{/multi}}>
+        <div class="qt">{{text|md}}</div>
+        {{#why?}}<dl class="kv"><dt>Why you</dt><dd class="rich">{{why|rich}}</dd>{{#due?}}<dt>Decide by</dt><dd>{{due}}</dd>{{/due?}}</dl>{{/why?}}{{^why?}}{{#due?}}<dl class="kv"><dt>Decide by</dt><dd>{{due}}</dd></dl>{{/due?}}{{/why?}}
+        {{#opts?}}<div class="choices" role="{{#multi}}group{{/multi}}{{^multi}}radiogroup{{/multi}}" aria-label="{{#multi}}Choose any that apply{{/multi}}{{^multi}}Choose one{{/multi}}">
+          {{#opts}}<label class="choice"><input type="{{#multi}}checkbox{{/multi}}{{^multi}}radio{{/multi}}" name="{{akey}}" value="{{text}}"><span><kbd>{{@n}}</kbd>{{text}}{{#rec}} <i class="rec">Recommended</i>{{/rec}}</span></label>{{/opts}}
+          <label class="choice other"><input type="{{#multi}}checkbox{{/multi}}{{^multi}}radio{{/multi}}" name="{{akey}}" value="__other"><span><kbd>0</kbd>Your own answer…</span></label>
+        </div>
+        <div class="hint">{{#multi}}Choose any that apply{{/multi}}{{^multi}}Choose one{{/multi}}, or your own answer</div>{{/opts?}}
+        <textarea class="own" rows="2" placeholder="Your own answer" aria-label="Your own answer"{{#opts?}} hidden{{/opts?}}></textarea>
+      </form>{{/asked}}{{/approvals}}
+      <div class="quiz-nav"><button type="button" class="qback">Back</button><span class="note" aria-live="polite"></span><button type="button" class="qnext" hidden>Next</button></div>
+    </div>{{/has_asked}}</section>{{/approvals?}}
 
   {{#actions?}}<section class="sec" id="sec-actions" data-block="{{key}}#actions"><h3><svg class="icon"><use href="#i-action"/></svg>Your actions</h3>
     <ul class="mine">{{#actions}}
@@ -980,68 +1018,111 @@ function toggleRail(byKeyboard) {
 const _open = open;
 open = function (key, o) { _open(key, o); const a = art(key); if (a) { stamps(a); paint(a); } };
 
-// ── answers: only from a report's "Needs approval" section, straight to the session ──
+// ── answers: a series of questions in "Needs approval"; the last step sends them to the session ──
 const ANSWER = TRACK.answer_to;          // {url, token} — the local answer service of this report
 let online = false;
 const store = "sr-answers:" + document.title;
 const draft = JSON.parse(localStorage.getItem(store) || "{}");
-function readForm(f) {
-  const a = f.closest(".report"), t = $("textarea", f).value.trim();
-  const radio = $("input[type=radio]:checked", f), hasRadios = !!$("input[type=radio]", f);
-  const item = {akey: f.dataset.akey, type: "approval", question: f.dataset.question, num: a.dataset.num || null, title: a.dataset.title,
-                choice: hasRadios ? (radio ? radio.value : null) : (t || null), done: null, comment: hasRadios ? (t || null) : null};
-  return (item.choice || item.comment) ? item : null;
+function valueOf(f) {
+  const picked = $$("input:checked", f).map(x => x.value);
+  const otherOn = !$("input", f) || picked.includes("__other");
+  const own = $("textarea.own", f).value.trim();
+  const choices = picked.filter(v => v !== "__other");
+  return {choices, other: otherOn && own ? own : null, valid: choices.length > 0 || (otherOn && !!own)};
 }
+function itemOf(f) {
+  const a = f.closest(".report"), v = valueOf(f);
+  return {akey: f.dataset.akey, type: "approval", question: f.dataset.question, num: a.dataset.num || null, title: a.dataset.title,
+          choice: f.dataset.multi ? v.choices : (v.choices[0] || null), other: v.other};
+}
+function syncOther(f) {
+  const o = $('input[value="__other"]', f), ta = $("textarea.own", f);
+  if (o) { ta.hidden = !o.checked; if (o.checked && document.activeElement !== ta && f.contains(document.activeElement)) ta.focus(); }
+}
+function saveDraft(f) {
+  draft[f.dataset.akey] = {picked: $$("input:checked", f).map(x => x.value), own: $("textarea.own", f).value};
+  localStorage.setItem(store, JSON.stringify(draft));
+}
+function quizState(quiz) {
+  const forms = $$("form.q", quiz), i = +(quiz.dataset.i || 0), f = forms[i], last = i === forms.length - 1;
+  forms.forEach((x, k) => x.hidden = k !== i);
+  $(".qi", quiz).textContent = i + 1;
+  $(".qbar i", quiz).style.width = ((i + 1) / forms.length * 100) + "%";
+  const back = $(".qback", quiz), next = $(".qnext", quiz), note = $(".note", quiz);
+  back.disabled = i === 0;
+  const ok = valueOf(f).valid, own = !!$('input[value="__other"]:checked', f) || !$("input", f);
+  const needsConfirm = !!f.dataset.multi || own;     // a single option answers by itself
+  next.hidden = !needsConfirm;
+  next.textContent = last ? "Finish" : "Next";
+  next.disabled = !ok;
+  next.classList.toggle("primary", last);
+  note.textContent = quiz.dataset.pending ? "The agent is offline — your answers will be sent as soon as it is back." :
+                     f.dataset.multi ? "Choose any that apply, then " + (last ? "Finish" : "Next") + "." : "";
+}
+const quizzes = () => $$(".sec.asks .quiz");
 function restore() {
-  for (const f of $$("form.answer")) {
-    const v = draft[f.dataset.akey]; if (!v) continue;
-    if (v.choice) { const r = $$("input[type=radio]", f).find(x => x.value === v.choice); if (r) r.checked = true; }
-    if (v.text) $("textarea", f).value = v.text;
+  for (const f of $$("form.q")) {
+    const d = draft[f.dataset.akey]; if (!d) continue;
+    $$("input", f).forEach(x => x.checked = (d.picked || []).includes(x.value));
+    $("textarea.own", f).value = d.own || "";
+    syncOther(f);
   }
 }
-function refreshSend(sec) {
-  const send = $(".send", sec); if (!send || send.dataset.sent) return;
-  const items = $$("form.answer", sec).map(readForm).filter(Boolean), m = $(".send textarea", sec).value.trim();
-  const btn = $(".send button", sec), note = $(".send .note", sec);
-  const n = items.length + (m ? 1 : 0);
-  btn.disabled = !online || n === 0;
-  btn.textContent = online ? "Send to agent" : "Agent offline";
-  note.textContent = !online ? "The agent's answer service is not running — your answers are kept here until it is."
-                   : n === 0 ? "Choose an option or write an answer." : (n === 1 ? "1 answer ready" : n + " answers ready");
-}
-const refreshAll = () => $$(".sec.asks").forEach(refreshSend);
 async function ping() {
   try { const r = await fetch(ANSWER.url + "/ping", {headers: {"X-Report-Token": ANSWER.token}}); online = r.ok; } catch (e) { online = false; }
-  refreshAll();
+  quizzes().forEach(q => { if (online && q.dataset.pending) { delete q.dataset.pending; sendQuiz(q); } else quizState(q); });
 }
-document.addEventListener("input", e => {
-  const f = e.target.closest("form.answer");
-  if (f) { const c = $("input[type=radio]:checked", f);
-    draft[f.dataset.akey] = {choice: c && c.value, text: $("textarea", f).value}; localStorage.setItem(store, JSON.stringify(draft)); }
-  const sec = e.target.closest(".sec.asks"); if (sec) refreshSend(sec);
+function advance(quiz) {
+  const forms = $$("form.q", quiz), i = +(quiz.dataset.i || 0);
+  if (i < forms.length - 1) { quiz.dataset.i = i + 1; quizState(quiz); forms[i + 1].querySelector("input,textarea")?.focus({preventScroll: true}); }
+  else finish(quiz);
+}
+function finish(quiz) {
+  if (online) return sendQuiz(quiz);
+  quiz.dataset.pending = "1"; quizState(quiz);
+}
+document.addEventListener("change", e => {
+  const f = e.target.closest("form.q"); if (!f) return;
+  syncOther(f); saveDraft(f);
+  const quiz = f.closest(".quiz"); quizState(quiz);
+  if (e.target.type === "radio" && e.target.value !== "__other" && e.target.checked) setTimeout(() => advance(quiz), 220);
 });
-document.addEventListener("change", e => { const sec = e.target.closest(".sec.asks"); if (sec) refreshSend(sec); });
+document.addEventListener("input", e => {
+  const f = e.target.closest("form.q"); if (!f) return;
+  saveDraft(f); quizState(f.closest(".quiz"));
+});
 document.addEventListener("submit", e => e.preventDefault());
-document.addEventListener("click", async e => {
-  const btn = e.target.closest(".send button"); if (!btn) return;
-  const sec = btn.closest(".sec.asks"), send = $(".send", sec), note = $(".note", send), box = $("textarea", send);
-  const items = $$("form.answer", sec).map(readForm).filter(Boolean), m = box.value.trim();
-  if (!online || (!items.length && !m)) return;
-  btn.disabled = true; note.textContent = "Sending…";
+async function sendQuiz(quiz) {
+  const items = $$("form.q", quiz).map(itemOf), note = $(".note", quiz), next = $(".qnext", quiz);
+  next.disabled = true; note.textContent = "Sending…";
   try {
-    const r = await fetch(ANSWER.url + "/answers", {method: "POST", headers: {"Content-Type": "application/json", "X-Report-Token": ANSWER.token}, body: JSON.stringify({items, message: m})});
+    const r = await fetch(ANSWER.url + "/answers", {method: "POST", headers: {"Content-Type": "application/json", "X-Report-Token": ANSWER.token}, body: JSON.stringify({items, message: ""})});
     if (!r.ok) throw new Error(String(r.status));
     const j = await r.json();
     items.forEach(it => delete draft[it.akey]); localStorage.setItem(store, JSON.stringify(draft));
-    send.dataset.sent = "1"; btn.textContent = "Sent"; box.disabled = true;
-    $$("form.answer", sec).forEach(f => f.querySelectorAll("input,textarea").forEach(x => x.disabled = true));
-    note.textContent = j.waiting ? "Delivered as prompt #" + j.prompt + " — the agent continues"
-                                 : "Saved as prompt #" + j.prompt + " — the agent picks it up as soon as it is free";
-  } catch (err) {
-    online = false; refreshSend(sec);
+    quiz.classList.add("sent");
+    quiz.innerHTML = '<div class="sent-msg"><svg class="icon"><use href="#i-done"/></svg><span>' +
+      (j.waiting ? "Delivered as prompt #" + j.prompt + " — the agent continues" : "Saved as prompt #" + j.prompt + " — the agent picks it up as soon as it is free") + "</span></div>";
+  } catch (err) { online = false; quiz.dataset.pending = "1"; quizState(quiz); }
+}
+document.addEventListener("click", e => {
+  const quiz = e.target.closest(".quiz"); if (!quiz) return;
+  const n = $$("form.q", quiz).length, i = +(quiz.dataset.i || 0);
+  if (e.target.closest(".qback") && i > 0) { quiz.dataset.i = i - 1; quizState(quiz); }
+  if (e.target.closest(".qnext")) advance(quiz);
+});
+document.addEventListener("keydown", e => {
+  const quiz = e.target.closest?.(".quiz"); if (!quiz || quiz.classList.contains("sent")) return;
+  const f = $$("form.q", quiz)[+(quiz.dataset.i || 0)];
+  if (e.target.tagName !== "TEXTAREA" && /^[0-9]$/.test(e.key)) {
+    const box = e.key === "0" ? $('input[value="__other"]', f) : $$("input", f).filter(x => x.value !== "__other")[+e.key - 1];
+    if (box) { e.preventDefault(); box.checked = box.type === "checkbox" ? !box.checked : true; box.dispatchEvent(new Event("change", {bubbles: true})); box.focus(); }
+  }
+  if (e.key === "Enter" && !(e.target.tagName === "TEXTAREA" && e.shiftKey)) {
+    const next = $(".qnext", quiz); if (!next.hidden && !next.disabled) { e.preventDefault(); next.click(); }
   }
 });
-if (ANSWER) { restore(); ping(); setInterval(() => { if (!online) ping(); }, 5000); }
+if (ANSWER) { restore(); quizzes().forEach(quizState); ping(); setInterval(() => { if (!online) ping(); }, 5000); }
 
 // ── copy as Markdown: a button wherever there is something worth taking away ──
 // Markdown is produced from the rendered structure (headings, lists, key/value rows, emphasis, code, links).

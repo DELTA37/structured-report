@@ -49,13 +49,17 @@ work, update the JSON and rebuild** — `build.py` fingerprints every block (eac
 and stamps new or changed blocks with the current prompt. Never write stamps yourself. The report
 shows a Prompts rail; picking a prompt highlights what appeared (green) or changed (blue) there.
 
-**Questions for the reader.** Put decisions in `approvals` (with `options`, your `recommend`,
-`why`, `due`) and manual steps in `actions`. The reader answers in the report's **Needs approval** section —
-that is the only place that sends anything to you; `actions` are steps the reader takes, not
-answers — and presses that section's **Send to agent** (even when the report is opened as a plain
-file): the answers go to a local answer service
-(`127.0.0.1:47319`, started by the build) and are stored in the journal as the next prompt. While
-the report has open questions, keep a waiter running as a **background** command:
+**Questions for the reader.** Put decisions in `approvals`. Each is a question with `options` —
+**exclusive** by default (one answer) or `"multi": true` (any that apply) — your `recommend` (a
+list for multi), `why` and `due`. The reader always has "your own answer" as an extra option; a
+question without options is answered in free text. In the report the open questions of a
+**Needs approval** section form a **series**, one question at a time: an exclusive option answers
+and moves on, a multi-choice or own answer is confirmed with Next / Finish, and finishing the
+series sends the answers to you — there is no other way to send, and `actions` (steps the reader
+takes) have no inputs. The answers go to a local answer service (`127.0.0.1:47319`, started and
+kept up to date by the build) even when the report is opened as a plain file, and are stored in
+the journal as the next prompt. While the report has open questions, keep a waiter running as a
+**background** command:
 
 ```bash
 python3 <skill>/scripts/track.py wait reports/<file>.json
@@ -96,8 +100,9 @@ Separate **how you know** each thing; never blur it.
   a `detail` (what will be done) and `when` (the condition or time: "after your approval",
   "Monday"). An unfinished task with no planned or in-progress stage gets a warning.
 - **approvals** — decisions only the reader can make: the question, `why` it is theirs,
-  `options`, your `recommend` (must be one of the options), `due`. Never ask approval for
-  something already done.
+  `options` (exclusive, or `multi: true`), your `recommend` (one of the options; a list for multi),
+  `due`. Several related questions in one node become a series — order them as the reader should
+  answer them. Never ask approval for something already done.
 - **actions** — things only the reader can do, with the exact `command` and `due` when relevant.
 - **secrets** — the report gets forwarded. The build fails on anything that looks like a key,
   token, private key, JWT, password assignment or credentials in a URL (gitleaks is used too when

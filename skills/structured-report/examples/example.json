@@ -528,6 +528,31 @@
           ],
           "recommend": "Backorder and email customers",
           "due": "tomorrow 12:00"
+        },
+        {
+          "text": "Who should be told about the replay?",
+          "why": "The email goes out on behalf of the company",
+          "options": [
+            "Customers — by email",
+            "Support",
+            "Finance",
+            "Product lead"
+          ],
+          "multi": true,
+          "recommend": [
+            "Customers — by email",
+            "Support"
+          ]
+        },
+        {
+          "text": "When to run the replay?",
+          "options": [
+            "Tonight",
+            "Tomorrow morning",
+            "After the provider replies"
+          ],
+          "recommend": "Tomorrow morning",
+          "due": "tomorrow 12:00"
         }
       ],
       "actions": [

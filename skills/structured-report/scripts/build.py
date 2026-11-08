@@ -422,11 +422,24 @@ def _report(n, key, num, trail, ctx_up, task_title, reports, waiting_up):
     n["actions"] = [dict({"why": None, "command": None, "due": None}, **a) for a in n.get("actions") or []]
     answers = (VIEW_CTX.get("journal") or {}).get("answers", {})
     prompt_n = {p["id"]: p["n"] for p in (VIEW_CTX.get("journal") or {}).get("prompts", [])}
+    answerable = VIEW_CTX.get("answerable")
     for i, a in enumerate(n["approvals"]):
         a["akey"] = f"{key}#a{i}"
+        a["multi"] = bool(a.get("multi"))
+        rec = a["recommend"] if isinstance(a["recommend"], list) else [a["recommend"]]
         ans = answers.get(a["akey"])
-        a["answered"] = dict(ans, n=prompt_n.get(ans.get("prompt"))) if ans else None
-        a["opts"] = [{"text": o, "rec": o == a["recommend"]} for o in a.get("options") or []] or None
+        if ans:
+            ch = ans.get("choice")
+            parts = (ch if isinstance(ch, list) else [ch] if ch else []) + ([f"Own answer: {ans['other']}"] if ans.get("other") else [])
+            a["answered"] = dict(ans, n=prompt_n.get(ans.get("prompt")), answer_text="; ".join(parts) or "—")
+        else:
+            a["answered"] = None
+        a["opts"] = [{"text": o, "rec": o in rec} for o in a.get("options") or []] or None
+        a["listed"] = bool(a["answered"]) or not answerable
+        a["asked"] = not a["listed"]
+    n["has_listed"] = any(a["listed"] for a in n["approvals"])
+    n["asked_count"] = sum(a["asked"] for a in n["approvals"])
+    n["has_asked"] = n["asked_count"] > 0
     for i, a in enumerate(n["actions"]):
         a["akey"] = f"{key}#d{i}"
         ans = answers.get(a["akey"])
@@ -588,8 +601,12 @@ def validate(d):
         if n.get("status") == "planned" and not top and not (n.get("detail") or n.get("goal")):
             err(f"{where}: a planned stage needs 'detail' — what will be done")
         for a in n.get("approvals") or []:
-            if a.get("recommend") and a.get("options") and a["recommend"] not in a["options"]:
-                err(f"{where}: recommend {a['recommend']!r} is not one of the options")
+            recs = a.get("recommend") if isinstance(a.get("recommend"), list) else [a.get("recommend")] if a.get("recommend") else []
+            if isinstance(a.get("recommend"), list) and not a.get("multi"):
+                err(f"{where}: a list in recommend needs multi: true")
+            for r_ in recs:
+                if a.get("options") and r_ not in a["options"]:
+                    err(f"{where}: recommend {r_!r} is not one of the options")
         for k in ("approvals", "actions"):
             for a in n.get(k) or []:
                 if not a.get("text"):
@@ -674,6 +691,7 @@ def main():
         if hidden:
             print(f"warning: {hidden} prompt(s) contained something like a secret — masked in the report", file=sys.stderr)
     with open(a.template, encoding="utf-8") as f:
+        VIEW_CTX["answerable"] = bool(answer_to)
         v = view(data, journal)
         v["track"]["answer_to"] = answer_to
         v["answerable"] = bool(answer_to)

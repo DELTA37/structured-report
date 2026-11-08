@@ -39,6 +39,8 @@ HOME = os.path.expanduser("~/.claude/structured-report")
 SESSIONS = os.path.join(HOME, "sessions.json")
 REGISTRY = os.path.join(HOME, "reports.json")
 LOG = os.path.join(HOME, "daemon.log")
+PIDFILE = os.path.join(HOME, "daemon.pid")
+VERSION = str(int(os.path.getmtime(os.path.abspath(__file__))))   # restart the daemon when this file changes
 HERE = os.path.dirname(os.path.abspath(__file__))
 HOST = "127.0.0.1"
 PORT = int(os.environ.get("STRUCTURED_REPORT_PORT", "47319"))
@@ -139,9 +141,26 @@ def daemon_alive():
         return False
 
 
+def daemon_version():
+    try:
+        with urllib.request.urlopen(f"{ENDPOINT}/version", timeout=0.5) as r:
+            return json.loads(r.read()).get("version")
+    except Exception:
+        return None
+
+
 def ensure_daemon():
     if daemon_alive():
-        return True
+        if daemon_version() == VERSION:
+            return True
+        try:                                   # an older daemon: replace it
+            os.kill(int(open(PIDFILE).read().strip()), signal.SIGTERM)
+        except (OSError, ValueError):
+            pass
+        for _ in range(20):
+            if not daemon_alive():
+                break
+            time.sleep(0.1)
     os.makedirs(HOME, exist_ok=True)
     with open(LOG, "a") as log:
         subprocess.Popen([sys.executable, os.path.join(HERE, "track.py"), "daemon"], stdin=subprocess.DEVNULL,
@@ -166,9 +185,13 @@ def format_answers(title, items, message):
     lines = [f"Answers from the report «{title}»:"]
     for it in items:
         where = f"{it['num']} " if it.get("num") else ""
-        val = (it.get("choice") or "—") if it.get("type") == "approval" else ("done" if it.get("done") else "not done")
-        c = f" — {it['comment']}" if it.get("comment") else ""
-        lines.append(f"- [{where}{it.get('title', '')}] {it.get('question', '')}: {val}{c}")
+        ch = it.get("choice")
+        parts = (ch if isinstance(ch, list) else [ch] if ch else [])
+        if it.get("other"):
+            parts.append(f"own answer: {it['other']}")
+        if it.get("comment"):
+            parts.append(f"comment: {it['comment']}")
+        lines.append(f"- [{where}{it.get('title', '')}] {it.get('question', '')}: {'; '.join(parts) or '—'}")
     if message:
         lines.append(f"Message: {message}")
     return "\n".join(lines)
@@ -200,6 +223,8 @@ class Handler(http.server.BaseHTTPRequestHandler):
         self.end_headers()
 
     def do_GET(self):
+        if self.path == "/version":
+            return self.reply(200, {"version": VERSION})
         r = self.report()
         if self.path != "/ping" or not r:
             return self.reply(403, {"ok": False})
@@ -220,13 +245,16 @@ class Handler(http.server.BaseHTTPRequestHandler):
         j, entry = add_prompt(r["journal"], format_answers(title, items, message), kind="answer")
         for it in items:
             if it.get("akey"):
-                j["answers"][it["akey"]] = {k: it.get(k) for k in ("choice", "done", "comment")} | {"prompt": entry["id"]}
+                j["answers"][it["akey"]] = {k: it.get(k) for k in ("choice", "other", "comment")} | {"prompt": entry["id"]}
         save(r["journal"], j)
         self.reply(200, {"ok": True, "prompt": entry["n"], "waiting": waiter_alive(r["journal"])})
 
 
 def cmd_daemon(a):
     srv = http.server.ThreadingHTTPServer((HOST, PORT), Handler)
+    os.makedirs(HOME, exist_ok=True)
+    with open(PIDFILE, "w") as f:
+        f.write(str(os.getpid()))
     print(f"{now()} structured-report daemon on {ENDPOINT}", flush=True)
     srv.serve_forever()
 
