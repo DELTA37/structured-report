@@ -103,9 +103,19 @@ body.map-page{height:100vh;overflow:hidden;display:flex;flex-direction:column}
 .drawer.open{transform:none} .drawer:focus{outline:none}
 .d-nav{position:sticky;top:0;z-index:3;display:flex;justify-content:flex-end;gap:6px;padding:12px 20px 0;height:0;overflow:visible}
 .report{padding:0 28px 64px}
-.r-head{position:sticky;top:0;z-index:2;background:var(--paper);border-bottom:1px solid var(--rule);padding:16px 140px 14px 0;display:grid;grid-template-columns:26px 1fr;gap:4px 10px;align-items:start}
+.r-head{position:sticky;top:0;z-index:2;background:var(--paper);border-bottom:1px solid var(--rule);padding:14px 140px 14px 0;display:grid;grid-template-columns:26px 1fr;gap:4px 10px;align-items:start}
 .r-head .icon{width:24px;height:24px;margin-top:3px}
 .r-head h2{font:600 28px/1.1 var(--display);margin:0}
+.r-head h2 .num,.flow-title .num{font:600 14px/1 var(--display);display:inline-grid;place-items:center;min-width:28px;height:26px;padding:0 7px;border-radius:13px;background:var(--ink);color:var(--panel);vertical-align:4px;margin-right:10px}
+.trail{grid-column:1 / -1;display:flex;flex-wrap:wrap;align-items:center;gap:2px;font-size:13px;margin-bottom:6px}
+.trail button{all:unset;cursor:pointer;color:var(--cobalt);padding:1px 5px;border-radius:5px}
+.trail button:hover{background:var(--panel-2)} .trail button:focus-visible{outline:2px solid var(--cobalt)}
+.trail .num{font:600 11.5px var(--display);color:var(--ink-2);margin-right:4px}
+.trail .sep{color:var(--ink-3);margin:0 2px}
+.tag.ghost{background:transparent;color:var(--ink-2);border:1px dashed var(--ink-3)}
+.waiting .where{font:600 12px var(--display);margin-right:6px;color:var(--ink-2)}
+.flow-hint{flex:1;color:var(--ink-2);font-size:13.5px}
+.flow.full .flow-hint{display:none}
 .r-head .ref{grid-column:2;display:inline-flex;gap:5px;align-items:center;font-size:13px;width:max-content}
 .r-head .ref .icon{width:15px;height:15px;margin:0}
 
@@ -146,7 +156,7 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
 /* ── workflow: canvas with nested levels, expandable to the full page ── */
 .flow{border:1px solid var(--rule);border-radius:var(--r);background:var(--paper);display:flex;flex-direction:column;margin:0 0 12px;overflow:hidden}
 .flow-bar{display:flex;align-items:center;gap:10px;padding:8px 8px 8px 12px;border-bottom:1px solid var(--rule);background:var(--panel)}
-.crumbs{flex:1;min-width:0;display:flex;align-items:center;gap:4px;flex-wrap:wrap;font-size:13.5px}
+.crumbs{display:none;flex:1;min-width:0;display:flex;align-items:center;gap:4px;flex-wrap:wrap;font-size:13.5px}
 .crumbs[hidden]{display:none}
 .crumbs button{all:unset;cursor:pointer;padding:2px 6px;border-radius:5px;color:var(--cobalt)}
 .crumbs button:hover{background:var(--panel-2)} .crumbs button:focus-visible{outline:2px solid var(--cobalt)}
@@ -159,11 +169,14 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
 .flow.full .canvas{height:auto;flex:1}
 .flow.full .flow-bar{padding:12px 16px 12px 20px}
 .flow-title{display:none;font:600 18px var(--display);margin-right:12px;white-space:nowrap}
-.flow.full .flow-title{display:block}
+.flow.full .flow-title{display:block;flex:1}
+.flow-title .trail{margin:0 0 4px;font:400 13px var(--text)}
 .flow [data-expand] .i-collapse,.flow.full [data-expand] .i-expand{display:none}
 .flow.full [data-expand] .i-collapse{display:block}
 
-.stage{position:absolute;width:300px;background:var(--panel);border:1px solid var(--rule);border-radius:var(--r);padding:10px 12px}
+.stage{position:absolute;width:300px;background:var(--panel);border:1px solid var(--rule);border-radius:var(--r);padding:10px 12px;cursor:pointer;transition:border-color .15s,box-shadow .15s}
+.stage:hover{border-color:var(--ink-3)}
+.stage.mine{border-left:5px solid var(--marker)}
 .stage .h{display:grid;grid-template-columns:auto 1fr auto;gap:8px;align-items:start}
 .stage .num{font:600 12px/1 var(--display);min-width:24px;height:24px;padding:0 6px;border-radius:12px;display:grid;place-items:center;background:var(--ink);color:var(--panel)}
 .stage h4{font:600 16px/1.25 var(--display);margin:2px 0 0}
@@ -174,9 +187,7 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
 .stage.s-failed{border-color:var(--bad)} .stage.s-skipped,.stage.s-planned{border-style:dashed} .stage.s-skipped{opacity:.65}
 .stage.s-partial,.stage.s-in_progress{border-color:var(--warn)}
 /* a stage with nested steps is a stack you can open */
-.stage.deep{cursor:pointer;box-shadow:4px 4px 0 -1px var(--panel),4px 4px 0 0 var(--rule),8px 8px 0 -1px var(--panel),8px 8px 0 0 var(--rule)}
-.stage.deep:hover{border-color:var(--ink-3)}
-.stage .open{display:flex;align-items:center;gap:6px;margin-top:10px;padding-top:8px;border-top:1px solid var(--rule);font-size:13px;color:var(--cobalt)}
+.stage.deep{box-shadow:4px 4px 0 -1px var(--panel),4px 4px 0 0 var(--rule),8px 8px 0 -1px var(--panel),8px 8px 0 0 var(--rule)}
 .stages-print{display:none}
 
 .mine{list-style:none;margin:0 0 12px;padding:0;display:grid;gap:10px}
@@ -264,7 +275,6 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
       <div class="nh"><span class="st-done" title="Done"><svg class="icon"><use href="#i-done"/></svg></span><h2>Find why checkout p95 doubled after 2.14</h2></div>
       <div class="brief rich"><dl class="kv"><dt>Cause</dt><dd>client 4.0 dropped the connection limit</dd><dt>Proven by</dt><dd>load test</dd></dl></div>
       <ul class="waiting">
-        
         <li title="Your action"><svg class="icon"><use href="#i-action"/></svg><span>Request provider-side logs for Nov 3, 19:00–19:30.</span></li>
       </ul>
     </button>
@@ -274,7 +284,6 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
       <div class="brief rich"><dl class="kv"><dt>Limit</dt><dd>50 connections per pod</dd><dt>Status</dt><dd>PR #1290 in review</dd></dl></div>
       <ul class="waiting">
         <li title="Needs approval"><svg class="icon"><use href="#i-approve"/></svg><span>Merge PR #1290 and ship it as 2.14.1 today.</span></li>
-        
       </ul>
     </button>
     
@@ -313,17 +322,18 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
 <div class="scrim" id="scrim"></div>
 <aside class="drawer" id="drawer" role="dialog" aria-modal="true" tabindex="-1" aria-label="Task report">
   <nav class="d-nav">
-    <button class="iconbtn" data-nav="-1" title="Previous task (Alt+←)" aria-label="Previous task"><svg class="icon"><use href="#i-prev"/></svg></button>
-    <button class="iconbtn" data-nav="1" title="Next task (Alt+→)" aria-label="Next task"><svg class="icon"><use href="#i-next"/></svg></button>
-    <button class="iconbtn" data-close title="Close (Esc)" aria-label="Close"><svg class="icon"><use href="#i-close"/></svg></button>
+    <button class="iconbtn" data-nav="-1" title="Previous on this level (Alt+←)" aria-label="Previous on this level"><svg class="icon"><use href="#i-prev"/></svg></button>
+    <button class="iconbtn" data-nav="1" title="Next on this level (Alt+→)" aria-label="Next on this level"><svg class="icon"><use href="#i-next"/></svg></button>
+    <button class="iconbtn" data-close title="Back to the work map (Esc)" aria-label="Back to the work map"><svg class="icon"><use href="#i-close"/></svg></button>
   </nav>
   <div id="slot"></div>
 </aside>
 
 <div class="reports" id="reports">
 
-<article class="report" id="report-latency" data-task="latency">
+<article class="report" id="report-latency" data-key="latency" data-prev="" data-next="pool">
   <header class="r-head">
+    <nav class="trail" aria-label="Where you are"><button type="button" data-close>Work map</button><span class="sep">›</span></nav>
     <span class="st-done" title="Done"><svg class="icon"><use href="#i-done"/></svg></span>
     <h2>Find why checkout p95 doubled after 2.14</h2>
     <a class="ref" href="https://example.com/issues/ACME-412" target="_blank" rel="noopener"><svg class="icon sm"><use href="#i-link"/></svg>ACME-412</a>
@@ -333,6 +343,7 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
     <div class="body rich lead"><dl class="kv"><dt>Since</dt><dd>release 2.14, Nov 2 14:05</dd><dt>Latency</dt><dd>checkout p95 <strong>820 ms → 1.7 s</strong></dd><dt>Timeouts</dt><dd><strong>0.9%</strong> of payment attempts</dd><dt>Customers</dt><dd>charged without an order (support reports)</dd></dl></div></section>
 
   <section class="sec"><h3><svg class="icon"><use href="#i-goal"/></svg>Task</h3>
+    <div class="body rich"><ul><li>Find the root cause <strong>with evidence</strong></li><li>Say what to change to get p95 back to the pre-2.14 level</li></ul></div></section><section class="sec"><h3><svg class="icon"><use href="#i-goal"/></svg>Task</h3>
     <div class="body rich"><ul><li>Find the root cause <strong>with evidence</strong></li><li>Say what to change to get p95 back to the pre-2.14 level</li></ul></div></section>
 
   <section class="sec"><h3><svg class="icon"><use href="#i-context"/></svg>Context</h3>
@@ -404,92 +415,291 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
   <section class="sec"><h3><svg class="icon"><use href="#i-flow"/></svg>Workflow</h3>
     <div class="flow">
       <div class="flow-bar">
-        <span class="flow-title">Find why checkout p95 doubled after 2.14</span>
-        <nav class="crumbs" data-for="root" aria-label="Workflow level">
-          <button type="button" data-goto="root">Workflow</button>
-        </nav><nav class="crumbs" data-for="root/s3" aria-label="Workflow level" hidden>
-          <button type="button" data-goto="root">Workflow</button><span class="sep">›</span><button type="button" data-goto="root/s3"><span class="num">3</span>Read the error logs</button>
-        </nav><nav class="crumbs" data-for="root/s3/g" aria-label="Workflow level" hidden>
-          <button type="button" data-goto="root">Workflow</button><span class="sep">›</span><button type="button" data-goto="root/s3"><span class="num">3</span>Read the error logs</button><span class="sep">›</span><button type="button" data-goto="root/s3/g"><span class="num">3.2</span>Group the errors</button>
-        </nav>
+        <span class="flow-title"><nav class="trail" aria-label="Where you are"><button type="button" data-close>Work map</button><span class="sep">›</span></nav>Find why checkout p95 doubled after 2.14</span>
+        <span class="flow-hint">Workflow</span>
         <button class="iconbtn" data-expand title="Expand to full page" aria-label="Expand workflow"><svg class="icon i-expand"><use href="#i-expand"/></svg><svg class="icon i-collapse"><use href="#i-collapse"/></svg></button>
       </div>
       <div class="canvas" data-dir="TB" data-embedded>
-        <div class="graph" data-key="root" data-edges="[{&quot;from&quot;: &quot;s1&quot;, &quot;to&quot;: &quot;s2&quot;}, {&quot;from&quot;: &quot;s1&quot;, &quot;to&quot;: &quot;s3&quot;}, {&quot;from&quot;: &quot;s2&quot;, &quot;to&quot;: &quot;s4&quot;}, {&quot;from&quot;: &quot;s3&quot;, &quot;to&quot;: &quot;s4&quot;}, {&quot;from&quot;: &quot;s4&quot;, &quot;to&quot;: &quot;s5&quot;}, {&quot;from&quot;: &quot;s5&quot;, &quot;to&quot;: &quot;s6&quot;}]">
-          <div class="stage s-done" data-id="s1">
+        <div class="graph" data-key="latency" data-edges="[{&quot;from&quot;: &quot;s1&quot;, &quot;to&quot;: &quot;s2&quot;}, {&quot;from&quot;: &quot;s1&quot;, &quot;to&quot;: &quot;s3&quot;}, {&quot;from&quot;: &quot;s2&quot;, &quot;to&quot;: &quot;s4&quot;}, {&quot;from&quot;: &quot;s3&quot;, &quot;to&quot;: &quot;s4&quot;}, {&quot;from&quot;: &quot;s4&quot;, &quot;to&quot;: &quot;s5&quot;}, {&quot;from&quot;: &quot;s5&quot;, &quot;to&quot;: &quot;s6&quot;}]">
+          <div class="stage s-done" data-id="s1" data-open="latency/s1" tabindex="0" role="button" aria-label="Open 1 Confirm the regression">
             <div class="h"><span class="num">1</span><h4>Confirm the regression</h4><span class="st-done" title="Done"><svg class="icon sm"><use href="#i-done"/></svg></span></div>
             <div class="d rich"><p>Compared p95 per hour for two weeks around the release.</p></div>
             <div class="o"><svg class="icon sm"><use href="#i-outcome"/></svg><div class="rich"><p>Step change at the 2.14 deploy.</p></div></div>
             <div class="refs"><a class="ref-chip" href="#ctx-C1" data-ctx="C1">C1</a></div>
-            
-          </div><div class="stage s-done" data-id="s2">
+          </div><div class="stage s-done" data-id="s2" data-open="latency/s2" tabindex="0" role="button" aria-label="Open 2 Diff the release">
             <div class="h"><span class="num">2</span><h4>Diff the release</h4><span class="st-done" title="Done"><svg class="icon sm"><use href="#i-done"/></svg></span></div>
             <div class="d rich"><p>Listed every dependency and config change in 2.14.</p></div>
             <div class="o"><svg class="icon sm"><use href="#i-outcome"/></svg><div class="rich"><p><strong>One risky change:</strong> payments client 3.2 → 4.0.</p></div></div>
             <div class="refs"><a class="ref-chip" href="#ctx-C2" data-ctx="C2">C2</a></div>
-            
-          </div><div class="stage s-done deep" data-id="s3" data-child="root/s3" tabindex="0" role="button" aria-label="Open steps of Read the error logs">
+          </div><div class="stage s-done deep" data-id="s3" data-open="latency/s3" tabindex="0" role="button" aria-label="Open 3 Read the error logs">
             <div class="h"><span class="num">3</span><h4>Read the error logs</h4><span class="st-done" title="Done"><svg class="icon sm"><use href="#i-done"/></svg></span></div>
             <div class="d rich"><p>Grouped errors during the evening peak by message and source.</p></div>
             <div class="o"><svg class="icon sm"><use href="#i-outcome"/></svg><div class="rich"><p><code>EMFILE</code> from the payments client dominates.</p></div></div>
             <div class="refs"><a class="ref-chip" href="#ctx-C4" data-ctx="C4">C4</a></div>
-            <div class="open"><svg class="icon sm"><use href="#i-nested"/></svg>Open nested steps</div>
-          </div><div class="stage s-done" data-id="s4">
+          </div><div class="stage s-done" data-id="s4" data-open="latency/s4" tabindex="0" role="button" aria-label="Open 4 Check the client changelog">
             <div class="h"><span class="num">4</span><h4>Check the client changelog</h4><span class="st-done" title="Done"><svg class="icon sm"><use href="#i-done"/></svg></span></div>
             <div class="d rich"><p>Looked for behaviour changes in 4.0.</p></div>
             <div class="o"><svg class="icon sm"><use href="#i-outcome"/></svg><div class="rich"><p>Pool limit default changed to unlimited.</p></div></div>
             <div class="refs"><a class="ref-chip" href="#ctx-C3" data-ctx="C3">C3</a><a class="ref-chip" href="#ctx-C6" data-ctx="C6">C6</a></div>
-            
-          </div><div class="stage s-done" data-id="s5">
+          </div><div class="stage s-done" data-id="s5" data-open="latency/s5" tabindex="0" role="button" aria-label="Open 5 Reproduce under load">
             <div class="h"><span class="num">5</span><h4>Reproduce under load</h4><span class="st-done" title="Done"><svg class="icon sm"><use href="#i-done"/></svg></span></div>
             <div class="d rich"><p>Ran the checkout load test with and without a pool cap.</p></div>
             <div class="o"><svg class="icon sm"><use href="#i-outcome"/></svg><div class="rich"><p>Cap removes the errors and restores latency.</p></div></div>
             
-            
-          </div><div class="stage s-done" data-id="s6">
+          </div><div class="stage s-done" data-id="s6" data-open="latency/s6" tabindex="0" role="button" aria-label="Open 6 Write it up">
             <div class="h"><span class="num">6</span><h4>Write it up</h4><span class="st-done" title="Done"><svg class="icon sm"><use href="#i-done"/></svg></span></div>
             <div class="d rich"><p>Root cause, evidence and the proposed fix in the issue.</p></div>
             <div class="o"><svg class="icon sm"><use href="#i-outcome"/></svg><div class="rich"><p>Handed over to the fix task.</p></div></div>
             
-            
           </div>
-        </div><div class="graph" data-key="root/s3" data-edges="[{&quot;from&quot;: &quot;q&quot;, &quot;to&quot;: &quot;g&quot;}, {&quot;from&quot;: &quot;q&quot;, &quot;to&quot;: &quot;c&quot;}]" hidden>
-          <div class="stage s-done" data-id="q">
+        </div>
+        <div class="zoom">
+          <button class="iconbtn" data-zoom="out" title="Zoom out" aria-label="Zoom out"><svg class="icon"><use href="#i-minus"/></svg></button>
+          <output aria-live="polite">100%</output>
+          <button class="iconbtn" data-zoom="in" title="Zoom in" aria-label="Zoom in"><svg class="icon"><use href="#i-plus"/></svg></button>
+          <button class="iconbtn" data-zoom="fit" title="Show everything" aria-label="Show everything"><svg class="icon"><use href="#i-fit"/></svg></button>
+        </div>
+        <svg class="minimap" hidden aria-hidden="true"></svg>
+      </div>
+    </div>
+    <ol class="stages-print"><li><strong>1 Confirm the regression</strong> — Done<div class="rich"><p>Compared p95 per hour for two weeks around the release.</p></div><div class="rich">→ <p>Step change at the 2.14 deploy.</p></div></li><li><strong>2 Diff the release</strong> — Done<div class="rich"><p>Listed every dependency and config change in 2.14.</p></div><div class="rich">→ <p><strong>One risky change:</strong> payments client 3.2 → 4.0.</p></div></li><li><strong>3 Read the error logs</strong> — Done<div class="rich"><p>Grouped errors during the evening peak by message and source.</p></div><div class="rich">→ <p><code>EMFILE</code> from the payments client dominates.</p></div></li><li><strong>4 Check the client changelog</strong> — Done<div class="rich"><p>Looked for behaviour changes in 4.0.</p></div><div class="rich">→ <p>Pool limit default changed to unlimited.</p></div></li><li><strong>5 Reproduce under load</strong> — Done<div class="rich"><p>Ran the checkout load test with and without a pool cap.</p></div><div class="rich">→ <p>Cap removes the errors and restores latency.</p></div></li><li><strong>6 Write it up</strong> — Done<div class="rich"><p>Root cause, evidence and the proposed fix in the issue.</p></div><div class="rich">→ <p>Handed over to the fix task.</p></div></li></ol>
+  </section>
+
+  
+
+  <section class="sec"><h3><svg class="icon"><use href="#i-action"/></svg>Your actions</h3>
+    <ul class="mine">
+      <li><svg class="icon"><use href="#i-action"/></svg><div><div class="t">Request provider-side logs for Nov 3, 19:00–19:30.</div>
+        <dl class="kv"><dt>Why you</dt><dd class="rich"><p>Only an account owner can open a ticket with the provider; it confirms the one open assumption.</p></dd></dl>
+      </div></li>
+    </ul></section>
+</article>
+
+<article class="report" id="report-latency/s1" data-key="latency/s1" data-prev="" data-next="latency/s2">
+  <header class="r-head">
+    <nav class="trail" aria-label="Where you are"><button type="button" data-close>Work map</button><span class="sep">›</span><button type="button" data-open="latency">Find why checkout p95 doubled after 2.14</button><span class="sep">›</span></nav>
+    <span class="st-done" title="Done"><svg class="icon"><use href="#i-done"/></svg></span>
+    <h2><span class="num">1</span>Confirm the regression</h2>
+    
+  </header>
+
+  
+
+  <section class="sec"><h3><svg class="icon"><use href="#i-goal"/></svg>Task</h3>
+    <div class="body rich"><p>Compared p95 per hour for two weeks around the release.</p></div></section>
+
+  <section class="sec"><h3><svg class="icon"><use href="#i-context"/></svg>Context</h3>
+    <ul class="items">
+      <li class="item" id="ctx-C1"><span class="tag ghost" title="From a level above">C1</span><div>
+        <a class="t" href="https://example.com/dash/checkout" target="_blank" rel="noopener">Checkout latency dashboard, Oct 26 – Nov 4</a>
+        <div class="n rich"><p>p95 jumps at 14:05 on Nov 2, the deploy time of 2.14.</p></div>
+      </div></li>
+    </ul></section>
+
+  
+
+  
+
+  <section class="sec"><h3><svg class="icon"><use href="#i-result"/></svg>Result</h3>
+    <div class="body rich lead"><p>Step change at the 2.14 deploy.</p></div>
+    </section>
+
+  
+
+  
+
+  
+</article>
+
+<article class="report" id="report-latency/s2" data-key="latency/s2" data-prev="latency/s1" data-next="latency/s3">
+  <header class="r-head">
+    <nav class="trail" aria-label="Where you are"><button type="button" data-close>Work map</button><span class="sep">›</span><button type="button" data-open="latency">Find why checkout p95 doubled after 2.14</button><span class="sep">›</span></nav>
+    <span class="st-done" title="Done"><svg class="icon"><use href="#i-done"/></svg></span>
+    <h2><span class="num">2</span>Diff the release</h2>
+    
+  </header>
+
+  
+
+  <section class="sec"><h3><svg class="icon"><use href="#i-goal"/></svg>Task</h3>
+    <div class="body rich"><p>Listed every dependency and config change in 2.14.</p></div></section>
+
+  <section class="sec"><h3><svg class="icon"><use href="#i-context"/></svg>Context</h3>
+    <ul class="items">
+      <li class="item" id="ctx-C2"><span class="tag ghost" title="From a level above">C2</span><div>
+        <a class="t" href="https://example.com/acme/shop/compare/v2.13...v2.14" target="_blank" rel="noopener">2.14 diff: payments client upgraded 3.2 → 4.0</a>
+        
+      </div></li>
+    </ul></section>
+
+  
+
+  
+
+  <section class="sec"><h3><svg class="icon"><use href="#i-result"/></svg>Result</h3>
+    <div class="body rich lead"><p><strong>One risky change:</strong> payments client 3.2 → 4.0.</p></div>
+    </section>
+
+  
+
+  
+
+  
+</article>
+
+<article class="report" id="report-latency/s3" data-key="latency/s3" data-prev="latency/s2" data-next="latency/s4">
+  <header class="r-head">
+    <nav class="trail" aria-label="Where you are"><button type="button" data-close>Work map</button><span class="sep">›</span><button type="button" data-open="latency">Find why checkout p95 doubled after 2.14</button><span class="sep">›</span></nav>
+    <span class="st-done" title="Done"><svg class="icon"><use href="#i-done"/></svg></span>
+    <h2><span class="num">3</span>Read the error logs</h2>
+    
+  </header>
+
+  
+
+  <section class="sec"><h3><svg class="icon"><use href="#i-goal"/></svg>Task</h3>
+    <div class="body rich"><p>Grouped errors during the evening peak by message and source.</p></div></section>
+
+  <section class="sec"><h3><svg class="icon"><use href="#i-context"/></svg>Context</h3>
+    <ul class="items">
+      <li class="item" id="ctx-C4"><span class="tag ghost" title="From a level above">C4</span><div>
+        <a class="t" href="https://example.com/logs/q/8812" target="_blank" rel="noopener">Pod logs during the peak, 2026-11-03 19:00–19:30</a>
+        <div class="n rich"><p>3,140 × <code>EMFILE: too many open files</code>, all from the payments client.</p></div>
+      </div></li>
+    </ul></section>
+
+  
+
+  
+
+  <section class="sec"><h3><svg class="icon"><use href="#i-result"/></svg>Result</h3>
+    <div class="body rich lead"><p><code>EMFILE</code> from the payments client dominates.</p></div>
+    </section>
+
+  <section class="sec"><h3><svg class="icon"><use href="#i-flow"/></svg>Workflow</h3>
+    <div class="flow">
+      <div class="flow-bar">
+        <span class="flow-title"><nav class="trail" aria-label="Where you are"><button type="button" data-close>Work map</button><span class="sep">›</span><button type="button" data-open="latency">Find why checkout p95 doubled after 2.14</button><span class="sep">›</span></nav><span class="num">3</span>Read the error logs</span>
+        <span class="flow-hint">Workflow</span>
+        <button class="iconbtn" data-expand title="Expand to full page" aria-label="Expand workflow"><svg class="icon i-expand"><use href="#i-expand"/></svg><svg class="icon i-collapse"><use href="#i-collapse"/></svg></button>
+      </div>
+      <div class="canvas" data-dir="TB" data-embedded>
+        <div class="graph" data-key="latency/s3" data-edges="[{&quot;from&quot;: &quot;q&quot;, &quot;to&quot;: &quot;g&quot;}, {&quot;from&quot;: &quot;q&quot;, &quot;to&quot;: &quot;c&quot;}]">
+          <div class="stage s-done" data-id="q" data-open="latency/s3/q" tabindex="0" role="button" aria-label="Open 3.1 Export peak logs">
             <div class="h"><span class="num">3.1</span><h4>Export peak logs</h4><span class="st-done" title="Done"><svg class="icon sm"><use href="#i-done"/></svg></span></div>
             <div class="d rich"><p>Log store query for 19:00–19:30</p></div>
             <div class="o"><svg class="icon sm"><use href="#i-outcome"/></svg><div class="rich"><p><strong>41,200</strong> lines</p></div></div>
             <div class="refs"><a class="ref-chip" href="#ctx-C4" data-ctx="C4">C4</a></div>
-            
-          </div><div class="stage s-done deep" data-id="g" data-child="root/s3/g" tabindex="0" role="button" aria-label="Open steps of Group the errors">
+          </div><div class="stage s-done deep" data-id="g" data-open="latency/s3/g" tabindex="0" role="button" aria-label="Open 3.2 Group the errors">
             <div class="h"><span class="num">3.2</span><h4>Group the errors</h4><span class="st-done" title="Done"><svg class="icon sm"><use href="#i-done"/></svg></span></div>
             <div class="d rich"><p>By message and source service</p></div>
             <div class="o"><svg class="icon sm"><use href="#i-outcome"/></svg><div class="rich"><p><strong>Top:</strong> <code>EMFILE</code> — 76%</p></div></div>
             
-            <div class="open"><svg class="icon sm"><use href="#i-nested"/></svg>Open nested steps</div>
-          </div><div class="stage s-failed" data-id="c">
+          </div><div class="stage s-failed" data-id="c" data-open="latency/s3/c" tabindex="0" role="button" aria-label="Open 3.3 Match socket metrics">
             <div class="h"><span class="num">3.3</span><h4>Match socket metrics</h4><span class="st-failed" title="Failed"><svg class="icon sm"><use href="#i-failed"/></svg></span></div>
             <div class="d rich"><p>Open-files metric is not collected</p></div>
             <div class="o"><svg class="icon sm"><use href="#i-outcome"/></svg><div class="rich"><p>Dead end — moved to the changelog</p></div></div>
             
-            
           </div>
-        </div><div class="graph" data-key="root/s3/g" data-edges="[{&quot;from&quot;: &quot;g1&quot;, &quot;to&quot;: &quot;g2&quot;}, {&quot;from&quot;: &quot;g1&quot;, &quot;to&quot;: &quot;g3&quot;}]" hidden>
-          <div class="stage s-done" data-id="g1">
+        </div>
+        <div class="zoom">
+          <button class="iconbtn" data-zoom="out" title="Zoom out" aria-label="Zoom out"><svg class="icon"><use href="#i-minus"/></svg></button>
+          <output aria-live="polite">100%</output>
+          <button class="iconbtn" data-zoom="in" title="Zoom in" aria-label="Zoom in"><svg class="icon"><use href="#i-plus"/></svg></button>
+          <button class="iconbtn" data-zoom="fit" title="Show everything" aria-label="Show everything"><svg class="icon"><use href="#i-fit"/></svg></button>
+        </div>
+        <svg class="minimap" hidden aria-hidden="true"></svg>
+      </div>
+    </div>
+    <ol class="stages-print"><li><strong>3.1 Export peak logs</strong> — Done<div class="rich"><p>Log store query for 19:00–19:30</p></div><div class="rich">→ <p><strong>41,200</strong> lines</p></div></li><li><strong>3.2 Group the errors</strong> — Done<div class="rich"><p>By message and source service</p></div><div class="rich">→ <p><strong>Top:</strong> <code>EMFILE</code> — 76%</p></div></li><li><strong>3.3 Match socket metrics</strong> — Failed<div class="rich"><p>Open-files metric is not collected</p></div><div class="rich">→ <p>Dead end — moved to the changelog</p></div></li></ol>
+  </section>
+
+  
+
+  
+</article>
+
+<article class="report" id="report-latency/s3/q" data-key="latency/s3/q" data-prev="" data-next="latency/s3/g">
+  <header class="r-head">
+    <nav class="trail" aria-label="Where you are"><button type="button" data-close>Work map</button><span class="sep">›</span><button type="button" data-open="latency">Find why checkout p95 doubled after 2.14</button><span class="sep">›</span><button type="button" data-open="latency/s3"><span class="num">3</span>Read the error logs</button><span class="sep">›</span></nav>
+    <span class="st-done" title="Done"><svg class="icon"><use href="#i-done"/></svg></span>
+    <h2><span class="num">3.1</span>Export peak logs</h2>
+    
+  </header>
+
+  
+
+  <section class="sec"><h3><svg class="icon"><use href="#i-goal"/></svg>Task</h3>
+    <div class="body rich"><p>Log store query for 19:00–19:30</p></div></section>
+
+  <section class="sec"><h3><svg class="icon"><use href="#i-context"/></svg>Context</h3>
+    <ul class="items">
+      <li class="item" id="ctx-C4"><span class="tag ghost" title="From a level above">C4</span><div>
+        <a class="t" href="https://example.com/logs/q/8812" target="_blank" rel="noopener">Pod logs during the peak, 2026-11-03 19:00–19:30</a>
+        <div class="n rich"><p>3,140 × <code>EMFILE: too many open files</code>, all from the payments client.</p></div>
+      </div></li>
+    </ul></section>
+
+  
+
+  
+
+  <section class="sec"><h3><svg class="icon"><use href="#i-result"/></svg>Result</h3>
+    <div class="body rich lead"><p><strong>41,200</strong> lines</p></div>
+    </section>
+
+  
+
+  
+
+  
+</article>
+
+<article class="report" id="report-latency/s3/g" data-key="latency/s3/g" data-prev="latency/s3/q" data-next="latency/s3/c">
+  <header class="r-head">
+    <nav class="trail" aria-label="Where you are"><button type="button" data-close>Work map</button><span class="sep">›</span><button type="button" data-open="latency">Find why checkout p95 doubled after 2.14</button><span class="sep">›</span><button type="button" data-open="latency/s3"><span class="num">3</span>Read the error logs</button><span class="sep">›</span></nav>
+    <span class="st-done" title="Done"><svg class="icon"><use href="#i-done"/></svg></span>
+    <h2><span class="num">3.2</span>Group the errors</h2>
+    
+  </header>
+
+  
+
+  <section class="sec"><h3><svg class="icon"><use href="#i-goal"/></svg>Task</h3>
+    <div class="body rich"><p>By message and source service</p></div></section>
+
+  
+
+  
+
+  
+
+  <section class="sec"><h3><svg class="icon"><use href="#i-result"/></svg>Result</h3>
+    <div class="body rich lead"><p><strong>Top:</strong> <code>EMFILE</code> — 76%</p></div>
+    </section>
+
+  <section class="sec"><h3><svg class="icon"><use href="#i-flow"/></svg>Workflow</h3>
+    <div class="flow">
+      <div class="flow-bar">
+        <span class="flow-title"><nav class="trail" aria-label="Where you are"><button type="button" data-close>Work map</button><span class="sep">›</span><button type="button" data-open="latency">Find why checkout p95 doubled after 2.14</button><span class="sep">›</span><button type="button" data-open="latency/s3"><span class="num">3</span>Read the error logs</button><span class="sep">›</span></nav><span class="num">3.2</span>Group the errors</span>
+        <span class="flow-hint">Workflow</span>
+        <button class="iconbtn" data-expand title="Expand to full page" aria-label="Expand workflow"><svg class="icon i-expand"><use href="#i-expand"/></svg><svg class="icon i-collapse"><use href="#i-collapse"/></svg></button>
+      </div>
+      <div class="canvas" data-dir="TB" data-embedded>
+        <div class="graph" data-key="latency/s3/g" data-edges="[{&quot;from&quot;: &quot;g1&quot;, &quot;to&quot;: &quot;g2&quot;}, {&quot;from&quot;: &quot;g1&quot;, &quot;to&quot;: &quot;g3&quot;}]">
+          <div class="stage s-done" data-id="g1" data-open="latency/s3/g/g1" tabindex="0" role="button" aria-label="Open 3.2.1 Normalise messages">
             <div class="h"><span class="num">3.2.1</span><h4>Normalise messages</h4><span class="st-done" title="Done"><svg class="icon sm"><use href="#i-done"/></svg></span></div>
             <div class="d rich"><p>Stripped ids and timestamps</p></div>
             
             
-            
-          </div><div class="stage s-done" data-id="g2">
+          </div><div class="stage s-done" data-id="g2" data-open="latency/s3/g/g2" tabindex="0" role="button" aria-label="Open 3.2.2 Count by source">
             <div class="h"><span class="num">3.2.2</span><h4>Count by source</h4><span class="st-done" title="Done"><svg class="icon sm"><use href="#i-done"/></svg></span></div>
             
             <div class="o"><svg class="icon sm"><use href="#i-outcome"/></svg><div class="rich"><p>Payments client produces every <code>EMFILE</code></p></div></div>
             
-            
-          </div><div class="stage s-skipped" data-id="g3">
+          </div><div class="stage s-skipped" data-id="g3" data-open="latency/s3/g/g3" tabindex="0" role="button" aria-label="Open 3.2.3 Check other pods">
             <div class="h"><span class="num">3.2.3</span><h4>Check other pods</h4><span class="st-skipped" title="Skipped"><svg class="icon sm"><use href="#i-skipped"/></svg></span></div>
             <div class="d rich"><p>Errors only in checkout — skipped</p></div>
-            
             
             
           </div>
@@ -503,22 +713,232 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
         <svg class="minimap" hidden aria-hidden="true"></svg>
       </div>
     </div>
-    <div class="stages-print"><ol><li><strong>1 Confirm the regression</strong> — Done<div class="rich"><p>Compared p95 per hour for two weeks around the release.</p></div><div class="rich">→ <p>Step change at the 2.14 deploy.</p></div></li><li><strong>2 Diff the release</strong> — Done<div class="rich"><p>Listed every dependency and config change in 2.14.</p></div><div class="rich">→ <p><strong>One risky change:</strong> payments client 3.2 → 4.0.</p></div></li><li><strong>3 Read the error logs</strong> — Done<div class="rich"><p>Grouped errors during the evening peak by message and source.</p></div><div class="rich">→ <p><code>EMFILE</code> from the payments client dominates.</p></div></li><li><strong>4 Check the client changelog</strong> — Done<div class="rich"><p>Looked for behaviour changes in 4.0.</p></div><div class="rich">→ <p>Pool limit default changed to unlimited.</p></div></li><li><strong>5 Reproduce under load</strong> — Done<div class="rich"><p>Ran the checkout load test with and without a pool cap.</p></div><div class="rich">→ <p>Cap removes the errors and restores latency.</p></div></li><li><strong>6 Write it up</strong> — Done<div class="rich"><p>Root cause, evidence and the proposed fix in the issue.</p></div><div class="rich">→ <p>Handed over to the fix task.</p></div></li></ol><h5>3 Read the error logs › </h5><ol><li><strong>3.1 Export peak logs</strong> — Done<div class="rich"><p>Log store query for 19:00–19:30</p></div><div class="rich">→ <p><strong>41,200</strong> lines</p></div></li><li><strong>3.2 Group the errors</strong> — Done<div class="rich"><p>By message and source service</p></div><div class="rich">→ <p><strong>Top:</strong> <code>EMFILE</code> — 76%</p></div></li><li><strong>3.3 Match socket metrics</strong> — Failed<div class="rich"><p>Open-files metric is not collected</p></div><div class="rich">→ <p>Dead end — moved to the changelog</p></div></li></ol><h5>3 Read the error logs › 3.2 Group the errors › </h5><ol><li><strong>3.2.1 Normalise messages</strong> — Done<div class="rich"><p>Stripped ids and timestamps</p></div></li><li><strong>3.2.2 Count by source</strong> — Done<div class="rich"></div><div class="rich">→ <p>Payments client produces every <code>EMFILE</code></p></div></li><li><strong>3.2.3 Check other pods</strong> — Skipped<div class="rich"><p>Errors only in checkout — skipped</p></div></li></ol></div>
-    </section>
+    <ol class="stages-print"><li><strong>3.2.1 Normalise messages</strong> — Done<div class="rich"><p>Stripped ids and timestamps</p></div></li><li><strong>3.2.2 Count by source</strong> — Done<div class="rich"></div><div class="rich">→ <p>Payments client produces every <code>EMFILE</code></p></div></li><li><strong>3.2.3 Check other pods</strong> — Skipped<div class="rich"><p>Errors only in checkout — skipped</p></div></li></ol>
+  </section>
 
-  <section class="sec"><h3><svg class="icon"><use href="#i-approve"/></svg>Needs approval</h3>
-    <p class="none">—</p></section>
+  
 
-  <section class="sec"><h3><svg class="icon"><use href="#i-action"/></svg>Your actions</h3>
-    <ul class="mine">
-      <li><svg class="icon"><use href="#i-action"/></svg><div><div class="t">Request provider-side logs for Nov 3, 19:00–19:30.</div>
-        <dl class="kv"><dt>Why you</dt><dd class="rich"><p>Only an account owner can open a ticket with the provider; it confirms the one open assumption.</p></dd></dl>
-      </div></li>
-    </ul></section>
+  
 </article>
 
-<article class="report" id="report-pool" data-task="pool">
+<article class="report" id="report-latency/s3/g/g1" data-key="latency/s3/g/g1" data-prev="" data-next="latency/s3/g/g2">
   <header class="r-head">
+    <nav class="trail" aria-label="Where you are"><button type="button" data-close>Work map</button><span class="sep">›</span><button type="button" data-open="latency">Find why checkout p95 doubled after 2.14</button><span class="sep">›</span><button type="button" data-open="latency/s3"><span class="num">3</span>Read the error logs</button><span class="sep">›</span><button type="button" data-open="latency/s3/g"><span class="num">3.2</span>Group the errors</button><span class="sep">›</span></nav>
+    <span class="st-done" title="Done"><svg class="icon"><use href="#i-done"/></svg></span>
+    <h2><span class="num">3.2.1</span>Normalise messages</h2>
+    
+  </header>
+
+  
+
+  <section class="sec"><h3><svg class="icon"><use href="#i-goal"/></svg>Task</h3>
+    <div class="body rich"><p>Stripped ids and timestamps</p></div></section>
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+</article>
+
+<article class="report" id="report-latency/s3/g/g2" data-key="latency/s3/g/g2" data-prev="latency/s3/g/g1" data-next="latency/s3/g/g3">
+  <header class="r-head">
+    <nav class="trail" aria-label="Where you are"><button type="button" data-close>Work map</button><span class="sep">›</span><button type="button" data-open="latency">Find why checkout p95 doubled after 2.14</button><span class="sep">›</span><button type="button" data-open="latency/s3"><span class="num">3</span>Read the error logs</button><span class="sep">›</span><button type="button" data-open="latency/s3/g"><span class="num">3.2</span>Group the errors</button><span class="sep">›</span></nav>
+    <span class="st-done" title="Done"><svg class="icon"><use href="#i-done"/></svg></span>
+    <h2><span class="num">3.2.2</span>Count by source</h2>
+    
+  </header>
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  <section class="sec"><h3><svg class="icon"><use href="#i-result"/></svg>Result</h3>
+    <div class="body rich lead"><p>Payments client produces every <code>EMFILE</code></p></div>
+    </section>
+
+  
+
+  
+
+  
+</article>
+
+<article class="report" id="report-latency/s3/g/g3" data-key="latency/s3/g/g3" data-prev="latency/s3/g/g2" data-next="">
+  <header class="r-head">
+    <nav class="trail" aria-label="Where you are"><button type="button" data-close>Work map</button><span class="sep">›</span><button type="button" data-open="latency">Find why checkout p95 doubled after 2.14</button><span class="sep">›</span><button type="button" data-open="latency/s3"><span class="num">3</span>Read the error logs</button><span class="sep">›</span><button type="button" data-open="latency/s3/g"><span class="num">3.2</span>Group the errors</button><span class="sep">›</span></nav>
+    <span class="st-skipped" title="Skipped"><svg class="icon"><use href="#i-skipped"/></svg></span>
+    <h2><span class="num">3.2.3</span>Check other pods</h2>
+    
+  </header>
+
+  
+
+  <section class="sec"><h3><svg class="icon"><use href="#i-goal"/></svg>Task</h3>
+    <div class="body rich"><p>Errors only in checkout — skipped</p></div></section>
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+</article>
+
+<article class="report" id="report-latency/s3/c" data-key="latency/s3/c" data-prev="latency/s3/g" data-next="">
+  <header class="r-head">
+    <nav class="trail" aria-label="Where you are"><button type="button" data-close>Work map</button><span class="sep">›</span><button type="button" data-open="latency">Find why checkout p95 doubled after 2.14</button><span class="sep">›</span><button type="button" data-open="latency/s3"><span class="num">3</span>Read the error logs</button><span class="sep">›</span></nav>
+    <span class="st-failed" title="Failed"><svg class="icon"><use href="#i-failed"/></svg></span>
+    <h2><span class="num">3.3</span>Match socket metrics</h2>
+    
+  </header>
+
+  
+
+  <section class="sec"><h3><svg class="icon"><use href="#i-goal"/></svg>Task</h3>
+    <div class="body rich"><p>Open-files metric is not collected</p></div></section>
+
+  
+
+  
+
+  
+
+  <section class="sec"><h3><svg class="icon"><use href="#i-result"/></svg>Result</h3>
+    <div class="body rich lead"><p>Dead end — moved to the changelog</p></div>
+    </section>
+
+  
+
+  
+
+  
+</article>
+
+<article class="report" id="report-latency/s4" data-key="latency/s4" data-prev="latency/s3" data-next="latency/s5">
+  <header class="r-head">
+    <nav class="trail" aria-label="Where you are"><button type="button" data-close>Work map</button><span class="sep">›</span><button type="button" data-open="latency">Find why checkout p95 doubled after 2.14</button><span class="sep">›</span></nav>
+    <span class="st-done" title="Done"><svg class="icon"><use href="#i-done"/></svg></span>
+    <h2><span class="num">4</span>Check the client changelog</h2>
+    
+  </header>
+
+  
+
+  <section class="sec"><h3><svg class="icon"><use href="#i-goal"/></svg>Task</h3>
+    <div class="body rich"><p>Looked for behaviour changes in 4.0.</p></div></section>
+
+  <section class="sec"><h3><svg class="icon"><use href="#i-context"/></svg>Context</h3>
+    <ul class="items">
+      <li class="item" id="ctx-C3"><span class="tag ghost" title="From a level above">C3</span><div>
+        <a class="t" href="https://example.com/payments-client/CHANGELOG.md#400" target="_blank" rel="noopener">payments-client 4.0 changelog</a>
+        <div class="n rich"><p>&quot;maxConnections now defaults to unlimited&quot;.</p></div>
+      </div></li>
+      <li class="item" id="ctx-C6"><span class="tag ghost" title="From a level above">C6</span><div>
+        <a class="t" href="https://example.com/acme/shop/blob/main/src/payments/client.ts#L18-L44" target="_blank" rel="noopener">src/payments/client.ts</a>
+        
+      </div></li>
+    </ul></section>
+
+  
+
+  
+
+  <section class="sec"><h3><svg class="icon"><use href="#i-result"/></svg>Result</h3>
+    <div class="body rich lead"><p>Pool limit default changed to unlimited.</p></div>
+    </section>
+
+  
+
+  
+
+  
+</article>
+
+<article class="report" id="report-latency/s5" data-key="latency/s5" data-prev="latency/s4" data-next="latency/s6">
+  <header class="r-head">
+    <nav class="trail" aria-label="Where you are"><button type="button" data-close>Work map</button><span class="sep">›</span><button type="button" data-open="latency">Find why checkout p95 doubled after 2.14</button><span class="sep">›</span></nav>
+    <span class="st-done" title="Done"><svg class="icon"><use href="#i-done"/></svg></span>
+    <h2><span class="num">5</span>Reproduce under load</h2>
+    
+  </header>
+
+  
+
+  <section class="sec"><h3><svg class="icon"><use href="#i-goal"/></svg>Task</h3>
+    <div class="body rich"><p>Ran the checkout load test with and without a pool cap.</p></div></section>
+
+  
+
+  
+
+  
+
+  <section class="sec"><h3><svg class="icon"><use href="#i-result"/></svg>Result</h3>
+    <div class="body rich lead"><p>Cap removes the errors and restores latency.</p></div>
+    </section>
+
+  
+
+  
+
+  
+</article>
+
+<article class="report" id="report-latency/s6" data-key="latency/s6" data-prev="latency/s5" data-next="">
+  <header class="r-head">
+    <nav class="trail" aria-label="Where you are"><button type="button" data-close>Work map</button><span class="sep">›</span><button type="button" data-open="latency">Find why checkout p95 doubled after 2.14</button><span class="sep">›</span></nav>
+    <span class="st-done" title="Done"><svg class="icon"><use href="#i-done"/></svg></span>
+    <h2><span class="num">6</span>Write it up</h2>
+    
+  </header>
+
+  
+
+  <section class="sec"><h3><svg class="icon"><use href="#i-goal"/></svg>Task</h3>
+    <div class="body rich"><p>Root cause, evidence and the proposed fix in the issue.</p></div></section>
+
+  
+
+  
+
+  
+
+  <section class="sec"><h3><svg class="icon"><use href="#i-result"/></svg>Result</h3>
+    <div class="body rich lead"><p>Handed over to the fix task.</p></div>
+    </section>
+
+  
+
+  
+
+  
+</article>
+
+<article class="report" id="report-pool" data-key="pool" data-prev="latency" data-next="replay">
+  <header class="r-head">
+    <nav class="trail" aria-label="Where you are"><button type="button" data-close>Work map</button><span class="sep">›</span></nav>
     <span class="st-needs_review" title="Needs review"><svg class="icon"><use href="#i-needs_review"/></svg></span>
     <h2>Cap connections in the payments client</h2>
     <a class="ref" href="https://example.com/acme/shop/pull/1290" target="_blank" rel="noopener"><svg class="icon sm"><use href="#i-link"/></svg>PR #1290</a>
@@ -528,6 +948,8 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
     <div class="body rich lead"><p>Payments client opens <strong>unlimited sockets</strong> → file descriptors run out under retries.</p></div></section>
 
   <section class="sec"><h3><svg class="icon"><use href="#i-goal"/></svg>Task</h3>
+    <div class="body rich"><ul><li>Limit the connection pool</li><li>Add backoff to retries</li><li>Keep payment semantics unchanged</li></ul></div></section><section class="sec"><h3><svg class="icon"><use href="#i-goal"/></svg>Task</h3>
+    <div class="body rich"><ul><li>Limit the connection pool</li><li>Add backoff to retries</li><li>Keep payment semantics unchanged</li></ul></div></section><section class="sec"><h3><svg class="icon"><use href="#i-goal"/></svg>Task</h3>
     <div class="body rich"><ul><li>Limit the connection pool</li><li>Add backoff to retries</li><li>Keep payment semantics unchanged</li></ul></div></section>
 
   <section class="sec"><h3><svg class="icon"><use href="#i-context"/></svg>Context</h3>
@@ -577,37 +999,31 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
   <section class="sec"><h3><svg class="icon"><use href="#i-flow"/></svg>Workflow</h3>
     <div class="flow">
       <div class="flow-bar">
-        <span class="flow-title">Cap connections in the payments client</span>
-        <nav class="crumbs" data-for="root" aria-label="Workflow level">
-          <button type="button" data-goto="root">Workflow</button>
-        </nav>
+        <span class="flow-title"><nav class="trail" aria-label="Where you are"><button type="button" data-close>Work map</button><span class="sep">›</span></nav>Cap connections in the payments client</span>
+        <span class="flow-hint">Workflow</span>
         <button class="iconbtn" data-expand title="Expand to full page" aria-label="Expand workflow"><svg class="icon i-expand"><use href="#i-expand"/></svg><svg class="icon i-collapse"><use href="#i-collapse"/></svg></button>
       </div>
       <div class="canvas" data-dir="TB" data-embedded>
-        <div class="graph" data-key="root" data-edges="[{&quot;from&quot;: &quot;a&quot;, &quot;to&quot;: &quot;b&quot;}, {&quot;from&quot;: &quot;b&quot;, &quot;to&quot;: &quot;c&quot;}, {&quot;from&quot;: &quot;b&quot;, &quot;to&quot;: &quot;d&quot;}, {&quot;from&quot;: &quot;c&quot;, &quot;to&quot;: &quot;d&quot;}]">
-          <div class="stage s-done" data-id="a">
+        <div class="graph" data-key="pool" data-edges="[{&quot;from&quot;: &quot;a&quot;, &quot;to&quot;: &quot;b&quot;}, {&quot;from&quot;: &quot;b&quot;, &quot;to&quot;: &quot;c&quot;}, {&quot;from&quot;: &quot;b&quot;, &quot;to&quot;: &quot;d&quot;}, {&quot;from&quot;: &quot;c&quot;, &quot;to&quot;: &quot;d&quot;}]">
+          <div class="stage s-done" data-id="a" data-open="pool/a" tabindex="0" role="button" aria-label="Open 1 Pick limits">
             <div class="h"><span class="num">1</span><h4>Pick limits</h4><span class="st-done" title="Done"><svg class="icon sm"><use href="#i-done"/></svg></span></div>
             <div class="d rich"><p>Derived the pool size from peak concurrency.</p></div>
             <div class="o"><svg class="icon sm"><use href="#i-outcome"/></svg><div class="rich"><p>50 per pod, 2 s queue timeout.</p></div></div>
             <div class="refs"><a class="ref-chip" href="#ctx-C3" data-ctx="C3">C3</a></div>
-            
-          </div><div class="stage s-done" data-id="b">
+          </div><div class="stage s-done" data-id="b" data-open="pool/b" tabindex="0" role="button" aria-label="Open 2 Implement cap and backoff">
             <div class="h"><span class="num">2</span><h4>Implement cap and backoff</h4><span class="st-done" title="Done"><svg class="icon sm"><use href="#i-done"/></svg></span></div>
             <div class="d rich"><p>Configured the pool; wrapped retries in a backoff helper.</p></div>
             
             <div class="refs"><a class="ref-chip" href="#ctx-C1" data-ctx="C1">C1</a><a class="ref-chip" href="#ctx-C2" data-ctx="C2">C2</a></div>
-            
-          </div><div class="stage s-done" data-id="c">
+          </div><div class="stage s-done" data-id="c" data-open="pool/c" tabindex="0" role="button" aria-label="Open 3 Add saturation metric">
             <div class="h"><span class="num">3</span><h4>Add saturation metric</h4><span class="st-done" title="Done"><svg class="icon sm"><use href="#i-done"/></svg></span></div>
             <div class="d rich"><p>Exported in-use connections per pod.</p></div>
             
             
-            
-          </div><div class="stage s-done" data-id="d">
+          </div><div class="stage s-done" data-id="d" data-open="pool/d" tabindex="0" role="button" aria-label="Open 4 Test">
             <div class="h"><span class="num">4</span><h4>Test</h4><span class="st-done" title="Done"><svg class="icon sm"><use href="#i-done"/></svg></span></div>
             <div class="d rich"><p>Unit tests and the incident load test.</p></div>
             <div class="o"><svg class="icon sm"><use href="#i-outcome"/></svg><div class="rich"><p>Green.</p></div></div>
-            
             
           </div>
         </div>
@@ -620,8 +1036,8 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
         <svg class="minimap" hidden aria-hidden="true"></svg>
       </div>
     </div>
-    <div class="stages-print"><ol><li><strong>1 Pick limits</strong> — Done<div class="rich"><p>Derived the pool size from peak concurrency.</p></div><div class="rich">→ <p>50 per pod, 2 s queue timeout.</p></div></li><li><strong>2 Implement cap and backoff</strong> — Done<div class="rich"><p>Configured the pool; wrapped retries in a backoff helper.</p></div></li><li><strong>3 Add saturation metric</strong> — Done<div class="rich"><p>Exported in-use connections per pod.</p></div></li><li><strong>4 Test</strong> — Done<div class="rich"><p>Unit tests and the incident load test.</p></div><div class="rich">→ <p>Green.</p></div></li></ol></div>
-    </section>
+    <ol class="stages-print"><li><strong>1 Pick limits</strong> — Done<div class="rich"><p>Derived the pool size from peak concurrency.</p></div><div class="rich">→ <p>50 per pod, 2 s queue timeout.</p></div></li><li><strong>2 Implement cap and backoff</strong> — Done<div class="rich"><p>Configured the pool; wrapped retries in a backoff helper.</p></div></li><li><strong>3 Add saturation metric</strong> — Done<div class="rich"><p>Exported in-use connections per pod.</p></div></li><li><strong>4 Test</strong> — Done<div class="rich"><p>Unit tests and the incident load test.</p></div><div class="rich">→ <p>Green.</p></div></li></ol>
+  </section>
 
   <section class="sec"><h3><svg class="icon"><use href="#i-approve"/></svg>Needs approval</h3>
     <ul class="mine">
@@ -630,12 +1046,144 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
       </div></li>
     </ul></section>
 
-  <section class="sec"><h3><svg class="icon"><use href="#i-action"/></svg>Your actions</h3>
-    <p class="none">—</p></section>
+  
 </article>
 
-<article class="report" id="report-replay" data-task="replay">
+<article class="report" id="report-pool/a" data-key="pool/a" data-prev="" data-next="pool/b">
   <header class="r-head">
+    <nav class="trail" aria-label="Where you are"><button type="button" data-close>Work map</button><span class="sep">›</span><button type="button" data-open="pool">Cap connections in the payments client</button><span class="sep">›</span></nav>
+    <span class="st-done" title="Done"><svg class="icon"><use href="#i-done"/></svg></span>
+    <h2><span class="num">1</span>Pick limits</h2>
+    
+  </header>
+
+  
+
+  <section class="sec"><h3><svg class="icon"><use href="#i-goal"/></svg>Task</h3>
+    <div class="body rich"><p>Derived the pool size from peak concurrency.</p></div></section>
+
+  <section class="sec"><h3><svg class="icon"><use href="#i-context"/></svg>Context</h3>
+    <ul class="items">
+      <li class="item" id="ctx-C3"><span class="tag ghost" title="From a level above">C3</span><div>
+        <a class="t" href="https://example.com/issues/ACME-412" target="_blank" rel="noopener">Root cause analysis (ACME-412)</a>
+        
+      </div></li>
+    </ul></section>
+
+  
+
+  
+
+  <section class="sec"><h3><svg class="icon"><use href="#i-result"/></svg>Result</h3>
+    <div class="body rich lead"><p>50 per pod, 2 s queue timeout.</p></div>
+    </section>
+
+  
+
+  
+
+  
+</article>
+
+<article class="report" id="report-pool/b" data-key="pool/b" data-prev="pool/a" data-next="pool/c">
+  <header class="r-head">
+    <nav class="trail" aria-label="Where you are"><button type="button" data-close>Work map</button><span class="sep">›</span><button type="button" data-open="pool">Cap connections in the payments client</button><span class="sep">›</span></nav>
+    <span class="st-done" title="Done"><svg class="icon"><use href="#i-done"/></svg></span>
+    <h2><span class="num">2</span>Implement cap and backoff</h2>
+    
+  </header>
+
+  
+
+  <section class="sec"><h3><svg class="icon"><use href="#i-goal"/></svg>Task</h3>
+    <div class="body rich"><p>Configured the pool; wrapped retries in a backoff helper.</p></div></section>
+
+  <section class="sec"><h3><svg class="icon"><use href="#i-context"/></svg>Context</h3>
+    <ul class="items">
+      <li class="item" id="ctx-C1"><span class="tag ghost" title="From a level above">C1</span><div>
+        <a class="t" href="https://example.com/acme/shop/blob/main/src/payments/client.ts" target="_blank" rel="noopener">src/payments/client.ts</a>
+        
+      </div></li>
+      <li class="item" id="ctx-C2"><span class="tag ghost" title="From a level above">C2</span><div>
+        <a class="t" href="https://example.com/payments-client/docs/pool" target="_blank" rel="noopener">payments-client pool options</a>
+        
+      </div></li>
+    </ul></section>
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+</article>
+
+<article class="report" id="report-pool/c" data-key="pool/c" data-prev="pool/b" data-next="pool/d">
+  <header class="r-head">
+    <nav class="trail" aria-label="Where you are"><button type="button" data-close>Work map</button><span class="sep">›</span><button type="button" data-open="pool">Cap connections in the payments client</button><span class="sep">›</span></nav>
+    <span class="st-done" title="Done"><svg class="icon"><use href="#i-done"/></svg></span>
+    <h2><span class="num">3</span>Add saturation metric</h2>
+    
+  </header>
+
+  
+
+  <section class="sec"><h3><svg class="icon"><use href="#i-goal"/></svg>Task</h3>
+    <div class="body rich"><p>Exported in-use connections per pod.</p></div></section>
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+</article>
+
+<article class="report" id="report-pool/d" data-key="pool/d" data-prev="pool/c" data-next="">
+  <header class="r-head">
+    <nav class="trail" aria-label="Where you are"><button type="button" data-close>Work map</button><span class="sep">›</span><button type="button" data-open="pool">Cap connections in the payments client</button><span class="sep">›</span></nav>
+    <span class="st-done" title="Done"><svg class="icon"><use href="#i-done"/></svg></span>
+    <h2><span class="num">4</span>Test</h2>
+    
+  </header>
+
+  
+
+  <section class="sec"><h3><svg class="icon"><use href="#i-goal"/></svg>Task</h3>
+    <div class="body rich"><p>Unit tests and the incident load test.</p></div></section>
+
+  
+
+  
+
+  
+
+  <section class="sec"><h3><svg class="icon"><use href="#i-result"/></svg>Result</h3>
+    <div class="body rich lead"><p>Green.</p></div>
+    </section>
+
+  
+
+  
+
+  
+</article>
+
+<article class="report" id="report-replay" data-key="replay" data-prev="pool" data-next="alerts">
+  <header class="r-head">
+    <nav class="trail" aria-label="Where you are"><button type="button" data-close>Work map</button><span class="sep">›</span></nav>
     <span class="st-blocked" title="Blocked"><svg class="icon"><use href="#i-blocked"/></svg></span>
     <h2>Replay orders that failed during the incident</h2>
     
@@ -645,6 +1193,7 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
     <div class="body rich lead"><dl class="kv"><dt>Affected</dt><dd><strong>212</strong> customers, <strong>$18,406</strong></dd><dt>State</dt><dd>charged by the provider, no order on our side</dd><dt>Cause</dt><dd>our timeout fired after the provider accepted the payment</dd></dl></div></section>
 
   <section class="sec"><h3><svg class="icon"><use href="#i-goal"/></svg>Task</h3>
+    <div class="body rich"><ul><li>Create the missing orders from provider records</li><li>Charge nobody twice</li></ul></div></section><section class="sec"><h3><svg class="icon"><use href="#i-goal"/></svg>Task</h3>
     <div class="body rich"><ul><li>Create the missing orders from provider records</li><li>Charge nobody twice</li></ul></div></section>
 
   <section class="sec"><h3><svg class="icon"><use href="#i-context"/></svg>Context</h3>
@@ -692,36 +1241,30 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
   <section class="sec"><h3><svg class="icon"><use href="#i-flow"/></svg>Workflow</h3>
     <div class="flow">
       <div class="flow-bar">
-        <span class="flow-title">Replay orders that failed during the incident</span>
-        <nav class="crumbs" data-for="root" aria-label="Workflow level">
-          <button type="button" data-goto="root">Workflow</button>
-        </nav>
+        <span class="flow-title"><nav class="trail" aria-label="Where you are"><button type="button" data-close>Work map</button><span class="sep">›</span></nav>Replay orders that failed during the incident</span>
+        <span class="flow-hint">Workflow</span>
         <button class="iconbtn" data-expand title="Expand to full page" aria-label="Expand workflow"><svg class="icon i-expand"><use href="#i-expand"/></svg><svg class="icon i-collapse"><use href="#i-collapse"/></svg></button>
       </div>
       <div class="canvas" data-dir="TB" data-embedded>
-        <div class="graph" data-key="root" data-edges="[{&quot;from&quot;: &quot;r1&quot;, &quot;to&quot;: &quot;r2&quot;}, {&quot;from&quot;: &quot;r2&quot;, &quot;to&quot;: &quot;r3&quot;}, {&quot;from&quot;: &quot;r3&quot;, &quot;to&quot;: &quot;r4&quot;}]">
-          <div class="stage s-done" data-id="r1">
+        <div class="graph" data-key="replay" data-edges="[{&quot;from&quot;: &quot;r1&quot;, &quot;to&quot;: &quot;r2&quot;}, {&quot;from&quot;: &quot;r2&quot;, &quot;to&quot;: &quot;r3&quot;}, {&quot;from&quot;: &quot;r3&quot;, &quot;to&quot;: &quot;r4&quot;}]">
+          <div class="stage s-done" data-id="r1" data-open="replay/r1" tabindex="0" role="button" aria-label="Open 1 Find affected payments">
             <div class="h"><span class="num">1</span><h4>Find affected payments</h4><span class="st-done" title="Done"><svg class="icon sm"><use href="#i-done"/></svg></span></div>
             <div class="d rich"><p>Joined provider captures with orders by payment id.</p></div>
             <div class="o"><svg class="icon sm"><use href="#i-outcome"/></svg><div class="rich"><p>212 payments without orders.</p></div></div>
             <div class="refs"><a class="ref-chip" href="#ctx-C1" data-ctx="C1">C1</a></div>
-            
-          </div><div class="stage s-done" data-id="r2">
+          </div><div class="stage s-done" data-id="r2" data-open="replay/r2" tabindex="0" role="button" aria-label="Open 2 Write replay script">
             <div class="h"><span class="num">2</span><h4>Write replay script</h4><span class="st-done" title="Done"><svg class="icon sm"><use href="#i-done"/></svg></span></div>
             <div class="d rich"><p>Creates orders through the normal service with an idempotent key.</p></div>
             
             <div class="refs"><a class="ref-chip" href="#ctx-C2" data-ctx="C2">C2</a></div>
-            
-          </div><div class="stage s-done" data-id="r3">
+          </div><div class="stage s-done" data-id="r3" data-open="replay/r3" tabindex="0" role="button" aria-label="Open 3 Dry run on staging">
             <div class="h"><span class="num">3</span><h4>Dry run on staging</h4><span class="st-done" title="Done"><svg class="icon sm"><use href="#i-done"/></svg></span></div>
             
             <div class="o"><svg class="icon sm"><use href="#i-outcome"/></svg><div class="rich"><p>7 orders hit out-of-stock items.</p></div></div>
             
-            
-          </div><div class="stage s-planned" data-id="r4">
+          </div><div class="stage s-planned" data-id="r4" data-open="replay/r4" tabindex="0" role="button" aria-label="Open 4 Run in production">
             <div class="h"><span class="num">4</span><h4>Run in production</h4><span class="st-planned" title="Planned"><svg class="icon sm"><use href="#i-planned"/></svg></span></div>
             <div class="d rich"><p>Waiting for the out-of-stock decision.</p></div>
-            
             
             
           </div>
@@ -735,8 +1278,8 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
         <svg class="minimap" hidden aria-hidden="true"></svg>
       </div>
     </div>
-    <div class="stages-print"><ol><li><strong>1 Find affected payments</strong> — Done<div class="rich"><p>Joined provider captures with orders by payment id.</p></div><div class="rich">→ <p>212 payments without orders.</p></div></li><li><strong>2 Write replay script</strong> — Done<div class="rich"><p>Creates orders through the normal service with an idempotent key.</p></div></li><li><strong>3 Dry run on staging</strong> — Done<div class="rich"></div><div class="rich">→ <p>7 orders hit out-of-stock items.</p></div></li><li><strong>4 Run in production</strong> — Planned<div class="rich"><p>Waiting for the out-of-stock decision.</p></div></li></ol></div>
-    </section>
+    <ol class="stages-print"><li><strong>1 Find affected payments</strong> — Done<div class="rich"><p>Joined provider captures with orders by payment id.</p></div><div class="rich">→ <p>212 payments without orders.</p></div></li><li><strong>2 Write replay script</strong> — Done<div class="rich"><p>Creates orders through the normal service with an idempotent key.</p></div></li><li><strong>3 Dry run on staging</strong> — Done<div class="rich"></div><div class="rich">→ <p>7 orders hit out-of-stock items.</p></div></li><li><strong>4 Run in production</strong> — Planned<div class="rich"><p>Waiting for the out-of-stock decision.</p></div></li></ol>
+  </section>
 
   <section class="sec"><h3><svg class="icon"><use href="#i-approve"/></svg>Needs approval</h3>
     <ul class="mine">
@@ -753,8 +1296,136 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
     </ul></section>
 </article>
 
-<article class="report" id="report-alerts" data-task="alerts">
+<article class="report" id="report-replay/r1" data-key="replay/r1" data-prev="" data-next="replay/r2">
   <header class="r-head">
+    <nav class="trail" aria-label="Where you are"><button type="button" data-close>Work map</button><span class="sep">›</span><button type="button" data-open="replay">Replay orders that failed during the incident</button><span class="sep">›</span></nav>
+    <span class="st-done" title="Done"><svg class="icon"><use href="#i-done"/></svg></span>
+    <h2><span class="num">1</span>Find affected payments</h2>
+    
+  </header>
+
+  
+
+  <section class="sec"><h3><svg class="icon"><use href="#i-goal"/></svg>Task</h3>
+    <div class="body rich"><p>Joined provider captures with orders by payment id.</p></div></section>
+
+  <section class="sec"><h3><svg class="icon"><use href="#i-context"/></svg>Context</h3>
+    <ul class="items">
+      <li class="item" id="ctx-C1"><span class="tag ghost" title="From a level above">C1</span><div>
+        <a class="t" href="https://example.com/sql/saved/931" target="_blank" rel="noopener">Provider payments without a matching order, Nov 2–5</a>
+        <div class="n rich"><p>212 rows, total $18,406.</p></div>
+      </div></li>
+    </ul></section>
+
+  
+
+  
+
+  <section class="sec"><h3><svg class="icon"><use href="#i-result"/></svg>Result</h3>
+    <div class="body rich lead"><p>212 payments without orders.</p></div>
+    </section>
+
+  
+
+  
+
+  
+</article>
+
+<article class="report" id="report-replay/r2" data-key="replay/r2" data-prev="replay/r1" data-next="replay/r3">
+  <header class="r-head">
+    <nav class="trail" aria-label="Where you are"><button type="button" data-close>Work map</button><span class="sep">›</span><button type="button" data-open="replay">Replay orders that failed during the incident</button><span class="sep">›</span></nav>
+    <span class="st-done" title="Done"><svg class="icon"><use href="#i-done"/></svg></span>
+    <h2><span class="num">2</span>Write replay script</h2>
+    
+  </header>
+
+  
+
+  <section class="sec"><h3><svg class="icon"><use href="#i-goal"/></svg>Task</h3>
+    <div class="body rich"><p>Creates orders through the normal service with an idempotent key.</p></div></section>
+
+  <section class="sec"><h3><svg class="icon"><use href="#i-context"/></svg>Context</h3>
+    <ul class="items">
+      <li class="item" id="ctx-C2"><span class="tag ghost" title="From a level above">C2</span><div>
+        <a class="t" href="https://example.com/acme/shop/blob/main/src/orders/create.ts" target="_blank" rel="noopener">Order creation service</a>
+        
+      </div></li>
+    </ul></section>
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+</article>
+
+<article class="report" id="report-replay/r3" data-key="replay/r3" data-prev="replay/r2" data-next="replay/r4">
+  <header class="r-head">
+    <nav class="trail" aria-label="Where you are"><button type="button" data-close>Work map</button><span class="sep">›</span><button type="button" data-open="replay">Replay orders that failed during the incident</button><span class="sep">›</span></nav>
+    <span class="st-done" title="Done"><svg class="icon"><use href="#i-done"/></svg></span>
+    <h2><span class="num">3</span>Dry run on staging</h2>
+    
+  </header>
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  <section class="sec"><h3><svg class="icon"><use href="#i-result"/></svg>Result</h3>
+    <div class="body rich lead"><p>7 orders hit out-of-stock items.</p></div>
+    </section>
+
+  
+
+  
+
+  
+</article>
+
+<article class="report" id="report-replay/r4" data-key="replay/r4" data-prev="replay/r3" data-next="">
+  <header class="r-head">
+    <nav class="trail" aria-label="Where you are"><button type="button" data-close>Work map</button><span class="sep">›</span><button type="button" data-open="replay">Replay orders that failed during the incident</button><span class="sep">›</span></nav>
+    <span class="st-planned" title="Planned"><svg class="icon"><use href="#i-planned"/></svg></span>
+    <h2><span class="num">4</span>Run in production</h2>
+    
+  </header>
+
+  
+
+  <section class="sec"><h3><svg class="icon"><use href="#i-goal"/></svg>Task</h3>
+    <div class="body rich"><p>Waiting for the out-of-stock decision.</p></div></section>
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+</article>
+
+<article class="report" id="report-alerts" data-key="alerts" data-prev="replay" data-next="runbook">
+  <header class="r-head">
+    <nav class="trail" aria-label="Where you are"><button type="button" data-close>Work map</button><span class="sep">›</span></nav>
     <span class="st-in_progress" title="In progress"><svg class="icon"><use href="#i-in_progress"/></svg></span>
     <h2>Alert on provider timeouts and pool saturation</h2>
     
@@ -787,8 +1458,7 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
         </dl></li>
     </ul></section>
 
-  <section class="sec"><h3><svg class="icon"><use href="#i-assumption"/></svg>Assumptions</h3>
-    <p class="none">—</p></section>
+  
 
   <section class="sec"><h3><svg class="icon"><use href="#i-result"/></svg>Result</h3>
     <div class="body rich lead"><dl class="kv"><dt>Timeout alert</dt><dd>drafted</dd><dt>Saturation alert</dt><dd>waits for the metric from the pool fix</dd></dl></div>
@@ -799,30 +1469,25 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
   <section class="sec"><h3><svg class="icon"><use href="#i-flow"/></svg>Workflow</h3>
     <div class="flow">
       <div class="flow-bar">
-        <span class="flow-title">Alert on provider timeouts and pool saturation</span>
-        <nav class="crumbs" data-for="root" aria-label="Workflow level">
-          <button type="button" data-goto="root">Workflow</button>
-        </nav>
+        <span class="flow-title"><nav class="trail" aria-label="Where you are"><button type="button" data-close>Work map</button><span class="sep">›</span></nav>Alert on provider timeouts and pool saturation</span>
+        <span class="flow-hint">Workflow</span>
         <button class="iconbtn" data-expand title="Expand to full page" aria-label="Expand workflow"><svg class="icon i-expand"><use href="#i-expand"/></svg><svg class="icon i-collapse"><use href="#i-collapse"/></svg></button>
       </div>
       <div class="canvas" data-dir="TB" data-embedded>
-        <div class="graph" data-key="root" data-edges="[{&quot;from&quot;: &quot;x1&quot;, &quot;to&quot;: &quot;x2&quot;}, {&quot;from&quot;: &quot;x1&quot;, &quot;to&quot;: &quot;x3&quot;}]">
-          <div class="stage s-done" data-id="x1">
+        <div class="graph" data-key="alerts" data-edges="[{&quot;from&quot;: &quot;x1&quot;, &quot;to&quot;: &quot;x2&quot;}, {&quot;from&quot;: &quot;x1&quot;, &quot;to&quot;: &quot;x3&quot;}]">
+          <div class="stage s-done" data-id="x1" data-open="alerts/x1" tabindex="0" role="button" aria-label="Open 1 Backtest thresholds">
             <div class="h"><span class="num">1</span><h4>Backtest thresholds</h4><span class="st-done" title="Done"><svg class="icon sm"><use href="#i-done"/></svg></span></div>
             
             <div class="o"><svg class="icon sm"><use href="#i-outcome"/></svg><div class="rich"><p>0.3% / 5 min.</p></div></div>
             <div class="refs"><a class="ref-chip" href="#ctx-C2" data-ctx="C2">C2</a></div>
-            
-          </div><div class="stage s-partial" data-id="x2">
+          </div><div class="stage s-partial" data-id="x2" data-open="alerts/x2" tabindex="0" role="button" aria-label="Open 2 Timeout alert">
             <div class="h"><span class="num">2</span><h4>Timeout alert</h4><span class="st-partial" title="Partly done"><svg class="icon sm"><use href="#i-partial"/></svg></span></div>
             <div class="d rich"><p>Rule written, routing to on-call not set.</p></div>
             
             
-            
-          </div><div class="stage s-planned" data-id="x3">
+          </div><div class="stage s-planned" data-id="x3" data-open="alerts/x3" tabindex="0" role="button" aria-label="Open 3 Saturation alert">
             <div class="h"><span class="num">3</span><h4>Saturation alert</h4><span class="st-planned" title="Planned"><svg class="icon sm"><use href="#i-planned"/></svg></span></div>
             <div class="d rich"><p>Needs <code>payments_pool_in_use</code> in production.</p></div>
-            
             
             
           </div>
@@ -836,18 +1501,108 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
         <svg class="minimap" hidden aria-hidden="true"></svg>
       </div>
     </div>
-    <div class="stages-print"><ol><li><strong>1 Backtest thresholds</strong> — Done<div class="rich"></div><div class="rich">→ <p>0.3% / 5 min.</p></div></li><li><strong>2 Timeout alert</strong> — Partly done<div class="rich"><p>Rule written, routing to on-call not set.</p></div></li><li><strong>3 Saturation alert</strong> — Planned<div class="rich"><p>Needs <code>payments_pool_in_use</code> in production.</p></div></li></ol></div>
-    </section>
+    <ol class="stages-print"><li><strong>1 Backtest thresholds</strong> — Done<div class="rich"></div><div class="rich">→ <p>0.3% / 5 min.</p></div></li><li><strong>2 Timeout alert</strong> — Partly done<div class="rich"><p>Rule written, routing to on-call not set.</p></div></li><li><strong>3 Saturation alert</strong> — Planned<div class="rich"><p>Needs <code>payments_pool_in_use</code> in production.</p></div></li></ol>
+  </section>
 
-  <section class="sec"><h3><svg class="icon"><use href="#i-approve"/></svg>Needs approval</h3>
-    <p class="none">—</p></section>
+  
 
-  <section class="sec"><h3><svg class="icon"><use href="#i-action"/></svg>Your actions</h3>
-    <p class="none">—</p></section>
+  
 </article>
 
-<article class="report" id="report-runbook" data-task="runbook">
+<article class="report" id="report-alerts/x1" data-key="alerts/x1" data-prev="" data-next="alerts/x2">
   <header class="r-head">
+    <nav class="trail" aria-label="Where you are"><button type="button" data-close>Work map</button><span class="sep">›</span><button type="button" data-open="alerts">Alert on provider timeouts and pool saturation</button><span class="sep">›</span></nav>
+    <span class="st-done" title="Done"><svg class="icon"><use href="#i-done"/></svg></span>
+    <h2><span class="num">1</span>Backtest thresholds</h2>
+    
+  </header>
+
+  
+
+  
+
+  <section class="sec"><h3><svg class="icon"><use href="#i-context"/></svg>Context</h3>
+    <ul class="items">
+      <li class="item" id="ctx-C2"><span class="tag ghost" title="From a level above">C2</span><div>
+        <a class="t" href="https://example.com/dash/payments-timeouts" target="_blank" rel="noopener">Timeout rate, last 30 days</a>
+        
+      </div></li>
+    </ul></section>
+
+  
+
+  
+
+  <section class="sec"><h3><svg class="icon"><use href="#i-result"/></svg>Result</h3>
+    <div class="body rich lead"><p>0.3% / 5 min.</p></div>
+    </section>
+
+  
+
+  
+
+  
+</article>
+
+<article class="report" id="report-alerts/x2" data-key="alerts/x2" data-prev="alerts/x1" data-next="alerts/x3">
+  <header class="r-head">
+    <nav class="trail" aria-label="Where you are"><button type="button" data-close>Work map</button><span class="sep">›</span><button type="button" data-open="alerts">Alert on provider timeouts and pool saturation</button><span class="sep">›</span></nav>
+    <span class="st-partial" title="Partly done"><svg class="icon"><use href="#i-partial"/></svg></span>
+    <h2><span class="num">2</span>Timeout alert</h2>
+    
+  </header>
+
+  
+
+  <section class="sec"><h3><svg class="icon"><use href="#i-goal"/></svg>Task</h3>
+    <div class="body rich"><p>Rule written, routing to on-call not set.</p></div></section>
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+</article>
+
+<article class="report" id="report-alerts/x3" data-key="alerts/x3" data-prev="alerts/x2" data-next="">
+  <header class="r-head">
+    <nav class="trail" aria-label="Where you are"><button type="button" data-close>Work map</button><span class="sep">›</span><button type="button" data-open="alerts">Alert on provider timeouts and pool saturation</button><span class="sep">›</span></nav>
+    <span class="st-planned" title="Planned"><svg class="icon"><use href="#i-planned"/></svg></span>
+    <h2><span class="num">3</span>Saturation alert</h2>
+    
+  </header>
+
+  
+
+  <section class="sec"><h3><svg class="icon"><use href="#i-goal"/></svg>Task</h3>
+    <div class="body rich"><p>Needs <code>payments_pool_in_use</code> in production.</p></div></section>
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+</article>
+
+<article class="report" id="report-runbook" data-key="runbook" data-prev="alerts" data-next="">
+  <header class="r-head">
+    <nav class="trail" aria-label="Where you are"><button type="button" data-close>Work map</button><span class="sep">›</span></nav>
     <span class="st-planned" title="Planned"><svg class="icon"><use href="#i-planned"/></svg></span>
     <h2>Update the payments incident runbook</h2>
     
@@ -867,25 +1622,19 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
       </div></li>
     </ul></section>
 
-  <section class="sec"><h3><svg class="icon"><use href="#i-inference"/></svg>Conclusions</h3>
-    <p class="none">—</p></section>
+  
 
-  <section class="sec"><h3><svg class="icon"><use href="#i-assumption"/></svg>Assumptions</h3>
-    <p class="none">—</p></section>
+  
 
   <section class="sec"><h3><svg class="icon"><use href="#i-result"/></svg>Result</h3>
     <div class="body rich lead"><p>Not started.</p></div>
     </section>
 
-  <section class="sec"><h3><svg class="icon"><use href="#i-flow"/></svg>Workflow</h3>
-    
-    <p class="none">—</p></section>
+  
 
-  <section class="sec"><h3><svg class="icon"><use href="#i-approve"/></svg>Needs approval</h3>
-    <p class="none">—</p></section>
+  
 
-  <section class="sec"><h3><svg class="icon"><use href="#i-action"/></svg>Your actions</h3>
-    <p class="none">—</p></section>
+  
 </article>
 
 </div>
@@ -1099,70 +1848,57 @@ class Canvas {
 const mapCanvas = new Canvas($("#map"));
 mapCanvas.show("map");
 
-// ── workflow canvases (one per report, created on first open) ──
+// ── workflow canvases (one per report, created when the report is first shown) ──
 const flows = new WeakMap();
 function flowOf(art) {
-  const box = $(".flow", art); if (!box) return null;
-  if (!flows.has(box)) {
-    const c = new Canvas($(":scope > .canvas", box));
-    c.el.addEventListener("level", e => {
-      $$(".crumbs", box).forEach(n => n.hidden = n.dataset.for !== e.detail);
-      $$(".crumbs button", box).forEach(b => b.setAttribute("aria-current", String(b.dataset.goto === e.detail)));
-    });
-    flows.set(box, c);
-    c.show("root");
-  }
+  const box = $(":scope > .sec .flow", art); if (!box) return null;
+  if (!flows.has(box)) { const c = new Canvas($(":scope > .canvas", box)); flows.set(box, c); c.show(art.dataset.key); }
   return flows.get(box);
 }
 let expanded = null;
 function expand(box, on) {
-  const c = flows.get(box);
   box.classList.toggle("full", on); expanded = on ? box : null;
-  document.body.style.overflow = on ? "hidden" : "";
-  requestAnimationFrame(() => c.home());
+  requestAnimationFrame(() => flows.get(box).home());
 }
 
-// ── drawer ──
+// ── drawer: shows one report at a time — a task, or a stage of it, at any depth ──
 const drawer = $("#drawer"), scrim = $("#scrim"), slot = $("#slot"), reports = $("#reports");
-const order = $$(".report", reports).map(r => r.dataset.task);
 let current = null, lastFocus = null;
-function open(id) {
-  const art = document.getElementById("report-" + id); if (!art) return;
+const art = key => document.getElementById("report-" + key);
+function open(key, {keepFull = false} = {}) {
+  const a = art(key); if (!a) return;
+  const wasFull = !!expanded;
+  if (expanded) expand(expanded, false);
   if (!current) lastFocus = document.activeElement;
-  if (current) reports.appendChild(document.getElementById("report-" + current));
-  slot.appendChild(art); current = id;
+  if (current) reports.appendChild(art(current));
+  slot.appendChild(a); current = key;
   drawer.classList.add("open"); scrim.classList.add("open");
-  $$("#map .node").forEach(n => n.setAttribute("aria-current", String(n.dataset.task === id)));
-  flowOf(art);
-  const i = order.indexOf(id);
-  $('[data-nav="-1"]', drawer).disabled = i <= 0;
-  $('[data-nav="1"]', drawer).disabled = i >= order.length - 1;
-  history.replaceState(null, "", "#task=" + encodeURIComponent(id));
+  const task = key.split("/")[0];
+  $$("#map .node").forEach(n => n.setAttribute("aria-current", String(n.dataset.task === task)));
+  const f = flowOf(a);
+  $('[data-nav="-1"]', drawer).disabled = !a.dataset.prev;
+  $('[data-nav="1"]', drawer).disabled = !a.dataset.next;
+  history.replaceState(null, "", "#task=" + encodeURIComponent(key));
   drawer.scrollTop = 0; drawer.focus({preventScroll: true});
+  if (keepFull && wasFull && f) expand($(":scope > .sec .flow", a), true);   // drilling from full page stays full page
 }
 function close() {
   if (!current) return;
   if (expanded) expand(expanded, false);
-  reports.appendChild(document.getElementById("report-" + current)); current = null;
+  reports.appendChild(art(current)); current = null;
   drawer.classList.remove("open"); scrim.classList.remove("open");
   $$("#map .node").forEach(n => n.setAttribute("aria-current", "false"));
   history.replaceState(null, "", location.pathname + location.search);
   lastFocus?.focus();
 }
-const step = d => { const i = order.indexOf(current) + d; if (order[i]) open(order[i]); };
+const step = d => { const a = art(current), k = a && a.dataset[d < 0 ? "prev" : "next"]; if (k) open(k, {keepFull: true}); };
+const up = () => { if (!current) return; const i = current.lastIndexOf("/"); i > 0 ? open(current.slice(0, i)) : close(); };
 
 document.addEventListener("click", e => {
   const node = e.target.closest("#map .node"); if (node) return open(node.dataset.task);
   if (e.target.closest("[data-close]") || e.target === scrim) return close();
   const nav = e.target.closest("[data-nav]"); if (nav) return step(+nav.dataset.nav);
-  const box = e.target.closest(".flow");
-  if (box) {
-    const c = flows.get(box);
-    const deep = e.target.closest(".stage[data-child]"), go = e.target.closest("[data-goto]");
-    if (deep && !e.target.closest("a")) return c.show(deep.dataset.child);
-    if (go) return c.show(go.dataset.goto);
-    if (e.target.closest("[data-expand]")) return expand(box, !box.classList.contains("full"));
-  }
+  const ex = e.target.closest("[data-expand]"); if (ex) { const box = ex.closest(".flow"); return expand(box, !box.classList.contains("full")); }
   const cp = e.target.closest("[data-copy]");
   if (cp) { navigator.clipboard?.writeText(cp.dataset.copy); cp.style.color = "var(--ok)"; setTimeout(() => cp.style.color = "", 1200); return; }
   const chip = e.target.closest("a[data-ctx]");
@@ -1171,21 +1907,24 @@ document.addEventListener("click", e => {
     if (expanded) expand(expanded, false);
     const el = slot.querySelector(`[id="ctx-${chip.dataset.ctx}"]`);
     if (el) { $$(".item.flash", slot).forEach(x => x.classList.remove("flash")); el.classList.add("flash"); el.scrollIntoView({block: "center", behavior: "smooth"}); }
+    return;
   }
+  const o = e.target.closest("[data-open]"); if (o) return open(o.dataset.open, {keepFull: !!o.closest(".flow.full")});
   if (e.target.closest("#print-btn")) print();
 });
 document.addEventListener("keydown", e => {
   if (e.target.closest?.("input,textarea")) return;
+  const o = e.target.closest?.("[data-open]");
+  if (o && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); return open(o.dataset.open, {keepFull: !!o.closest(".flow.full")}); }
   if (expanded) {
     if (e.key === "Escape") { e.preventDefault(); return expand(expanded, false); }
-    const st = e.target.closest?.(".stage[data-child]");
-    if (st && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); return flows.get(expanded).show(st.dataset.child); }
+    if (e.altKey && e.key === "ArrowUp") { e.preventDefault(); return up(); }
+    if (e.altKey && (e.key === "ArrowRight" || e.key === "ArrowLeft")) { e.preventDefault(); return step(e.key === "ArrowRight" ? 1 : -1); }
     return flows.get(expanded).key(e);
   }
   if (current) {
-    const st = e.target.closest?.(".stage[data-child]");
-    if (st && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); return flows.get(st.closest(".flow")).show(st.dataset.child); }
     if (e.key === "Escape") close();
+    if (e.altKey && e.key === "ArrowUp") { e.preventDefault(); up(); }
     if (e.altKey && e.key === "ArrowRight") step(1);
     if (e.altKey && e.key === "ArrowLeft") step(-1);
     return;

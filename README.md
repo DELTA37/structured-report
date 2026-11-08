@@ -20,7 +20,7 @@ or Ctrl/⌘+scroll to zoom, a minimap to jump around.
 | What I concluded | conclusions, each citing the context it rests on, with confidence |
 | What I assumed | unverified assumptions, with how to check them and the risk if wrong |
 | Result | typed outcomes: added, changed, fixed, verified, measured, decided — with links |
-| How the work went | a directed flowchart of the stages, each a block with what was done and what came out |
+| Workflow | a canvas of the stages; **each stage opens its own report in the same structure**, to any depth |
 | Needs your approval | decisions only the reader can make |
 | For you to do | steps only the reader can take, with copyable commands |
 

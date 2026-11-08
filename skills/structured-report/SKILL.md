@@ -61,15 +61,16 @@ The report separates **how you know** each thing. Readers rely on this; never bl
   `removed`, `fixed`, `verified`, `metric` with `value`, `doc`, `decision`), each with a `ref` link
   when there is something to open (PR, commit, file, dashboard). `verified` means you ran a check
   and saw it pass — say which check.
-- **stages** — the steps you actually took, in order, 2–8 per task. Each has a `title` (verb
-  first), `detail` (what you did), `outcome` (what you learned or produced), optional `status`
-  (done / partial / failed / skipped / planned / in_progress / blocked) and `uses` (context ids).
-  Dead ends are stages too (`failed` / `skipped`) — they show why the final path was chosen.
-  Use `flow` edges when work branched or ran in parallel; omit `flow` for a straight line.
-  A stage that was itself several steps gets its own `stages` (and `flow`), to any depth — the
-  reader opens it like a folder. Keep each level to 2–8 stages; nest instead of making one level
-  long. Typical: an investigation stage containing its queries, a migration stage containing its
-  batches.
+- **stages** — the steps you actually took, in order, 2–8 per level. **A stage is the same kind of
+  node as a task**: `id` and `title` are required, and it may carry any task field — `problem`,
+  `goal`, `context`, `inferences`, `assumptions`, `result`, `approvals`, `actions` and its own
+  `stages` + `flow`, to any depth. On the card it shows `detail` (what you did), `outcome` (what
+  came out), `status` and `uses` (context ids from its own or any enclosing level). Clicking a
+  stage opens its report in the same structure, so give a stage real content when it was real
+  work (an investigation, a migration batch), and keep trivial steps to `detail` + `outcome`.
+  In a stage's report `detail` stands in for Task and `outcome` for Result when those are absent;
+  empty sections are hidden. Dead ends are stages too (`failed` / `skipped`). Use `flow` edges
+  when work branched or ran in parallel; omit it for a straight line.
 - **approvals** — decisions only the reader can make (merge/ship, spend, scope, anything
   irreversible or customer-facing). State the question, `why` it is theirs, and `options` if
   there are clear choices. Never present something you already did as needing approval.

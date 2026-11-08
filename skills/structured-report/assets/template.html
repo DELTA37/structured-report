@@ -103,9 +103,19 @@ body.map-page{height:100vh;overflow:hidden;display:flex;flex-direction:column}
 .drawer.open{transform:none} .drawer:focus{outline:none}
 .d-nav{position:sticky;top:0;z-index:3;display:flex;justify-content:flex-end;gap:6px;padding:12px 20px 0;height:0;overflow:visible}
 .report{padding:0 28px 64px}
-.r-head{position:sticky;top:0;z-index:2;background:var(--paper);border-bottom:1px solid var(--rule);padding:16px 140px 14px 0;display:grid;grid-template-columns:26px 1fr;gap:4px 10px;align-items:start}
+.r-head{position:sticky;top:0;z-index:2;background:var(--paper);border-bottom:1px solid var(--rule);padding:14px 140px 14px 0;display:grid;grid-template-columns:26px 1fr;gap:4px 10px;align-items:start}
 .r-head .icon{width:24px;height:24px;margin-top:3px}
 .r-head h2{font:600 28px/1.1 var(--display);margin:0}
+.r-head h2 .num,.flow-title .num{font:600 14px/1 var(--display);display:inline-grid;place-items:center;min-width:28px;height:26px;padding:0 7px;border-radius:13px;background:var(--ink);color:var(--panel);vertical-align:4px;margin-right:10px}
+.trail{grid-column:1 / -1;display:flex;flex-wrap:wrap;align-items:center;gap:2px;font-size:13px;margin-bottom:6px}
+.trail button{all:unset;cursor:pointer;color:var(--cobalt);padding:1px 5px;border-radius:5px}
+.trail button:hover{background:var(--panel-2)} .trail button:focus-visible{outline:2px solid var(--cobalt)}
+.trail .num{font:600 11.5px var(--display);color:var(--ink-2);margin-right:4px}
+.trail .sep{color:var(--ink-3);margin:0 2px}
+.tag.ghost{background:transparent;color:var(--ink-2);border:1px dashed var(--ink-3)}
+.waiting .where{font:600 12px var(--display);margin-right:6px;color:var(--ink-2)}
+.flow-hint{flex:1;color:var(--ink-2);font-size:13.5px}
+.flow.full .flow-hint{display:none}
 .r-head .ref{grid-column:2;display:inline-flex;gap:5px;align-items:center;font-size:13px;width:max-content}
 .r-head .ref .icon{width:15px;height:15px;margin:0}
 
@@ -146,7 +156,7 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
 /* ── workflow: canvas with nested levels, expandable to the full page ── */
 .flow{border:1px solid var(--rule);border-radius:var(--r);background:var(--paper);display:flex;flex-direction:column;margin:0 0 12px;overflow:hidden}
 .flow-bar{display:flex;align-items:center;gap:10px;padding:8px 8px 8px 12px;border-bottom:1px solid var(--rule);background:var(--panel)}
-.crumbs{flex:1;min-width:0;display:flex;align-items:center;gap:4px;flex-wrap:wrap;font-size:13.5px}
+.crumbs{display:none;flex:1;min-width:0;display:flex;align-items:center;gap:4px;flex-wrap:wrap;font-size:13.5px}
 .crumbs[hidden]{display:none}
 .crumbs button{all:unset;cursor:pointer;padding:2px 6px;border-radius:5px;color:var(--cobalt)}
 .crumbs button:hover{background:var(--panel-2)} .crumbs button:focus-visible{outline:2px solid var(--cobalt)}
@@ -159,11 +169,14 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
 .flow.full .canvas{height:auto;flex:1}
 .flow.full .flow-bar{padding:12px 16px 12px 20px}
 .flow-title{display:none;font:600 18px var(--display);margin-right:12px;white-space:nowrap}
-.flow.full .flow-title{display:block}
+.flow.full .flow-title{display:block;flex:1}
+.flow-title .trail{margin:0 0 4px;font:400 13px var(--text)}
 .flow [data-expand] .i-collapse,.flow.full [data-expand] .i-expand{display:none}
 .flow.full [data-expand] .i-collapse{display:block}
 
-.stage{position:absolute;width:300px;background:var(--panel);border:1px solid var(--rule);border-radius:var(--r);padding:10px 12px}
+.stage{position:absolute;width:300px;background:var(--panel);border:1px solid var(--rule);border-radius:var(--r);padding:10px 12px;cursor:pointer;transition:border-color .15s,box-shadow .15s}
+.stage:hover{border-color:var(--ink-3)}
+.stage.mine{border-left:5px solid var(--marker)}
 .stage .h{display:grid;grid-template-columns:auto 1fr auto;gap:8px;align-items:start}
 .stage .num{font:600 12px/1 var(--display);min-width:24px;height:24px;padding:0 6px;border-radius:12px;display:grid;place-items:center;background:var(--ink);color:var(--panel)}
 .stage h4{font:600 16px/1.25 var(--display);margin:2px 0 0}
@@ -174,9 +187,7 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
 .stage.s-failed{border-color:var(--bad)} .stage.s-skipped,.stage.s-planned{border-style:dashed} .stage.s-skipped{opacity:.65}
 .stage.s-partial,.stage.s-in_progress{border-color:var(--warn)}
 /* a stage with nested steps is a stack you can open */
-.stage.deep{cursor:pointer;box-shadow:4px 4px 0 -1px var(--panel),4px 4px 0 0 var(--rule),8px 8px 0 -1px var(--panel),8px 8px 0 0 var(--rule)}
-.stage.deep:hover{border-color:var(--ink-3)}
-.stage .open{display:flex;align-items:center;gap:6px;margin-top:10px;padding-top:8px;border-top:1px solid var(--rule);font-size:13px;color:var(--cobalt)}
+.stage.deep{box-shadow:4px 4px 0 -1px var(--panel),4px 4px 0 0 var(--rule),8px 8px 0 -1px var(--panel),8px 8px 0 0 var(--rule)}
 .stages-print{display:none}
 
 .mine{list-style:none;margin:0 0 12px;padding:0;display:grid;gap:10px}
@@ -263,9 +274,8 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
     <button class="node" type="button" data-id="{{id}}" data-task="{{id}}" aria-label="{{title}} — {{status_label}}">
       <div class="nh"><span class="st-{{status}}" title="{{status_label}}"><svg class="icon"><use href="#i-{{status}}"/></svg></span><h2>{{title}}</h2></div>
       {{#brief?}}<div class="brief rich">{{brief|rich}}</div>{{/brief?}}
-      {{#waiting}}<ul class="waiting">
-        {{#approvals}}<li title="Needs approval"><svg class="icon"><use href="#i-approve"/></svg><span>{{text|md}}</span></li>{{/approvals}}
-        {{#actions}}<li title="Your action"><svg class="icon"><use href="#i-action"/></svg><span>{{text|md}}</span></li>{{/actions}}
+      {{#waiting}}<ul class="waiting">{{#waiting_all}}
+        <li title="{{#approve}}Needs approval{{/approve}}{{^approve}}Your action{{/approve}}"><svg class="icon"><use href="#i-{{#approve}}approve{{/approve}}{{^approve}}action{{/approve}}"/></svg><span>{{#where}}<b class="where">{{where}}</b>{{/where}}{{text|md}}</span></li>{{/waiting_all}}
       </ul>{{/waiting}}
     </button>
     {{/tasks}}
@@ -283,80 +293,78 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
 <div class="scrim" id="scrim"></div>
 <aside class="drawer" id="drawer" role="dialog" aria-modal="true" tabindex="-1" aria-label="Task report">
   <nav class="d-nav">
-    <button class="iconbtn" data-nav="-1" title="Previous task (Alt+←)" aria-label="Previous task"><svg class="icon"><use href="#i-prev"/></svg></button>
-    <button class="iconbtn" data-nav="1" title="Next task (Alt+→)" aria-label="Next task"><svg class="icon"><use href="#i-next"/></svg></button>
-    <button class="iconbtn" data-close title="Close (Esc)" aria-label="Close"><svg class="icon"><use href="#i-close"/></svg></button>
+    <button class="iconbtn" data-nav="-1" title="Previous on this level (Alt+←)" aria-label="Previous on this level"><svg class="icon"><use href="#i-prev"/></svg></button>
+    <button class="iconbtn" data-nav="1" title="Next on this level (Alt+→)" aria-label="Next on this level"><svg class="icon"><use href="#i-next"/></svg></button>
+    <button class="iconbtn" data-close title="Back to the work map (Esc)" aria-label="Back to the work map"><svg class="icon"><use href="#i-close"/></svg></button>
   </nav>
   <div id="slot"></div>
 </aside>
 
 <div class="reports" id="reports">
-{{#tasks}}
-<article class="report" id="report-{{id}}" data-task="{{id}}">
+{{#reports}}
+<article class="report" id="report-{{key}}" data-key="{{key}}" data-prev="{{prev}}" data-next="{{next}}">
   <header class="r-head">
+    <nav class="trail" aria-label="Where you are">{{#trail}}{{#map}}<button type="button" data-close>Work map</button>{{/map}}{{^map}}<button type="button" data-open="{{key}}">{{#num}}<span class="num">{{num}}</span>{{/num}}{{title}}</button>{{/map}}<span class="sep">›</span>{{/trail}}</nav>
     <span class="st-{{status}}" title="{{status_label}}"><svg class="icon"><use href="#i-{{status}}"/></svg></span>
-    <h2>{{title}}</h2>
+    <h2>{{#num}}<span class="num">{{num}}</span>{{/num}}{{title}}</h2>
     {{#ref}}<a class="ref" href="{{url|url}}" target="_blank" rel="noopener"><svg class="icon sm"><use href="#i-link"/></svg>{{label}}</a>{{/ref}}
   </header>
 
-  <section class="sec"><h3><svg class="icon"><use href="#i-problem"/></svg>Problem</h3>
-    <div class="body rich lead">{{problem|rich}}</div></section>
+  {{#problem}}<section class="sec"><h3><svg class="icon"><use href="#i-problem"/></svg>Problem</h3>
+    <div class="body rich lead">{{problem|rich}}</div></section>{{/problem}}
 
-  <section class="sec"><h3><svg class="icon"><use href="#i-goal"/></svg>Task</h3>
-    <div class="body rich">{{goal|rich}}</div></section>
+  {{#goal_text}}<section class="sec"><h3><svg class="icon"><use href="#i-goal"/></svg>Task</h3>
+    <div class="body rich">{{goal_text|rich}}</div></section>{{/goal_text}}
 
-  <section class="sec"><h3><svg class="icon"><use href="#i-context"/></svg>Context</h3>
-    {{#context?}}<ul class="items">{{#context}}
-      <li class="item" id="ctx-{{id}}"><span class="tag">{{id}}</span><div>
+  {{#ctx?}}<section class="sec"><h3><svg class="icon"><use href="#i-context"/></svg>Context</h3>
+    <ul class="items">{{#ctx}}
+      <li class="item" id="ctx-{{id}}"><span class="tag{{#inherited}} ghost{{/inherited}}"{{#inherited}} title="From a level above"{{/inherited}}>{{id}}</span><div>
         {{#url}}<a class="t" href="{{url|url}}" target="_blank" rel="noopener">{{title}}</a>{{/url}}{{^url}}<span class="t">{{title}}</span>{{/url}}
         {{#note}}<div class="n rich">{{note|rich}}</div>{{/note}}
-      </div></li>{{/context}}
-    </ul>{{/context?}}{{^context}}<p class="none">—</p>{{/context}}</section>
+      </div></li>{{/ctx}}
+    </ul></section>{{/ctx?}}
 
-  <section class="sec"><h3><svg class="icon"><use href="#i-inference"/></svg>Conclusions</h3>
-    {{#inferences?}}<ul class="claims">{{#inferences}}
+  {{#inferences?}}<section class="sec"><h3><svg class="icon"><use href="#i-inference"/></svg>Conclusions</h3>
+    <ul class="claims">{{#inferences}}
       <li class="claim inference"><div class="rich">{{text|rich}}</div>
         <dl class="kv">
           {{#basis?}}<dt>Based on</dt><dd>{{#basis}}<a class="ref-chip" href="#ctx-{{.}}" data-ctx="{{.}}">{{.}}</a>{{/basis}}</dd>{{/basis?}}
           {{#confidence}}<dt>Confidence</dt><dd><span class="dots" data-n="{{confidence_dots}}"><i></i><i></i><i></i></span>{{confidence}}</dd>{{/confidence}}
         </dl></li>{{/inferences}}
-    </ul>{{/inferences?}}{{^inferences}}<p class="none">—</p>{{/inferences}}</section>
+    </ul></section>{{/inferences?}}
 
-  <section class="sec"><h3><svg class="icon"><use href="#i-assumption"/></svg>Assumptions</h3>
-    {{#assumptions?}}<ul class="claims">{{#assumptions}}
+  {{#assumptions?}}<section class="sec"><h3><svg class="icon"><use href="#i-assumption"/></svg>Assumptions</h3>
+    <ul class="claims">{{#assumptions}}
       <li class="claim assumption"><div class="rich">{{text|rich}}</div>
         <dl class="kv">
           {{#why}}<dt>Why assumed</dt><dd class="rich">{{why|rich}}</dd>{{/why}}
           {{#verify}}<dt>How to verify</dt><dd class="rich">{{verify|rich}}</dd>{{/verify}}
           {{#risk}}<dt>Risk if wrong</dt><dd><span class="level {{risk}}">{{risk}}</span></dd>{{/risk}}
         </dl></li>{{/assumptions}}
-    </ul>{{/assumptions?}}{{^assumptions}}<p class="none">—</p>{{/assumptions}}</section>
+    </ul></section>{{/assumptions?}}
 
-  <section class="sec"><h3><svg class="icon"><use href="#i-result"/></svg>Result</h3>
-    {{#result.summary}}<div class="body rich lead">{{result.summary|rich}}</div>{{/result.summary}}
-    {{#result.items?}}<ul class="results">{{#result.items}}
-      <li><span class="k">{{kind}}</span><div class="v">{{#value}}<b>{{value}}</b>{{/value}}{{text|md}}{{#ref}} <a class="ref-chip" href="{{url|url}}" target="_blank" rel="noopener">{{label}}</a>{{/ref}}</div></li>{{/result.items}}
-    </ul>{{/result.items?}}</section>
+  {{#has_result}}<section class="sec"><h3><svg class="icon"><use href="#i-result"/></svg>Result</h3>
+    {{#result_summary}}<div class="body rich lead">{{result_summary|rich}}</div>{{/result_summary}}
+    {{#result_items?}}<ul class="results">{{#result_items}}
+      <li><span class="k">{{kind}}</span><div class="v">{{#value}}<b>{{value}}</b>{{/value}}{{text|md}}{{#ref}} <a class="ref-chip" href="{{url|url}}" target="_blank" rel="noopener">{{label}}</a>{{/ref}}</div></li>{{/result_items}}
+    </ul>{{/result_items?}}</section>{{/has_result}}
 
-  <section class="sec"><h3><svg class="icon"><use href="#i-flow"/></svg>Workflow</h3>
-    {{#levels?}}<div class="flow">
+  {{#children?}}<section class="sec"><h3><svg class="icon"><use href="#i-flow"/></svg>Workflow</h3>
+    <div class="flow">
       <div class="flow-bar">
-        <span class="flow-title">{{title}}</span>
-        {{#levels}}<nav class="crumbs" data-for="{{key}}" aria-label="Workflow level"{{^root}} hidden{{/root}}>
-          {{#trail}}{{^root}}<span class="sep">›</span>{{/root}}<button type="button" data-goto="{{key}}">{{#root}}Workflow{{/root}}{{#num}}<span class="num">{{num}}</span>{{/num}}{{title}}</button>{{/trail}}
-        </nav>{{/levels}}
+        <span class="flow-title"><nav class="trail" aria-label="Where you are">{{#trail}}{{#map}}<button type="button" data-close>Work map</button>{{/map}}{{^map}}<button type="button" data-open="{{key}}">{{#num}}<span class="num">{{num}}</span>{{/num}}{{title}}</button>{{/map}}<span class="sep">›</span>{{/trail}}</nav>{{#num}}<span class="num">{{num}}</span>{{/num}}{{title}}</span>
+        <span class="flow-hint">Workflow</span>
         <button class="iconbtn" data-expand title="Expand to full page" aria-label="Expand workflow"><svg class="icon i-expand"><use href="#i-expand"/></svg><svg class="icon i-collapse"><use href="#i-collapse"/></svg></button>
       </div>
       <div class="canvas" data-dir="TB" data-embedded>
-        {{#levels}}<div class="graph" data-key="{{key}}" data-edges="{{edges|json}}"{{^root}} hidden{{/root}}>
-          {{#stages}}<div class="stage s-{{status}}{{#child}} deep{{/child}}" data-id="{{id}}"{{#child}} data-child="{{child}}" tabindex="0" role="button" aria-label="Open steps of {{title}}"{{/child}}>
+        <div class="graph" data-key="{{key}}" data-edges="{{edges|json}}">
+          {{#children}}<div class="stage s-{{status}}{{#deep}} deep{{/deep}}{{#waiting}} mine{{/waiting}}" data-id="{{id}}" data-open="{{key}}" tabindex="0" role="button" aria-label="Open {{num}} {{title}}">
             <div class="h"><span class="num">{{num}}</span><h4>{{title}}</h4><span class="st-{{status}}" title="{{status_label}}"><svg class="icon sm"><use href="#i-{{status}}"/></svg></span></div>
             {{#detail}}<div class="d rich">{{detail|rich}}</div>{{/detail}}
             {{#outcome}}<div class="o"><svg class="icon sm"><use href="#i-outcome"/></svg><div class="rich">{{outcome|rich}}</div></div>{{/outcome}}
             {{#uses?}}<div class="refs">{{#uses}}<a class="ref-chip" href="#ctx-{{.}}" data-ctx="{{.}}">{{.}}</a>{{/uses}}</div>{{/uses?}}
-            {{#child}}<div class="open"><svg class="icon sm"><use href="#i-nested"/></svg>Open nested steps</div>{{/child}}
-          </div>{{/stages}}
-        </div>{{/levels}}
+          </div>{{/children}}
+        </div>
         <div class="zoom">
           <button class="iconbtn" data-zoom="out" title="Zoom out" aria-label="Zoom out"><svg class="icon"><use href="#i-minus"/></svg></button>
           <output aria-live="polite">100%</output>
@@ -366,24 +374,24 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
         <svg class="minimap" hidden aria-hidden="true"></svg>
       </div>
     </div>
-    <div class="stages-print">{{#levels}}{{^root}}<h5>{{#trail}}{{#num}}{{num}} {{title}} › {{/num}}{{/trail}}</h5>{{/root}}<ol>{{#stages}}<li><strong>{{num}} {{title}}</strong> — {{status_label}}<div class="rich">{{detail|rich}}</div>{{#outcome}}<div class="rich">→ {{outcome|rich}}</div>{{/outcome}}</li>{{/stages}}</ol>{{/levels}}</div>{{/levels?}}
-    {{^levels}}<p class="none">—</p>{{/levels}}</section>
+    <ol class="stages-print">{{#children}}<li><strong>{{num}} {{title}}</strong> — {{status_label}}<div class="rich">{{detail|rich}}</div>{{#outcome}}<div class="rich">→ {{outcome|rich}}</div>{{/outcome}}</li>{{/children}}</ol>
+  </section>{{/children?}}
 
-  <section class="sec"><h3><svg class="icon"><use href="#i-approve"/></svg>Needs approval</h3>
-    {{#approvals?}}<ul class="mine">{{#approvals}}
+  {{#approvals?}}<section class="sec"><h3><svg class="icon"><use href="#i-approve"/></svg>Needs approval</h3>
+    <ul class="mine">{{#approvals}}
       <li><svg class="icon"><use href="#i-approve"/></svg><div><div class="t">{{text|md}}</div>
         <dl class="kv">{{#why}}<dt>Why you</dt><dd class="rich">{{why|rich}}</dd>{{/why}}{{#options?}}<dt>Options</dt><dd class="opts">{{#options}}<span>{{.}}</span>{{/options}}</dd>{{/options?}}</dl>
       </div></li>{{/approvals}}
-    </ul>{{/approvals?}}{{^approvals}}<p class="none">—</p>{{/approvals}}</section>
+    </ul></section>{{/approvals?}}
 
-  <section class="sec"><h3><svg class="icon"><use href="#i-action"/></svg>Your actions</h3>
-    {{#actions?}}<ul class="mine">{{#actions}}
+  {{#actions?}}<section class="sec"><h3><svg class="icon"><use href="#i-action"/></svg>Your actions</h3>
+    <ul class="mine">{{#actions}}
       <li><svg class="icon"><use href="#i-action"/></svg><div><div class="t">{{text|md}}</div>
         <dl class="kv">{{#why}}<dt>Why you</dt><dd class="rich">{{why|rich}}</dd>{{/why}}{{#command}}<dt>Command</dt><dd class="cmd"><code>{{command}}</code><button class="copy" data-copy="{{command}}" title="Copy" aria-label="Copy command"><svg class="icon sm"><use href="#i-copy"/></svg></button></dd>{{/command}}</dl>
       </div></li>{{/actions}}
-    </ul>{{/actions?}}{{^actions}}<p class="none">—</p>{{/actions}}</section>
+    </ul></section>{{/actions?}}
 </article>
-{{/tasks}}
+{{/reports}}
 </div>
 
 <script>
@@ -595,70 +603,57 @@ class Canvas {
 const mapCanvas = new Canvas($("#map"));
 mapCanvas.show("map");
 
-// ── workflow canvases (one per report, created on first open) ──
+// ── workflow canvases (one per report, created when the report is first shown) ──
 const flows = new WeakMap();
 function flowOf(art) {
-  const box = $(".flow", art); if (!box) return null;
-  if (!flows.has(box)) {
-    const c = new Canvas($(":scope > .canvas", box));
-    c.el.addEventListener("level", e => {
-      $$(".crumbs", box).forEach(n => n.hidden = n.dataset.for !== e.detail);
-      $$(".crumbs button", box).forEach(b => b.setAttribute("aria-current", String(b.dataset.goto === e.detail)));
-    });
-    flows.set(box, c);
-    c.show("root");
-  }
+  const box = $(":scope > .sec .flow", art); if (!box) return null;
+  if (!flows.has(box)) { const c = new Canvas($(":scope > .canvas", box)); flows.set(box, c); c.show(art.dataset.key); }
   return flows.get(box);
 }
 let expanded = null;
 function expand(box, on) {
-  const c = flows.get(box);
   box.classList.toggle("full", on); expanded = on ? box : null;
-  document.body.style.overflow = on ? "hidden" : "";
-  requestAnimationFrame(() => c.home());
+  requestAnimationFrame(() => flows.get(box).home());
 }
 
-// ── drawer ──
+// ── drawer: shows one report at a time — a task, or a stage of it, at any depth ──
 const drawer = $("#drawer"), scrim = $("#scrim"), slot = $("#slot"), reports = $("#reports");
-const order = $$(".report", reports).map(r => r.dataset.task);
 let current = null, lastFocus = null;
-function open(id) {
-  const art = document.getElementById("report-" + id); if (!art) return;
+const art = key => document.getElementById("report-" + key);
+function open(key, {keepFull = false} = {}) {
+  const a = art(key); if (!a) return;
+  const wasFull = !!expanded;
+  if (expanded) expand(expanded, false);
   if (!current) lastFocus = document.activeElement;
-  if (current) reports.appendChild(document.getElementById("report-" + current));
-  slot.appendChild(art); current = id;
+  if (current) reports.appendChild(art(current));
+  slot.appendChild(a); current = key;
   drawer.classList.add("open"); scrim.classList.add("open");
-  $$("#map .node").forEach(n => n.setAttribute("aria-current", String(n.dataset.task === id)));
-  flowOf(art);
-  const i = order.indexOf(id);
-  $('[data-nav="-1"]', drawer).disabled = i <= 0;
-  $('[data-nav="1"]', drawer).disabled = i >= order.length - 1;
-  history.replaceState(null, "", "#task=" + encodeURIComponent(id));
+  const task = key.split("/")[0];
+  $$("#map .node").forEach(n => n.setAttribute("aria-current", String(n.dataset.task === task)));
+  const f = flowOf(a);
+  $('[data-nav="-1"]', drawer).disabled = !a.dataset.prev;
+  $('[data-nav="1"]', drawer).disabled = !a.dataset.next;
+  history.replaceState(null, "", "#task=" + encodeURIComponent(key));
   drawer.scrollTop = 0; drawer.focus({preventScroll: true});
+  if (keepFull && wasFull && f) expand($(":scope > .sec .flow", a), true);   // drilling from full page stays full page
 }
 function close() {
   if (!current) return;
   if (expanded) expand(expanded, false);
-  reports.appendChild(document.getElementById("report-" + current)); current = null;
+  reports.appendChild(art(current)); current = null;
   drawer.classList.remove("open"); scrim.classList.remove("open");
   $$("#map .node").forEach(n => n.setAttribute("aria-current", "false"));
   history.replaceState(null, "", location.pathname + location.search);
   lastFocus?.focus();
 }
-const step = d => { const i = order.indexOf(current) + d; if (order[i]) open(order[i]); };
+const step = d => { const a = art(current), k = a && a.dataset[d < 0 ? "prev" : "next"]; if (k) open(k, {keepFull: true}); };
+const up = () => { if (!current) return; const i = current.lastIndexOf("/"); i > 0 ? open(current.slice(0, i)) : close(); };
 
 document.addEventListener("click", e => {
   const node = e.target.closest("#map .node"); if (node) return open(node.dataset.task);
   if (e.target.closest("[data-close]") || e.target === scrim) return close();
   const nav = e.target.closest("[data-nav]"); if (nav) return step(+nav.dataset.nav);
-  const box = e.target.closest(".flow");
-  if (box) {
-    const c = flows.get(box);
-    const deep = e.target.closest(".stage[data-child]"), go = e.target.closest("[data-goto]");
-    if (deep && !e.target.closest("a")) return c.show(deep.dataset.child);
-    if (go) return c.show(go.dataset.goto);
-    if (e.target.closest("[data-expand]")) return expand(box, !box.classList.contains("full"));
-  }
+  const ex = e.target.closest("[data-expand]"); if (ex) { const box = ex.closest(".flow"); return expand(box, !box.classList.contains("full")); }
   const cp = e.target.closest("[data-copy]");
   if (cp) { navigator.clipboard?.writeText(cp.dataset.copy); cp.style.color = "var(--ok)"; setTimeout(() => cp.style.color = "", 1200); return; }
   const chip = e.target.closest("a[data-ctx]");
@@ -667,21 +662,24 @@ document.addEventListener("click", e => {
     if (expanded) expand(expanded, false);
     const el = slot.querySelector(`[id="ctx-${chip.dataset.ctx}"]`);
     if (el) { $$(".item.flash", slot).forEach(x => x.classList.remove("flash")); el.classList.add("flash"); el.scrollIntoView({block: "center", behavior: "smooth"}); }
+    return;
   }
+  const o = e.target.closest("[data-open]"); if (o) return open(o.dataset.open, {keepFull: !!o.closest(".flow.full")});
   if (e.target.closest("#print-btn")) print();
 });
 document.addEventListener("keydown", e => {
   if (e.target.closest?.("input,textarea")) return;
+  const o = e.target.closest?.("[data-open]");
+  if (o && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); return open(o.dataset.open, {keepFull: !!o.closest(".flow.full")}); }
   if (expanded) {
     if (e.key === "Escape") { e.preventDefault(); return expand(expanded, false); }
-    const st = e.target.closest?.(".stage[data-child]");
-    if (st && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); return flows.get(expanded).show(st.dataset.child); }
+    if (e.altKey && e.key === "ArrowUp") { e.preventDefault(); return up(); }
+    if (e.altKey && (e.key === "ArrowRight" || e.key === "ArrowLeft")) { e.preventDefault(); return step(e.key === "ArrowRight" ? 1 : -1); }
     return flows.get(expanded).key(e);
   }
   if (current) {
-    const st = e.target.closest?.(".stage[data-child]");
-    if (st && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); return flows.get(st.closest(".flow")).show(st.dataset.child); }
     if (e.key === "Escape") close();
+    if (e.altKey && e.key === "ArrowUp") { e.preventDefault(); up(); }
     if (e.altKey && e.key === "ArrowRight") step(1);
     if (e.altKey && e.key === "ArrowLeft") step(-1);
     return;

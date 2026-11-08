@@ -209,68 +209,97 @@ def render(tpl, data):
 
 
 # ── view model: derive what the template needs, without changing the content ──
+#
+# Tasks and stages are the same kind of node. A task is a top-level node (shown on the map);
+# its `stages` are nodes too, with the same fields, to any depth. Every node gets its own report.
 
-def _levels(stages, flow):
-    """Flatten nested stages into levels: the root workflow, then one level per stage that has
-    its own `stages`. Each level: key, trail (breadcrumb), stages (with hierarchical num), edges."""
-    out = []
+STATUSES = TASK_STATUS | STAGE_STATUS | {"skipped"}
+NODE_TEXT = ("ref", "brief", "problem", "goal", "detail", "outcome", "flow")
 
-    def walk(sts, fl, key, trail, prefix):
-        level = {"key": key, "trail": trail, "root": key == "root", "stages": sts,
-                 "edges": fl or [{"from": sts[i]["id"], "to": sts[i + 1]["id"]} for i in range(len(sts) - 1)]}
-        out.append(level)
-        for i, s in enumerate(sts):
-            s.setdefault("status", "done")
-            s["status_label"] = STATUS_LABEL.get(s["status"], s["status"])
-            s["num"] = f"{prefix}{i + 1}"
-            for k in ("detail", "outcome", "uses"):
-                s.setdefault(k, None)
-            s["child"] = None
-            if s.get("stages"):
-                s["child"] = f"{key}/{s['id']}"
-                walk(s["stages"], s.get("flow"), s["child"],
-                     trail + [{"key": s["child"], "num": s["num"], "title": s["title"], "root": False}], s["num"] + ".")
-            else:
-                s["stages"] = None
-    if stages:
-        walk(stages, flow, "root", [{"key": "root", "num": None, "title": None, "root": True}], "")
-    return out
+
+def _report(n, key, num, trail, ctx_up, task_title, reports, waiting_up):
+    """Flatten one node (and its subtree) into `reports`; return the stage-card view of it."""
+    n = dict(n)
+    for k in NODE_TEXT:
+        n.setdefault(k, None)
+    n["status"] = n.get("status") or ("planned" if num is None else "done")
+    n["status_label"] = STATUS_LABEL.get(n["status"], n["status"])
+    n["key"], n["num"], n["trail"] = key, num, trail
+    n["is_task"] = num is None
+
+    own = [dict(c, inherited=False, url=c.get("url"), note=c.get("note")) for c in n.get("context") or []]
+    index = {**ctx_up, **{c["id"]: c for c in own}}
+    stages = n.get("stages") or []
+    wanted = set(n.get("uses") or [])
+    for i in n.get("inferences") or []:
+        wanted.update(i.get("basis") or [])
+    for s in stages:
+        wanted.update(s.get("uses") or [])
+    own_ids = {c["id"] for c in own}
+    n["ctx"] = own + [dict(ctx_up[i], inherited=True) for i in sorted(wanted - own_ids) if i in ctx_up]
+
+    n["inferences"] = [dict({"basis": None, "confidence": None}, **i) for i in n.get("inferences") or []]
+    for i in n["inferences"]:
+        i["confidence_dots"] = {"high": 3, "medium": 2, "low": 1}.get(i.get("confidence"), 0)
+    n["assumptions"] = [dict({"why": None, "verify": None, "risk": None}, **a) for a in n.get("assumptions") or []]
+    n["approvals"] = [dict({"why": None, "options": None}, **a) for a in n.get("approvals") or []]
+    n["actions"] = [dict({"why": None, "command": None}, **a) for a in n.get("actions") or []]
+    res = n.get("result") or {}
+    n["result_summary"] = res.get("summary") or n["outcome"]
+    n["result_items"] = [dict({"kind": None, "value": None, "ref": None}, **r) for r in res.get("items") or []]
+    n["goal_text"] = n["goal"] or n["detail"]
+    n["has_result"] = bool(n["result_summary"] or n["result_items"])
+
+    # what waits on the reader here and anywhere below
+    slot = len(reports)
+    reports.append(None)          # reserve: reports are listed depth-first, parent before children
+    here = [{"approve": True, "text": a["text"], "where": num} for a in n["approvals"]] + \
+           [{"approve": False, "text": a["text"], "where": num} for a in n["actions"]]
+    below = []
+    me = {"key": key, "num": num, "title": n["title"], "map": False}
+    cards = []
+    for i, s in enumerate(stages):
+        snum = f"{num}.{i + 1}" if num else str(i + 1)
+        card = _report(s, f"{key}/{s['id']}", snum, trail + [me], index, task_title, reports, below)
+        cards.append(card)
+    keys = [c["key"] for c in cards]
+    for i, c in enumerate(cards):
+        reports_by_key[c["key"]]["prev"] = keys[i - 1] if i else None
+        reports_by_key[c["key"]]["next"] = keys[i + 1] if i + 1 < len(keys) else None
+    n["children"] = cards
+    n["edges"] = n["flow"] or [{"from": stages[i]["id"], "to": stages[i + 1]["id"]} for i in range(len(stages) - 1)]
+    n["waiting_all"] = here + below
+    n["waiting"] = bool(n["waiting_all"])
+    n.setdefault("prev", None)
+    n.setdefault("next", None)
+    waiting_up.extend(n["waiting_all"])
+    reports[slot] = n
+    reports_by_key[key] = n
+    return {"id": n["id"], "key": key, "num": num, "title": n["title"], "status": n["status"],
+            "status_label": n["status_label"], "detail": n["detail"], "outcome": n["outcome"],
+            "uses": n.get("uses") or None, "deep": bool(stages), "waiting": n["waiting"]}
+
+
+reports_by_key = {}
 
 
 def view(d):
     v = json.loads(json.dumps(d))
     v.setdefault("meta", {})
     v["meta"].setdefault("lang", "en")
-    tasks = v["tasks"]
-    # Every optional key exists explicitly, so a missing field never resolves to a parent's value.
-    OPT = {
-        "context": ("url", "note"), "inferences": ("basis", "confidence"),
-        "assumptions": ("why", "verify", "risk"),
-        "approvals": ("why", "options"), "actions": ("why", "command"),
-    }
-    for t in tasks:
-        for k in ("ref", "brief", "flow"):
-            t.setdefault(k, None)
-        for coll, keys in OPT.items():
-            t[coll] = t.get(coll) or []
-            for it in t[coll]:
-                for k in keys:
-                    it.setdefault(k, None)
-        t.setdefault("result", {})
-        t["result"] = t["result"] or {}
-        t["result"].setdefault("summary", None)
-        t["result"]["items"] = t["result"].get("items") or []
-        for it in t["result"]["items"]:
-            for k in ("kind", "value", "ref"):
-                it.setdefault(k, None)
-    for t in tasks:
-        t.setdefault("status", "planned")
-        t["status_label"] = STATUS_LABEL.get(t["status"], t["status"])
-        t["brief"] = t.get("brief") or (t.get("result") or {}).get("summary") or ""
-        t["waiting"] = bool(t.get("approvals") or t.get("actions"))
-        t["levels"] = _levels(t.get("stages") or [], t.get("flow"))
-        for i in t.get("inferences") or []:
-            i["confidence_dots"] = {"high": 3, "medium": 2, "low": 1}.get(i.get("confidence"), 0)
+    reports_by_key.clear()
+    reports, tasks = [], []
+    root = {"key": "", "num": None, "title": None, "map": True}
+    for t in v["tasks"]:
+        sink = []
+        _report(t, t["id"], None, [root], {}, t["title"], reports, sink)
+        tasks.append(reports_by_key[t["id"]])
+    ids = [t["key"] for t in tasks]
+    for i, t in enumerate(tasks):
+        t["prev"] = ids[i - 1] if i else None
+        t["next"] = ids[i + 1] if i + 1 < len(ids) else None
+    v["tasks"] = tasks
+    v["reports"] = reports
     # "A depends on B" is drawn B -> A (prerequisite first)
     v["edges"] = [({"from": l["to"], "to": l["from"], "kind": "depends", "label": l.get("label")}
                    if l.get("kind") == "depends" else
@@ -293,81 +322,78 @@ def validate(d):
     if not isinstance(tasks, list) or not tasks:
         err("tasks must be a non-empty list")
         return errors, warnings
-    ids = set()
-    for n, t in enumerate(tasks):
-        tid = t.get("id")
-        if not tid:
-            err(f"tasks[{n}].id is required")
-        elif tid in ids:
-            err(f"tasks[{n}].id {tid!r} is duplicated")
-        ids.add(tid)
-        where = f"task {tid or n}"
-        for k in ("title", "problem", "goal"):
-            if not t.get(k):
-                err(f"{where}: {k} is required")
-        if not t.get("brief"):
-            warn(f"{where}: no brief — the map card falls back to result.summary")
-        if t.get("status") and t["status"] not in TASK_STATUS:
-            err(f"{where}: status {t['status']!r} not in {sorted(TASK_STATUS)}")
-        ctx_ids = set()
-        for c in t.get("context") or []:
+
+    def node(n, where, ctx_up, top):
+        if not n.get("id") or not n.get("title"):
+            err(f"{where}: id and title are required")
+        if "/" in str(n.get("id", "")):
+            err(f"{where}: id must not contain '/'")
+        if top:
+            for k in ("problem", "goal"):
+                if not n.get(k):
+                    err(f"{where}: {k} is required for a task")
+            if not n.get("brief"):
+                warn(f"{where}: no brief — the map card falls back to result.summary")
+        if n.get("status") and n["status"] not in STATUSES:
+            err(f"{where}: status {n['status']!r} not in {sorted(STATUSES)}")
+        own = set()
+        for c in n.get("context") or []:
             if not c.get("id") or not c.get("title"):
                 err(f"{where}: every context item needs id and title")
-            if c.get("id") in ctx_ids:
+            if c.get("id") in own:
                 err(f"{where}: context id {c.get('id')!r} duplicated")
-            ctx_ids.add(c.get("id"))
-        if not ctx_ids:
+            own.add(c.get("id"))
+        known = ctx_up | own
+        if top and not own:
             warn(f"{where}: no context gathered")
-        for i in t.get("inferences") or []:
+        for u in n.get("uses") or []:
+            if u not in known:
+                err(f"{where}: uses unknown context {u!r}")
+        for i in n.get("inferences") or []:
             if not i.get("text"):
                 err(f"{where}: inference without text")
             for b in i.get("basis") or []:
-                if b not in ctx_ids:
-                    err(f"{where}: inference basis {b!r} is not a context id")
+                if b not in known:
+                    err(f"{where}: inference basis {b!r} is not a context id here or above")
             if not i.get("basis"):
                 warn(f"{where}: inference {str(i.get('text', ''))[:40]!r} has no basis — is it an assumption?")
             if i.get("confidence") and i["confidence"] not in LEVELS:
                 err(f"{where}: confidence must be one of {sorted(LEVELS)}")
-        for a in t.get("assumptions") or []:
+        for a in n.get("assumptions") or []:
             if not a.get("text"):
                 err(f"{where}: assumption without text")
             if not a.get("verify"):
                 warn(f"{where}: assumption {str(a.get('text', ''))[:40]!r} has no 'verify'")
             if a.get("risk") and a["risk"] not in LEVELS:
                 err(f"{where}: risk must be one of {sorted(LEVELS)}")
-        res = t.get("result") or {}
-        if not res.get("summary") and not res.get("items"):
+        res = n.get("result") or {}
+        if top and not res.get("summary") and not res.get("items"):
             warn(f"{where}: empty result")
         for r in res.get("items") or []:
             if r.get("kind") and r["kind"] not in RESULT_KINDS:
                 err(f"{where}: result kind {r['kind']!r} not in {sorted(RESULT_KINDS)}")
-        def check_stages(sts, fl, at):
-            ids_ = set()
-            for s in sts:
-                if not s.get("id") or not s.get("title"):
-                    err(f"{where}: every stage needs id and title ({at})")
-                if s.get("id") in ids_:
-                    err(f"{where}: stage id {s.get('id')!r} duplicated ({at})")
-                ids_.add(s.get("id"))
-                if s.get("status") and s["status"] not in STAGE_STATUS:
-                    err(f"{where}: stage status {s['status']!r} not in {sorted(STAGE_STATUS)}")
-                for u in s.get("uses") or []:
-                    if u not in ctx_ids:
-                        err(f"{where}: stage {s.get('id')!r} uses unknown context {u!r}")
-                if s.get("stages"):
-                    check_stages(s["stages"], s.get("flow"), f"{at} › {s.get('id')}")
-                elif s.get("flow"):
-                    err(f"{where}: stage {s.get('id')!r} has flow but no stages")
-            for f in fl or []:
-                if f.get("from") not in ids_ or f.get("to") not in ids_:
-                    err(f"{where}: flow edge {f} references unknown stage ({at})")
-            return ids_
-        if not check_stages(t.get("stages") or [], t.get("flow"), "workflow"):
-            warn(f"{where}: no stages — the workflow chart will be empty")
         for k in ("approvals", "actions"):
-            for a in t.get(k) or []:
+            for a in n.get(k) or []:
                 if not a.get("text"):
                     err(f"{where}: {k[:-1]} without text")
+        sids = set()
+        for s in n.get("stages") or []:
+            if s.get("id") in sids:
+                err(f"{where}: stage id {s.get('id')!r} duplicated")
+            sids.add(s.get("id"))
+            node(s, f"{where} › {s.get('id')}", known, False)
+        for f in n.get("flow") or []:
+            if f.get("from") not in sids or f.get("to") not in sids:
+                err(f"{where}: flow edge {f} references unknown stage")
+        if top and not sids:
+            warn(f"{where}: no stages — the workflow chart will be empty")
+
+    ids = set()
+    for n, t in enumerate(tasks):
+        if t.get("id") in ids:
+            err(f"tasks[{n}].id {t.get('id')!r} is duplicated")
+        ids.add(t.get("id"))
+        node(t, f"task {t.get('id') or n}", set(), True)
     for l in d.get("links") or []:
         if l.get("from") not in ids or l.get("to") not in ids:
             err(f"link {l} references unknown task")

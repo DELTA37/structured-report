@@ -60,15 +60,15 @@ Everything is HTML-escaped.
       }]
     },
 
-    "stages": [{
-      "id": "unique within the task",
+    "stages": [{                                               // a stage is a node: same fields as a task
+      "id": "unique among its siblings, no '/'",
       "title": "required, verb first",
-      "detail": "what was done",
-      "outcome": "what it produced or showed",
-      "status": "done (default) | partial | failed | skipped | planned | in_progress | blocked",
-      "uses": ["C2"],                                          // context ids
-      "stages": [ … ],                                         // optional nested steps, same shape, any depth
-      "flow": [ … ]                                            // edges between those nested steps
+      "status": "done (default) | partial | failed | skipped | planned | in_progress | blocked | needs_review",
+      "detail": "what was done — shown on the card; Task in its report when goal is absent",
+      "outcome": "what it produced — shown on the card; Result in its report when result is absent",
+      "uses": ["C2"],                                          // context ids from this level or any above
+      // optional, exactly as for a task: problem, goal, context, inferences, assumptions,
+      // result, approvals, actions, and nested "stages" + "flow" — to any depth
     }],
     "flow": [{"from": "stage id", "to": "stage id", "label": "optional"}],
     // flow omitted → stages are chained in order
@@ -104,17 +104,23 @@ Warnings: task without context or stages, inference without basis, assumption wi
   Tabbing to a card brings it into view. Layout: left → right by `depends` / `blocks`, dashed
   for `related`. Each card: status icon, title,
   `brief` (falls back to `result.summary`), and the task's approvals and actions.
-- Workflow is the same kind of canvas inside the report (drag to move, pinch / Ctrl+wheel to zoom;
-  plain wheel keeps scrolling the report). The expand button opens it full page (Esc to leave).
-  Stages with nested `stages` look like a stack; clicking one opens its level, numbered
-  hierarchically (3 → 3.1 → 3.1.2), with breadcrumbs to go back. Each level keeps its own view.
-- Click a card → drawer with the task report in the template's fixed section order;
-  `#task=<id>` deep-links to it; Esc closes; Alt+←/→ moves between tasks.
+- Every task and every stage has its own report in the same structure (empty sections hidden).
+  Its Workflow is a canvas of its direct stages (drag, pinch / Ctrl+wheel; plain wheel scrolls the
+  report; expand button = full page, Esc to leave). Click a stage to open its report — recursively.
+  Stages that contain stages look like a stack; stages with something waiting on the reader carry
+  a yellow edge. A trail (Work map › task › 3 › 3.2) leads back; ‹ › move between siblings,
+  Alt+↑ goes one level up. `#task=<id>/<stage id>/…` deep-links to any level.
+- Approvals and actions from nested stages also appear on the task's map card, prefixed with the
+  stage number.
+- Click a card → drawer with the task report in the template's fixed section order; Esc closes.
 - Print / Save as PDF prints every task report, one per page, with stages as a numbered list.
 
 ## Template placeholders
 
 See the docstring of `scripts/build.py`. The template receives the JSON plus derived fields:
-`status_label`, `waiting` (task has approvals or actions), `levels` (the workflow flattened into
-levels: `key`, `trail`, `root`, `stages` with `num` and `child`, `edges` — stages chained when
-`flow` is omitted), `confidence_dots`, top-level `edges` and `has_blocks`.
+`tasks` (top-level nodes, for the map) and `reports` (every node, depth first). Each report has
+`key` (`task/stage/…`), `num` (`3.2`, none for tasks), `trail`, `prev` / `next` (siblings),
+`status_label`, `goal_text`, `result_summary`, `result_items`, `has_result`, `ctx` (own context plus
+inherited items it references, flagged `inherited`), `children` (stage cards: `key`, `num`, `deep`,
+`waiting`), `edges`, and `waiting_all` (its own and nested approvals/actions with `where`).
+Top-level `edges` and `has_blocks` describe the map.
