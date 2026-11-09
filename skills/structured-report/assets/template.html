@@ -1182,6 +1182,8 @@ function toggleRail(byKeyboard) {
   if (byKeyboard) (closed ? $("#rail-open") : $("#rail-close")).focus({preventScroll: true});
   setTimeout(() => mapCanvas.apply(), 280);
 }
+// A narrow pane (the report beside a session in the IDE): the prompts rail would cover the map — start it hidden.
+if (rail && innerWidth < 900 && !rail.classList.contains("closed")) toggleRail();
 const _open = open;
 open = function (key, o) { _open(key, o); const a = art(key); if (a) { stamps(a); paint(a); } };
 

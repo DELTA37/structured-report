@@ -81,6 +81,13 @@ Every block of the report has a **copy as Markdown** button (the whole report, a
 report, a section, a single item, a step, a prompt) — point the reader to it when they want to
 paste something elsewhere.
 
+**Inside PyCharm / WebStorm** (the session runs in the IDE's agent panel or terminal):
+`python3 scripts/ide.py open <report.json> --project <repo> --session <id>` shows the report in the
+IDE's built-in browser in the editor window to the right of the session — a split *Session | Report* —
+and reloads it after every rebuild. It uses the IDE's own `ideScript` command to run
+`scripts/ide-open.groovy` inside the running IDE: no plugin, no restart. Outside a JetBrains IDE it
+does nothing. Then do not `open` the HTML in the browser as well.
+
 ## The rules that make the report trustworthy
 
 Separate **how you know** each thing; never blur it.
@@ -143,5 +150,6 @@ Content in the user's language, `meta.lang` set to its code. Structure labels st
 - `scripts/track.py` — `start`, `wait`, `hook`, `stop-hook`, `daemon`, `status`, `install-hook`
   (see its docstring).
 - `scripts/statusline.py` — the report link for the Claude Code status line.
+- `scripts/ide.py`, `scripts/ide-open.groovy` — the report beside the session in a JetBrains IDE.
 - `references/schema.md` — every field.
 - `examples/` — English and Russian examples; the Russian one carries a 5-prompt journal.
