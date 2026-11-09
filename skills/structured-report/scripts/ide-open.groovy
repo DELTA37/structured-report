@@ -149,6 +149,22 @@ def projectFor = { String path ->
             .max { it.basePath.length() }
 }
 
+// Smooth scrolling: the IDE's default out-of-process JCEF ships every frame between processes and the
+// report's scrolling stutters. Switch the IDE to in-process JCEF once; it applies after an IDE restart.
+try {
+    def k = com.intellij.openapi.util.registry.Registry.get("ide.browser.jcef.out-of-process.enabled")
+    if (k.asBoolean()) {
+        k.setValue(false)
+        log("registry ide.browser.jcef.out-of-process.enabled → false (restart the IDE to apply)")
+        try {
+            new com.intellij.notification.Notification("System Messages", "structured-report",
+                    "Встроенный браузер переключён в режим in-process, чтобы отчёт прокручивался плавно. " +
+                    "Применится после перезапуска IDE. Вернуть: Registry → ide.browser.jcef.out-of-process.enabled.",
+                    com.intellij.notification.NotificationType.INFORMATION).notify(null)
+        } catch (Throwable ignored) {}
+    }
+} catch (Throwable t) { log("registry: ${t}") }
+
 // requests from the SessionStart hook: which projects want the service
 def wanted = [] as Set
 (new File(dir, "requests").listFiles() ?: []).findAll { it.name.endsWith(".properties") }.each { File rf ->

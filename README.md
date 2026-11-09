@@ -48,6 +48,16 @@ icons, keyboard navigation, deep links (`#task=<id>`), and a print view that pri
 - **Search** — `/` or ⌘K, across every task and stage.
 - **Link in the session** — `scripts/statusline.py` adds the report to the Claude Code status line,
   under the input: a clickable link that opens it, and how many questions are waiting.
+- **A report for every session, automatically** — `scripts/autobind.py install` wires a
+  `SessionStart` hook (per repo, or `--global`): each new session gets its own living report in
+  `~/Reports/sessions/<repo>/`, bound and built before the first prompt.
+- **Beside the session in PyCharm / WebStorm** — when the session runs inside a JetBrains IDE (its
+  agent panel or terminal), the report of the *active* session is shown in the editor window to the
+  right of it — a split *Session | Report*. It appears after the first prompt, follows you when you
+  switch sessions and reloads on every rebuild. No plugin: the IDE's own `ideScript` command runs
+  `scripts/ide-open.groovy` inside the running IDE. For smooth scrolling it switches the IDE's
+  built-in browser to in-process mode (registry `ide.browser.jcef.out-of-process.enabled = false`,
+  applies after an IDE restart; a notification says so).
 - **Checks** — `verified` needs proof (`how`), finished work must say what was *not checked*,
   next steps are planned stages, and the build refuses anything that looks like a secret.
 
@@ -65,6 +75,17 @@ Or copy the skill folder into your agent's skills directory, e.g. for Claude Cod
 git clone https://github.com/DELTA37/structured-report
 cp -r structured-report/skills/structured-report ~/.claude/skills/
 ```
+
+### A living report for every Claude Code session
+
+```bash
+cd your-repo
+python3 ~/.claude/skills/structured-report/scripts/autobind.py install            # this repo (.claude/settings.local.json)
+python3 ~/.claude/skills/structured-report/scripts/autobind.py install --global   # every repo (~/.claude/settings.json)
+python3 ~/.claude/skills/structured-report/scripts/autobind.py status | uninstall
+```
+
+Optionally add `scripts/statusline.py` to your status line for a clickable link to the report.
 
 ## Use
 
