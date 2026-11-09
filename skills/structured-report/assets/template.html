@@ -43,6 +43,7 @@ code{font:12.5px/1.4 ui-monospace,"SF Mono",Menlo,monospace;background:var(--pan
 .kv{display:grid;grid-template-columns:max-content 1fr;gap:4px 14px;margin:0 0 8px}
 .kv:last-child{margin-bottom:0}
 .kv dt{color:var(--ink-2)} .kv dd{margin:0}
+.sized .kv dd{min-width:0}
 
 /* status colours (template-defined statuses) */
 .st-done{color:var(--ok)} .st-in_progress,.st-partial{color:var(--warn)} .st-blocked,.st-failed{color:var(--bad)}
@@ -85,7 +86,7 @@ body.map-page{height:100vh;overflow:hidden;display:flex;flex-direction:column}
 .legend svg.line{width:30px;height:10px}
 #map{flex:1;min-width:0}
 
-.node{position:absolute;width:300px;text-align:left;font:inherit;color:inherit;cursor:pointer;
+.node{position:absolute;width:min-content;min-width:300px;max-width:560px;overflow-wrap:break-word;text-align:left;font:inherit;color:inherit;cursor:pointer;
   background:var(--panel);border:1px solid var(--rule);border-radius:var(--r);padding:14px 16px;
   transition:border-color .15s,box-shadow .15s}
 .node:hover{border-color:var(--ink-3);box-shadow:0 8px 20px -14px rgba(23,38,43,.55)}
@@ -269,7 +270,10 @@ body.at-prompt #map .node:not(.p-new):not(.p-changed),body.at-prompt .stage:not(
   font:500 12.5px/20px ui-monospace,SFMono-Regular,Menlo,monospace;padding:0 7px 0 5px;margin:0 1px;border-radius:6px;
   background:rgba(45,79,214,.07);border:1px solid rgba(45,79,214,.22);color:var(--cobalt);white-space:nowrap;transition:background .15s,border-color .15s}
 .fref .icon{width:13px;height:13px;flex:none}
-.fref .fl{color:var(--ink-2)}
+.fref{max-width:100%}
+.fref .fn{min-width:0;overflow:hidden;text-overflow:ellipsis}
+.fref .fl{color:var(--ink-2);flex:none}
+.rich,.sec .body,.claim,.kv{overflow-wrap:break-word}
 .fref:hover{background:rgba(45,79,214,.13);border-color:var(--cobalt)}
 .fref:focus-visible{outline:2px solid var(--cobalt);outline-offset:1px}
 .fv-scrim{position:fixed;inset:0;z-index:70;background:rgba(23,38,43,.38);animation:fvfade .15s ease}
@@ -404,7 +408,7 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
 .flow [data-expand] .i-collapse,.flow.full [data-expand] .i-expand{display:none}
 .flow.full [data-expand] .i-collapse{display:block}
 
-.stage{position:absolute;width:300px;background:var(--panel);border:1px solid var(--rule);border-radius:var(--r);padding:10px 12px;cursor:pointer;transition:border-color .15s,box-shadow .15s}
+.stage{position:absolute;width:min-content;min-width:300px;max-width:560px;overflow-wrap:break-word;background:var(--panel);border:1px solid var(--rule);border-radius:var(--r);padding:10px 12px;cursor:pointer;transition:border-color .15s,box-shadow .15s}
 .stage:hover{border-color:var(--ink-3)}
 .stage.mine{border-left:5px solid var(--marker)}
 .stage .h{display:grid;grid-template-columns:auto 1fr auto;gap:8px;align-items:start}
@@ -763,6 +767,9 @@ function edgePath(a, b, dir) {
 function arrange(graph, dir) {
   graph.querySelector(":scope > svg")?.remove();
   const els = $$(":scope > [data-id]", graph);
+  // Block width = its widest unbreakable piece (file chip, path, code), 300…560px; then fix it and let text wrap inside.
+  els.forEach(el => { el.style.width = ""; el.classList.remove("sized"); });
+  els.map(el => el.offsetWidth).forEach((w, i) => { els[i].style.width = w + "px"; els[i].classList.add("sized"); });
   const edges = JSON.parse(graph.dataset.edges || "[]").map(e => dir === "TB" ? {...e, kind: e.kind || "depends"} : e);
   const labelled = edges.some(e => e.label);
   const o = dir === "LR" ? {gapMain: labelled ? 150 : 100, gapCross: 40, pad: 24} : {gapMain: labelled ? 70 : 46, gapCross: 28, pad: 24};

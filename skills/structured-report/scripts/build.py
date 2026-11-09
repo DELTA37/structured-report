@@ -168,7 +168,7 @@ def file_chip(m):
     rs = [(max(1, a), min(len(f["lines"]), b)) for a, b in rs if a <= len(f["lines"])]
     f["want"].extend(rs or [(1, 0)])
     spec = ",".join(f"{a}" if a == b else f"{a}-{b}" for a, b in rs)
-    label = html.escape(os.path.basename(abs_)) + (f'<span class="fl">:{spec}</span>' if spec else "")
+    label = f'<span class="fn">{html.escape(os.path.basename(abs_))}</span>' + (f'<span class="fl">:{spec}</span>' if spec else "")
     where = f"{f['repo']}/{f['rel']}" + (f":{spec}" if spec else "")
     return lead + (f'<span role="button" tabindex="0" class="fref" data-f="{f["id"]}" data-ls="{spec}" data-md="{html.escape(where)}" '
             f'title="{html.escape(where)} — open the lines"><svg class="icon"><use href="#i-file"/></svg>{label}</span>')
