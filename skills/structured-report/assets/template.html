@@ -436,6 +436,15 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
 .copy:focus-visible{outline:2px solid var(--cobalt)}
 
 .reports{display:none}
+/* narrow pane (the report beside a session in the IDE): compact header and task titles */
+@media (max-width:900px){
+  .bar{gap:10px;padding:8px 12px} .bar h1{font-size:16px}
+  .bar .iconbtn,.bar > .copybtn.cb-all{height:30px} .bar .iconbtn{width:30px}
+  .bar > .copybtn.cb-all{padding:0 8px} .bar > .copybtn.cb-all span{display:none} .search{flex:0 1 170px;min-width:0} .bar{overflow:hidden}
+  .r-head{padding-top:8px;padding-bottom:8px;grid-template-columns:20px 1fr;gap:2px 8px}
+  .r-head h2{font-size:19px;line-height:1.2} .r-head .icon{width:18px;height:18px;margin-top:2px}
+  .r-head h2 .num{font-size:12px;min-width:22px;height:20px;margin-right:6px;vertical-align:2px}
+}
 @media (max-width:760px){.legend{display:none} .rail{position:absolute;z-index:30;height:calc(100% - 66px)} .search{flex-basis:200px} .search:focus-within{flex-basis:100%} .legend span{display:none} .report{padding:0 16px 48px} .r-head{padding-right:120px} .flow .canvas{height:380px}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 @media print{
