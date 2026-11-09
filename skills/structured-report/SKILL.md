@@ -123,6 +123,9 @@ Every text field renders structure, so give it structure:
 - `**bold**` the one or two things per line the reader must not miss; `==text==` highlights;
   `` `code` `` for identifiers, paths, commands.
 - No paragraph longer than two sentences; no subtitles or intro lines.
+- Point at code as `path:line` (`src/runtime/ops/send.ts:421`, ranges `:40-58`, several `:235,293`;
+  another repo — `turnkey-extensions src/…:421`). It becomes a chip that opens those lines inside the
+  report, so cite the exact lines a context item or result rests on, not just the file.
 
 Field guidance: `brief` — 1–3 `Key: value` lines for the map card. `problem` — key/value facts.
 `goal` — bullets of what done means. `result.summary` — key/value or bullets.

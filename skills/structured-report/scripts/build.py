@@ -52,16 +52,167 @@ def _safe_url(u):
 
 
 def md(s):
-    """Inline formatting only: `code`, **bold**, ==mark==, [label](url)."""
+    """Inline formatting only: `code`, **bold**, ==mark==, [label](url), and file references
+    (`src/a.ts:12`, `repo src/a.ts:12-20`, `Form.tsx:235,293`) as chips that open the lines."""
     h = html.escape(str(s if s is not None else ""), quote=True)
-    h = re.sub(r"`([^`]+)`", r"<code>\1</code>", h)
-    h = re.sub(r"\*\*([^*]+)\*\*", r"<strong>\1</strong>", h)
-    h = re.sub(r"==([^=]+)==", r"<mark>\1</mark>", h)
+    keep = []
+
+    def hold(x):
+        keep.append(x)
+        return f"\x00{len(keep) - 1}\x00"
 
     def link(m):
         url = _safe_url(html.unescape(m.group(2)))
-        return f'<a href="{html.escape(url)}" target="_blank" rel="noopener">{m.group(1)}</a>' if url else m.group(1)
-    return re.sub(r"\[([^\]]+)\]\(([^)\s]+)\)", link, h)
+        return hold(f'<a href="{html.escape(url)}" target="_blank" rel="noopener">{m.group(1)}</a>') if url else m.group(1)
+    h = re.sub(r"\[([^\]]+)\]\(([^)\s]+)\)", link, h)
+    h = re.sub(r"https?://\S+", lambda m: hold(m.group(0)), h)
+    h = FILEREF.sub(lambda m: (lambda c: hold(c) if c else m.group(0))(file_chip(m)), h)
+    h = re.sub(r"`\s*(\x00\d+\x00)\s*`", r"\1", h)                 # `src/a.ts:1` → the chip alone
+    h = re.sub(r"`([^`]+)`", r"<code>\1</code>", h)
+    h = re.sub(r"\*\*([^*]+)\*\*", r"<strong>\1</strong>", h)
+    h = re.sub(r"==([^=]+)==", r"<mark>\1</mark>", h)
+    while "\x00" in h:
+        h = re.sub(r"\x00(\d+)\x00", lambda m: keep[int(m.group(1))], h)
+    return h
+
+
+# ── file references → chips with the lines embedded ─────────────────────────
+# The report is a local file: it cannot read the repo when opened, so build.py copies the
+# referenced lines (with some surrounding context) into the HTML. Roots: meta.roots, the repo
+# the report sits under (~/Reports/sessions/<repo>/ → ~/<repo>), the git root of the report.
+
+FILE_EXT = ("ts|tsx|js|jsx|mjs|cjs|py|pyi|go|rs|java|kt|kts|swift|rb|php|cs|c|h|cc|cpp|hpp|m|mm|scala|"
+            "vue|svelte|astro|css|scss|sass|less|html|htm|json|jsonc|yml|yaml|toml|ini|cfg|conf|md|mdx|txt|"
+            "sh|bash|zsh|fish|sql|graphql|gql|proto|tf|hcl|lua|dart|ex|exs|erl|zig|nix|xml|csv|gradle|lock")
+FILEREF = re.compile(
+    r"(?<![\w/.\-@])"
+    r"(?:(?P<repo>[A-Za-z0-9_.\-]{2,60})\s+(?=[\w.@\-]*/))?"
+    r"(?P<path>(?:[\w.@\-]+/)*[\w.@\-]+\.(?:" + FILE_EXT + r"))(?![\w/])"
+    r"(?:(?::|#L)(?P<lines>\d+(?:[-–]L?\d+)?(?:,\s?\d+(?:[-–]\d+)?)*))?")
+FILE_CTX = 25            # lines of context around each referenced range
+FILE_WHOLE = 400         # a file up to this many lines is embedded whole
+FILE_MAX_BYTES = 2_000_000
+FILES = {"roots": [], "by_abs": {}, "ls": {}}
+
+
+def _ranges(spec):
+    out = []
+    for part in re.split(r",\s?", spec or ""):
+        m = re.match(r"(\d+)(?:[-–]L?(\d+))?$", part)
+        if m:
+            a, b = int(m.group(1)), int(m.group(2) or m.group(1))
+            out.append((min(a, b), max(a, b)))
+    return out
+
+
+def _ls(root):
+    if root not in FILES["ls"]:
+        try:
+            r = subprocess.run(["git", "-C", root, "ls-files"], capture_output=True, text=True, timeout=10)
+            FILES["ls"][root] = r.stdout.splitlines() if r.returncode == 0 else []
+        except (OSError, subprocess.SubprocessError):
+            FILES["ls"][root] = []
+    return FILES["ls"][root]
+
+
+def _resolve(repo, path):
+    roots = FILES["roots"]
+    if repo:
+        cands = [os.path.join(os.path.dirname(r), repo) for r in roots] + [os.path.expanduser(f"~/{repo}")]
+        for c in cands:
+            if os.path.isfile(os.path.join(c, path)):
+                if c not in roots:
+                    roots.append(c)                    # later bare paths may live in this repo too
+                return os.path.join(c, path), c, True
+    for r in roots:
+        if os.path.isfile(os.path.join(r, path)):
+            return os.path.join(r, path), r, False
+    if "/" in path or not roots:
+        # a path that does not start at the repo root: match it as a suffix of a tracked file
+        for r in roots:
+            hits = [f for f in _ls(r) if f == path or f.endswith("/" + path)]
+            if len(hits) == 1:
+                return os.path.join(r, hits[0]), r, False
+        return None
+    for r in roots:                                    # a bare file name: unique in one repo
+        hits = [f for f in _ls(r) if os.path.basename(f) == path]
+        if len(hits) == 1:
+            return os.path.join(r, hits[0]), r, False
+    return None
+
+
+def file_chip(m):
+    if not FILES["roots"]:
+        return None
+    found = _resolve(m.group("repo"), html.unescape(m.group("path")))
+    if not found:
+        return None
+    abs_, root, used_repo = found
+    lead = "" if used_repo or not m.group("repo") else m.group("repo") + " "
+    base = os.path.basename(abs_)
+    if re.match(r"\.env(\.|$)", base) and not base.endswith((".example", ".sample", ".template")):
+        return None                                    # never copy env files into a report
+    f = FILES["by_abs"].get(abs_)
+    if f is None:
+        try:
+            if os.path.getsize(abs_) > FILE_MAX_BYTES:
+                return None
+            with open(abs_, encoding="utf-8") as fh:
+                lines = fh.read().split("\n")
+        except (OSError, UnicodeDecodeError):
+            return None
+        rel = os.path.relpath(abs_, root)
+        f = FILES["by_abs"][abs_] = {"id": f"f{len(FILES['by_abs']) + 1}", "abs": abs_, "rel": rel,
+                                     "repo": os.path.basename(root), "lines": lines, "want": []}
+    rs = _ranges(m.group("lines"))
+    rs = [(max(1, a), min(len(f["lines"]), b)) for a, b in rs if a <= len(f["lines"])]
+    f["want"].extend(rs or [(1, 0)])
+    spec = ",".join(f"{a}" if a == b else f"{a}-{b}" for a, b in rs)
+    label = html.escape(os.path.basename(abs_)) + (f'<span class="fl">:{spec}</span>' if spec else "")
+    where = f"{f['repo']}/{f['rel']}" + (f":{spec}" if spec else "")
+    return lead + (f'<span role="button" tabindex="0" class="fref" data-f="{f["id"]}" data-ls="{spec}" data-md="{html.escape(where)}" '
+            f'title="{html.escape(where)} — open the lines"><svg class="icon"><use href="#i-file"/></svg>{label}</span>')
+
+
+def files_payload():
+    out = {}
+    for f in FILES["by_abs"].values():
+        n = len(f["lines"])
+        if n <= FILE_WHOLE:
+            spans = [(1, n)]
+        else:
+            spans = sorted((max(1, a - FILE_CTX), min(n, (b or 60) + FILE_CTX)) for a, b in f["want"])
+            merged = []
+            for a, b in spans:
+                if merged and a <= merged[-1][1] + 3:
+                    merged[-1] = (merged[-1][0], max(merged[-1][1], b))
+                else:
+                    merged.append((a, b))
+            spans = merged
+        out[f["id"]] = {"repo": f["repo"], "rel": f["rel"], "total": n,
+                        "segs": [[a, [redact_text(x) for x in f["lines"][a - 1:b]]] for a, b in spans]}
+    return out
+
+
+def file_roots(data_path, meta):
+    roots = [os.path.expanduser(r) for r in (meta or {}).get("roots") or []]
+    d = os.path.dirname(os.path.abspath(data_path))
+    parts = d.split(os.sep)
+    if "sessions" in parts:                              # ~/Reports/sessions/<repo>/…
+        i = parts.index("sessions")
+        if i + 1 < len(parts):
+            roots.append(os.path.expanduser("~/" + parts[i + 1]))
+    try:
+        g = subprocess.run(["git", "-C", d, "rev-parse", "--show-toplevel"], capture_output=True, text=True, timeout=5)
+        if g.returncode == 0:
+            roots.append(g.stdout.strip())
+    except (OSError, subprocess.SubprocessError):
+        pass
+    seen = []
+    for r in roots:
+        if os.path.isdir(r) and r not in seen:
+            seen.append(r)
+    return seen
 
 
 def rich(v):
@@ -686,6 +837,7 @@ def main():
     ap.add_argument("--template", default=TEMPLATE, help="template HTML (default: bundled)")
     ap.add_argument("--check", action="store_true", help="validate only")
     ap.add_argument("--journal", help="journal JSON (default: <data>.journal.json if it exists)")
+    ap.add_argument("--no-files", action="store_true", help="don't turn file references into chips / don't embed file lines")
     ap.add_argument("--static", action="store_true", help="no answer channel: don't create a journal/token or start the answer service")
     a = ap.parse_args()
     with open(a.data, encoding="utf-8") as f:
@@ -719,12 +871,16 @@ def main():
         hidden = sum(1 for p in journal["prompts"] if redact_text(p.get("text", "")) != p.get("text", ""))
         if hidden:
             print(f"warning: {hidden} prompt(s) contained something like a secret — masked in the report", file=sys.stderr)
+    FILES["roots"] = [] if a.no_files else file_roots(a.data, data.get("meta"))
     with open(a.template, encoding="utf-8") as f:
         VIEW_CTX["answerable"] = bool(answer_to)
         v = view(data, journal)
         v["track"]["answer_to"] = answer_to
         v["answerable"] = bool(answer_to)
-        out_html = render(f.read(), v)
+        tpl = f.read()
+        render(tpl, v)                                  # first pass collects the referenced files
+        v["files"] = files_payload()
+        out_html = render(tpl, v)
     out = a.out or os.path.splitext(a.data)[0] + ".html"
     with open(out, "w", encoding="utf-8") as f:
         f.write(out_html)

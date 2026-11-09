@@ -10,6 +10,14 @@ structured text — a string or an array of strings (array → bullet list). Ins
 | two or more `Key: value` lines | aligned key/value table (one alone → **Key:** value) |
 | blank line | new paragraph |
 | `**bold**`, `==highlight==`, `` `code` ``, `[label](https://…)` | inline emphasis / link |
+| `src/a.ts:42`, `src/a.ts:40-58`, `Form.tsx:235,293`, `other-repo src/x.py:7`, `README.md#L3-L9` | a **file chip**: click opens an in-page viewer with those lines highlighted |
+
+File chips: `build.py` resolves the path against `meta.roots`, the repo the report sits under
+(`…/sessions/<repo>/` → `~/<repo>`), the report's git root, and any repo named before a path
+(`turnkey-extensions src/…`). A bare file name works if it is unique in a root. It copies the
+lines into the HTML — the whole file up to 400 lines, otherwise 25 lines around each range —
+because the page cannot read the repo when it is opened. Secrets are masked; `.env` files are never
+copied. A reference that does not resolve stays plain text. `--no-files` turns this off.
 
 Everything is HTML-escaped.
 
@@ -17,7 +25,8 @@ Everything is HTML-escaped.
 {
   "meta": {
     "title": "string, required — what the report covers",
-    "lang": "language code of the content (html lang attribute); labels stay English"
+    "lang": "language code of the content (html lang attribute); labels stay English",
+    "roots": ["/abs/path/to/repo — where file references resolve (optional)"]
   },
 
   "tasks": [{
