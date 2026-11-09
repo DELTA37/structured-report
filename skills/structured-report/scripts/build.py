@@ -486,6 +486,35 @@ reports_by_key = {}
 VIEW_CTX = {}
 
 
+# What reaches UserPromptSubmit is not always the reader's own words: the harness also delivers
+# background-task notifications and `!` shell commands as "prompts". Show those as events.
+_TAG = lambda name, t: (re.search(rf"<{name}>(.*?)</{name}>", t, re.S) or [None, ""])[1].strip()
+
+
+def prompt_view(p):
+    text = p.get("text", "")
+    v = dict(p, text=redact_text(text), answer=p.get("kind") == "answer", event=False)
+    if "<task-notification>" in text:
+        summary, status = _TAG("summary", text), _TAG("status", text).lower()
+        m = re.match(r'^(.*?)\s*"(.+)"\s*(.*)$', summary, re.S)
+        what, title, rest = (m.group(1), m.group(2), m.group(3)) if m else ("Background task", summary or "Task finished", "")
+        code = re.search(r"exit code (-?\d+)", rest)
+        ok = status == "completed" and (not code or code.group(1) == "0")
+        state = "ok" if ok else "fail" if status in ("completed", "failed", "killed", "error") else "run"
+        detail = [status or "update"] + ([f"exit {code.group(1)}"] if code else [])
+        v.update(event=True, ev_state=state, ev_icon={"ok": "done", "fail": "failed", "run": "in_progress"}[state],
+                 ev_title=redact_text(title), ev_kind=(what.strip() or "Background task").rstrip(":"),
+                 ev_detail=" · ".join(detail))
+    elif "<bash-input>" in text:
+        v.update(event=True, ev_state="shell", ev_icon="terminal", ev_title=redact_text(_TAG("bash-input", text)),
+                 ev_kind="Shell command", ev_detail="run by you")
+    elif "<command-name>" in text:
+        v.update(event=True, ev_state="shell", ev_icon="terminal",
+                 ev_title=redact_text((_TAG("command-name", text) + " " + _TAG("command-args", text)).strip()),
+                 ev_kind="Slash command", ev_detail="run by you")
+    return v
+
+
 def view(d, journal=None):
     v = json.loads(json.dumps(d))
     v.setdefault("meta", {})
@@ -512,7 +541,7 @@ def view(d, journal=None):
     v["has_blocks"] = any(l.get("kind") == "blocks" for l in v.get("links") or [])
     v["index"] = search_index(reports)
     j = journal or {}
-    v["prompts"] = [dict(p, text=redact_text(p.get("text", "")), answer=p.get("kind") == "answer") for p in j.get("prompts", [])]
+    v["prompts"] = [prompt_view(p) for p in j.get("prompts", [])]
     v["prompt_count"] = len(v["prompts"])
     v["track"] = {"prompts": [{"id": p["id"], "n": p["n"]} for p in j.get("prompts", [])], "blocks": {k: {"since": b.get("since"), "changed": b.get("changed", [])} for k, b in j.get("blocks", {}).items()}}
     return v

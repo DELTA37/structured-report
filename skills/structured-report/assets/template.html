@@ -148,6 +148,21 @@ body.map-page{height:100vh;overflow:hidden;display:flex;flex-direction:column}
 .rail .pt{font-size:13px;line-height:1.4;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
 .rail .pa{font-size:11.5px;opacity:.7;margin-top:2px;display:flex;gap:6px;align-items:center}
 .rail .pa .icon{width:13px;height:13px}
+.rail li.ev > button[data-prompt]{padding-top:6px;padding-bottom:6px}
+.rail li.ev .pn{border:0;display:grid;place-items:center;height:26px;width:26px;border-radius:50%;background:var(--panel-2);color:var(--ink-2)}
+.rail li.ev .pn .icon{width:15px;height:15px}
+.rail li.ev-ok .pn{background:rgba(46,125,82,.13);color:var(--ok)}
+.rail li.ev-fail .pn{background:rgba(196,60,42,.12);color:#C43C2A}
+.rail li.ev-run .pn{background:rgba(45,79,214,.1);color:var(--cobalt)}
+.rail li.ev .ek{display:block;font:500 11px/1.3 var(--text);color:var(--ink-3);margin-bottom:1px}
+.rail li.ev .pt{font-size:12.5px;color:var(--ink-2);-webkit-line-clamp:2}
+.rail li.ev-shell .pt{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px}
+.rail li.ev .pa{flex-wrap:wrap;row-gap:2px}
+.rail li.ev .chip{white-space:nowrap;font:500 10.5px/16px var(--text);padding:0 6px;border-radius:8px;background:var(--panel-2);color:var(--ink-2)}
+.rail li.ev-ok .chip{background:rgba(46,125,82,.13);color:var(--ok)}
+.rail li.ev-fail .chip{background:rgba(196,60,42,.12);color:#C43C2A}
+.rail li.ev > button[aria-pressed="true"] .pn,.rail li.ev > button[aria-pressed="true"] .chip{background:rgba(255,255,255,.16);color:var(--panel)}
+.rail li.ev > button[aria-pressed="true"] .ek,.rail li.ev > button[aria-pressed="true"] .pt{color:var(--panel)}
 .rail .clear{font:500 12px var(--text);color:var(--cobalt);background:var(--paper);border:1px solid rgba(45,79,214,.35);border-radius:999px;cursor:pointer;padding:3px 10px;white-space:nowrap}
 .rail .clear:hover{background:#fff;border-color:var(--cobalt)}
 .rail .clear[hidden]{display:none}
@@ -432,6 +447,7 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
   <symbol id="i-prompts" viewBox="0 0 24 24"><path d="M4 5h16v10H9l-5 4z"/><path d="M8 9h8M8 12h5"/></symbol>
   <symbol id="i-answer" viewBox="0 0 24 24"><path d="M10 9V5l-7 7 7 7v-4.1c5 0 8.5 1.6 11 5.1-1-5-4-10-11-11z"/></symbol>
   <symbol id="i-unchecked" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2" stroke-dasharray="3 2.4"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.6 2.2c-.7.4-1.1.9-1.1 1.6M12 16v.1"/></symbol>
+  <symbol id="i-terminal" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2.5"/><path d="m7 9 3 3-3 3M13 15h4"/></symbol>
   <symbol id="i-send" viewBox="0 0 24 24"><path d="M21 3 10.5 13.5"/><path d="M21 3 14.5 21l-4-7.5L3 9.5z"/></symbol>
   <symbol id="i-edit" viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16z"/></symbol>
   <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
@@ -461,7 +477,7 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
     <button class="rail-x" id="rail-close" title="Hide prompts" aria-label="Hide prompts" aria-controls="rail"><svg class="icon"><use href="#i-prev"/></svg></button>
   </div>
   <ol>{{#prompts}}
-    <li><button type="button" data-prompt="{{id}}" aria-pressed="false"><span class="pn">{{n}}</span><span><span class="pt">{{text}}</span><span class="pa">{{#answer}}<svg class="icon"><use href="#i-answer"/></svg>Answered in the report · {{/answer}}{{at}}</span></span></button></li>{{/prompts}}
+    {{#event}}<li class="ev ev-{{ev_state}}" data-n="{{n}}"><button type="button" data-prompt="{{id}}" aria-pressed="false" title="Not a prompt you wrote — the session received it as #{{n}}"><span class="pn"><svg class="icon"><use href="#i-{{ev_icon}}"/></svg></span><span><span class="ek">{{ev_kind}}</span><span class="pt">{{ev_title}}</span><span class="pa"><span class="chip">{{ev_detail}}</span>#{{n}} · {{at}}</span></span></button></li>{{/event}}{{^event}}<li data-n="{{n}}"><button type="button" data-prompt="{{id}}" aria-pressed="false"><span class="pn">{{n}}</span><span><span class="pt">{{text}}</span><span class="pa">{{#answer}}<svg class="icon"><use href="#i-answer"/></svg>Answered in the report · {{/answer}}{{at}}</span></span></button></li>{{/event}}{{/prompts}}
   </ol>
 </aside>{{/prompts?}}
 <main class="canvas" id="map" aria-label="Work map" data-dir="LR">
@@ -1312,7 +1328,15 @@ document.addEventListener("click", e => {
   if (k === "report") return copyMd(reportMd(b.closest(".report")), "Report");
   if (k === "section") return copyMd(tidy(sectionMd(b.closest(".sec"))), "Section");
   if (k === "item") return copyMd(itemMd(b.closest("li")), "Item");
-  if (k === "prompt") { const li = b.closest("li"); return copyMd(tidy("> " + $(".pt", li).textContent.trim().replace(/\n/g, "\n> ") + "\n\n— prompt #" + $(".pn", li).textContent.trim() + ", " + $(".pa", li).textContent.trim()), "Prompt"); }
+  if (k === "prompt") {
+    const li = b.closest("li"), t = s => ($(s, li)?.textContent || "").trim();
+    if (li.classList.contains("ev")) {
+      const mark = li.classList.contains("ev-ok") ? "✅" : li.classList.contains("ev-fail") ? "❌" : li.classList.contains("ev-shell") ? "▸" : "⏳";
+      const title = li.classList.contains("ev-shell") ? "`" + t(".pt") + "`" : "**" + t(".pt") + "**";
+      return copyMd(`${mark} ${t(".ek")}: ${title} — ${t(".chip")}\n\n_event #${li.dataset.n}, ${t(".pa").replace(t(".chip"), "").replace(/^#\d+ · /, "")}_`, "Event");
+    }
+    return copyMd(tidy("> " + t(".pt").replace(/\n/g, "\n> ") + "\n\n_prompt #" + li.dataset.n + ", " + t(".pa") + "_"), "Prompt");
+  }
 }, true);
 const setBar = () => document.documentElement.style.setProperty("--bar-h", $(".bar").offsetHeight + "px");
 setBar(); addEventListener("resize", setBar);
