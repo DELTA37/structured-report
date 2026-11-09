@@ -58,7 +58,7 @@ code{font:12.5px/1.4 ui-monospace,"SF Mono",Menlo,monospace;background:var(--pan
   background-image:radial-gradient(var(--dot) 1px,transparent 1.2px);background-size:18px 18px}
 .canvas a,.canvas img{-webkit-user-drag:none;user-drag:none}
 .canvas.dragging{cursor:grabbing} .canvas.dragging .node,.canvas.dragging .stage{cursor:grabbing}
-.canvas .graph{position:absolute;left:0;top:0;transform-origin:0 0}
+.canvas .graph{position:absolute;left:0;top:0;transform-origin:0 0;will-change:transform}
 .canvas.animate .graph{transition:transform .25s cubic-bezier(.2,.7,.2,1)}
 .canvas .graph[hidden]{display:none}
 .graph > svg{position:absolute;inset:0;overflow:visible;pointer-events:none}
@@ -816,10 +816,14 @@ class Canvas {
     V.x = Math.min(this.cw - k, Math.max(k - W * V.s, V.x)); V.y = Math.min(this.ch - k, Math.max(k - H * V.s, V.y)); }
   apply(animate) {
     this.clamp();
-    this.el.classList.toggle("animate", !!animate);
-    this.graph.style.transform = `translate(${this.V.x}px, ${this.V.y}px) scale(${this.V.s})`;
-    if (this.out) this.out.textContent = Math.round(this.V.s * 100) + "%";
-    this.drawMini();
+    if (animate) this._animate = true;
+    if (this._raf) return;                 // one paint per frame: wheel / drag fire far more often than frames
+    this._raf = requestAnimationFrame(() => {
+      this._raf = 0; this.el.classList.toggle("animate", !!this._animate); this._animate = false;
+      this.graph.style.transform = `translate(${this.V.x}px, ${this.V.y}px) scale(${this.V.s})`;
+      if (this.out) this.out.textContent = Math.round(this.V.s * 100) + "%";
+      this.drawMini();
+    });
   }
   fitScale() { return Math.min(1, (this.cw - 32) / this.G.W, (this.ch - 32) / this.G.H); }
   fit(animate) { const V = this.V; V.s = Math.min(MAX, Math.max(MIN, this.fitScale()));
@@ -845,13 +849,17 @@ class Canvas {
     const show = this.G.W * this.V.s > this.cw + 2 || this.G.H * this.V.s > this.ch + 2;
     m.toggleAttribute("hidden", !show); if (!show) return;
     const k = Math.min(180 / this.G.W, 130 / this.G.H), w = this.G.W * k, h = this.G.H * k; this.k = k;
-    m.setAttribute("width", w); m.setAttribute("height", h); m.setAttribute("viewBox", `0 0 ${w} ${h}`);
-    let s = "";
-    for (const n of $$(":scope > [data-id]", this.graph))
-      s += `<rect class="n${n.querySelector(".waiting") ? " mine" : ""}${n.dataset.child ? " deep" : ""}" x="${n.offsetLeft * k}" y="${n.offsetTop * k}" width="${n.offsetWidth * k}" height="${n.offsetHeight * k}" rx="2"/>`;
-    const V = this.V;
-    s += `<rect class="vp" x="${-V.x / V.s * k}" y="${-V.y / V.s * k}" width="${this.cw / V.s * k}" height="${this.ch / V.s * k}" rx="3"/>`;
-    m.innerHTML = s;
+    const V = this.V, vp = [-V.x / V.s * k, -V.y / V.s * k, this.cw / V.s * k, this.ch / V.s * k];
+    if (this._miniG !== this.G || this._miniK !== k) {          // node rects: only after a new layout
+      this._miniG = this.G; this._miniK = k;
+      m.setAttribute("width", w); m.setAttribute("height", h); m.setAttribute("viewBox", `0 0 ${w} ${h}`);
+      let s = "";
+      for (const n of $$(":scope > [data-id]", this.graph))
+        s += `<rect class="n${n.querySelector(".waiting") ? " mine" : ""}${n.dataset.child ? " deep" : ""}" x="${n.offsetLeft * k}" y="${n.offsetTop * k}" width="${n.offsetWidth * k}" height="${n.offsetHeight * k}" rx="2"/>`;
+      m.innerHTML = s + `<rect class="vp" rx="3"/>`;
+    }
+    const r = m.querySelector(".vp");                             // per frame: just the viewport
+    ["x", "y", "width", "height"].forEach((a, i) => r.setAttribute(a, vp[i]));
   }
   bind() {
     const el = this.el, m = this.mini;
