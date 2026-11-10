@@ -149,10 +149,12 @@ body.map-page{height:100vh;overflow:hidden;display:flex;flex-direction:column}
 .rail .pn{font:600 12px/22px var(--display);height:22px;border-radius:11px;text-align:center;border:1px solid currentColor}
 .rail .pt{font-size:13px;line-height:1.4;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
 .rail .pt-paste{font-style:italic;color:var(--ink-2)}
-.rail .pp{display:inline-flex;align-items:center;gap:5px;margin:4px 6px 0 0;padding:1px 8px 1px 6px;border-radius:6px;
+.rail .pps{display:flex;flex-wrap:wrap;gap:4px 6px;padding:0 8px 6px 46px;margin-top:-4px}
+.rail .pp{all:unset;box-sizing:border-box;cursor:pointer;display:inline-flex;align-items:center;gap:5px;margin:0;padding:1px 8px 1px 6px;border-radius:6px;
   border:1px dashed var(--rule);background:var(--panel-2);color:var(--ink-2);font:500 11px/18px var(--text);white-space:nowrap}
 .rail .pp .icon{width:12px;height:12px}
-.rail li > button[aria-pressed="true"] .pp{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.35);color:var(--panel)}
+.rail .pp:hover{border-style:solid;border-color:var(--cobalt);color:var(--cobalt);background:#fff}
+.rail .pp:focus-visible{outline:2px solid var(--cobalt);outline-offset:1px}
 .rail li > button[aria-pressed="true"] .pt-paste{color:var(--panel)}
 .rail .pa{font-size:11.5px;opacity:.7;margin-top:2px;display:flex;gap:6px;align-items:center}
 .rail .pa .icon{width:13px;height:13px}
@@ -305,6 +307,8 @@ body.at-prompt #map .node:not(.p-new):not(.p-changed),body.at-prompt .stage:not(
 .fv-code td{padding:0 16px 0 0;vertical-align:top}
 .fv-code td.ln{width:1%;min-width:52px;text-align:right;padding:0 14px 0 16px;color:var(--ink-3);user-select:none;border-right:1px solid var(--rule)}
 .fv-code td.tx{white-space:pre;padding-left:14px;color:var(--ink)}
+.fileview.fv-prose .fv-code td.tx{white-space:pre-wrap;overflow-wrap:anywhere;font:14px/1.55 var(--text)}
+.fileview.fv-prose .fv-head > .icon{color:var(--ink-2)}
 .fv-code tr.hl td{background:rgba(245,213,71,.32)}
 .fv-code tr.hl td.ln{color:var(--ink);font-weight:600;box-shadow:inset 3px 0 0 #E2B400}
 .fv-code tr.gap td{padding:7px 16px;background:var(--paper);color:var(--ink-3);font:italic 12px var(--text);text-align:center;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule)}
@@ -536,7 +540,7 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
     <button class="rail-x" id="rail-close" title="Hide prompts" aria-label="Hide prompts" aria-controls="rail"><svg class="icon"><use href="#i-prev"/></svg></button>
   </div>
   <ol>{{#prompts}}
-    {{#event}}<li class="ev ev-{{ev_state}}" data-n="{{n}}"><button type="button" data-prompt="{{id}}" aria-pressed="false" title="Not a prompt you wrote — the session received it as #{{n}}"><span class="pn"><svg class="icon"><use href="#i-{{ev_icon}}"/></svg></span><span><span class="ek">{{ev_kind}}</span><span class="pt">{{ev_title}}</span><span class="pa"><span class="chip">{{ev_detail}}</span>#{{n}} · {{at}}</span></span></button></li>{{/event}}{{^event}}<li data-n="{{n}}"><button type="button" data-prompt="{{id}}" aria-pressed="false"><span class="pn">{{n}}</span><span><span class="pt{{#text_is_paste}} pt-paste{{/text_is_paste}}">{{text}}</span>{{#pastes}}<span class="pp" title="{{preview}}"><svg class="icon"><use href="#i-paste"/></svg>Pasted · {{lines}} lines</span><span class="pp-body" hidden>{{body}}</span>{{/pastes}}<span class="pa">{{#answer}}<svg class="icon"><use href="#i-answer"/></svg>Answered in the report · {{/answer}}{{at}}</span></span></button></li>{{/event}}{{/prompts}}
+    {{#event}}<li class="ev ev-{{ev_state}}" data-n="{{n}}"><button type="button" data-prompt="{{id}}" aria-pressed="false" title="Not a prompt you wrote — the session received it as #{{n}}"><span class="pn"><svg class="icon"><use href="#i-{{ev_icon}}"/></svg></span><span><span class="ek">{{ev_kind}}</span><span class="pt">{{ev_title}}</span><span class="pa"><span class="chip">{{ev_detail}}</span>#{{n}} · {{at}}</span></span></button></li>{{/event}}{{^event}}<li data-n="{{n}}"><button type="button" data-prompt="{{id}}" aria-pressed="false"><span class="pn">{{n}}</span><span><span class="pt{{#text_is_paste}} pt-paste{{/text_is_paste}}">{{text}}</span><span class="pa">{{#answer}}<svg class="icon"><use href="#i-answer"/></svg>Answered in the report · {{/answer}}{{at}}</span></span></button>{{#pastes?}}<div class="pps">{{#pastes}}<button type="button" class="pp" data-pn="{{n}}" data-lines="{{lines}}" title="Show the pasted text — {{preview}}"><svg class="icon"><use href="#i-paste"/></svg>Pasted · {{lines}} lines</button><template class="pp-body">{{body}}</template>{{/pastes}}</div>{{/pastes?}}</li>{{/event}}{{/prompts}}
   </ol>
 </aside>{{/prompts?}}
 <main class="canvas" id="map" aria-label="Work map" data-dir="LR">
@@ -701,7 +705,7 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
 <div class="fv-scrim" id="fv-scrim" hidden></div>
 <section class="fileview" id="fileview" role="dialog" aria-modal="true" aria-labelledby="fv-name" hidden>
   <header class="fv-head">
-    <svg class="icon"><use href="#i-file"/></svg>
+    <svg class="icon"><use class="fv-icon" href="#i-file"/></svg>
     <div class="fv-title"><div class="fv-name" id="fv-name"></div><div class="fv-path"></div></div>
     <div class="fv-jump" hidden><button type="button" class="fv-prev" title="Previous range (↑)" aria-label="Previous range"><svg class="icon"><use href="#i-prev"/></svg></button><span class="fv-pos"></span><button type="button" class="fv-next" title="Next range (↓)" aria-label="Next range"><svg class="icon"><use href="#i-next"/></svg></button></div>
     <button type="button" class="fv-copy" title="Copy the path with lines"><svg class="icon"><use href="#i-copy"/></svg><span>Copy path</span></button>
@@ -1103,6 +1107,8 @@ function ranges(spec) {
 }
 function openFile(chip) {
   const f = FILES[chip.dataset.f]; if (!f) return;
+  FV.paste = null; FV.el.classList.remove("fv-prose"); $(".fv-icon", FV.el).setAttribute("href", "#i-file");
+  $(".fv-copy span", FV.el).textContent = "Copy path";
   const rs = ranges(chip.dataset.ls), inR = n => rs.some(([a, b]) => n >= a && n <= b);
   FV.back = document.activeElement; FV.chip = chip;
   const label = chip.dataset.ls ? '<span class="fl">:' + esc(chip.dataset.ls) + "</span>" : "";
@@ -1123,6 +1129,20 @@ function openFile(chip) {
   jumpFile(0);
   $(".fv-close", FV.el).focus({preventScroll: true});
 }
+function openPaste(btn) {                     // text the reader pasted into a prompt, in the same viewer
+  const text = btn.nextElementSibling?.content?.textContent ?? "";
+  FV.back = document.activeElement; FV.chip = btn; FV.paste = text;
+  FV.el.classList.add("fv-prose"); $(".fv-icon", FV.el).setAttribute("href", "#i-paste");
+  $("#fv-name").textContent = "Pasted text";
+  $(".fv-path", FV.el).textContent = "Prompt #" + btn.dataset.pn + " · " + btn.dataset.lines + " lines";
+  $(".fv-code tbody", FV.el).innerHTML = text.split("\n").map((t, i) =>
+    `<tr data-n="${i + 1}"><td class="ln">${i + 1}</td><td class="tx">${esc(t) || " "}</td></tr>`).join("");
+  FV.hl = []; $(".fv-jump", FV.el).hidden = true; $(".fv-copy-code", FV.el).hidden = true;
+  $(".fv-copy span", FV.el).textContent = "Copy text";
+  FV.el.hidden = FV.scrim.hidden = false;
+  $(".fv-body", FV.el).scrollTop = 0;
+  $(".fv-close", FV.el).focus({preventScroll: true});
+}
 function jumpFile(d) {
   const body = $(".fv-body", FV.el);
   if (!FV.hl.length) { body.scrollTop = 0; return; }
@@ -1140,10 +1160,12 @@ function closeFile() {
 document.addEventListener("click", e => {
   const chip = e.target.closest(".fref");
   if (chip) { e.preventDefault(); e.stopPropagation(); return openFile(chip); }
+  const pp = e.target.closest(".pp");
+  if (pp) { e.preventDefault(); e.stopPropagation(); return openPaste(pp); }
   if (e.target.closest(".fv-close") || e.target === FV.scrim) return closeFile();
   if (e.target.closest(".fv-prev")) return jumpFile(-1);
   if (e.target.closest(".fv-next")) return jumpFile(1);
-  if (e.target.closest(".fv-copy")) return copyMd(FV.chip.dataset.md, "Path");
+  if (e.target.closest(".fv-copy")) return FV.paste != null ? copyMd(FV.paste, "Text") : copyMd(FV.chip.dataset.md, "Path");
   if (e.target.closest(".fv-copy-code")) {
     const f = FILES[FV.chip.dataset.f], ext = f.rel.split(".").pop();
     const lines = $$("tr.hl", FV.el).map(r => r.querySelector(".tx").textContent);
@@ -1504,7 +1526,7 @@ document.addEventListener("click", e => {
       return copyMd(`${mark} ${t(".ek")}: ${title} — ${t(".chip")}\n\n_event #${li.dataset.n}, ${t(".pa").replace(t(".chip"), "").replace(/^#\d+ · /, "")}_`, "Event");
     }
     const own = li.querySelector(".pt-paste") ? "" : t(".pt");
-    const pasted = [...li.querySelectorAll(".pp-body")].map(b => "Pasted:\n\n```\n" + b.textContent + "\n```").join("\n\n");
+    const pasted = [...li.querySelectorAll("template.pp-body")].map(b => "Pasted:\n\n```\n" + b.content.textContent + "\n```").join("\n\n");
     return copyMd(tidy((own ? "> " + own.replace(/\n/g, "\n> ") + "\n\n" : "") + (pasted ? pasted + "\n\n" : "") +
                        "_prompt #" + li.dataset.n + ", " + t(".pa") + "_"), "Prompt");
   }
