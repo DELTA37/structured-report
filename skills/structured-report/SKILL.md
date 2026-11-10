@@ -49,7 +49,7 @@ work, update the JSON and rebuild.** The Stop hook enforces it: when the turn ed
 6+ tool calls and the report JSON is older than the prompt (or the HTML older than the JSON), it
 stops the turn once and asks for the update; if nothing in the work changed, end the turn again.
 `autobind.py install` wires these two hooks too (unless your user settings already have them).
- — `build.py` fingerprints every block (each node × section)
+`build.py` fingerprints every block (each node × section)
 and stamps new or changed blocks with the current prompt. Never write stamps yourself. The report
 shows a Prompts rail; picking a prompt highlights what appeared (green) or changed (blue) there.
 
