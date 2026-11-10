@@ -323,23 +323,97 @@ def cmd_hook(a):
         if not (text.strip().startswith("/") and len(text.split()) == 1):
             _, e = add_prompt(jp, text)
             out.append(f"[structured-report] This session tracks {report} — this is prompt #{e['n']}. "
-                       f"If it changes the work, update the report JSON and rebuild (changed blocks get #{e['n']}).")
+                       f"Before ending the turn, update the report JSON with what this turn did and rebuild "
+                       f"(changed blocks get #{e['n']}); the Stop hook checks it.")
         print("\n".join(out))
     except Exception:
         pass
 
 
+WRITE_TOOLS = {"Edit", "Write", "MultiEdit", "NotebookEdit"}
+WORK_CALLS = 6          # a turn with this many tool calls (reads, searches, commands) did work worth reporting
+
+
+def turn_activity(transcript):
+    """(prompt time as epoch, tool names used since it) for the current turn of a session transcript."""
+    try:
+        with open(transcript, "rb") as f:
+            f.seek(0, 2)
+            f.seek(max(0, f.tell() - 4_000_000))
+            lines = f.read().decode("utf-8", "replace").splitlines()
+    except OSError:
+        return None, []
+    tools = []
+    for line in reversed(lines):
+        try:
+            e = json.loads(line)
+        except ValueError:
+            continue
+        c = (e.get("message") or {}).get("content")
+        if e.get("type") == "assistant" and isinstance(c, list):
+            tools += [x.get("name", "") for x in c if x.get("type") == "tool_use"]
+        elif e.get("type") == "user" and not e.get("isMeta"):
+            is_prompt = isinstance(c, str) or (isinstance(c, list) and any(x.get("type") == "text" for x in c)
+                                               and not any(x.get("type") == "tool_result" for x in c))
+            if is_prompt:
+                try:
+                    ts = datetime.datetime.fromisoformat(e["timestamp"].replace("Z", "+00:00")).timestamp()
+                except (KeyError, ValueError):
+                    ts = None
+                return ts, tools
+    return None, tools
+
+
+def stale_reason(report, ev):
+    """Why the report lags this turn's work (None if it is current or the turn did no work)."""
+    since, tools = turn_activity(ev.get("transcript_path") or "")
+    if since is None:
+        return None
+    worked = any(t in WRITE_TOOLS for t in tools) or len(tools) >= WORK_CALLS
+    if not worked:
+        return None
+    html = os.path.splitext(report)[0] + ".html"
+    j_m = os.path.getmtime(report)
+    h_m = os.path.getmtime(html) if os.path.exists(html) else 0
+    build = os.path.join(HERE, "build.py")
+    if j_m < since:
+        n = len(journal(journal_path(report))["prompts"])
+        return (f"[structured-report] Отчёт сессии не обновлён за этот ход (запрос #{n}, {len(tools)} вызовов инструментов). "
+                f"Обнови {report} по скиллу structured-report: что сделано и почему, результат, что не проверено, "
+                f"что нужно от пользователя (actions / approvals), статусы этапов. Затем пересобери: "
+                f"python3 {build} {report}. Если за ход в работе действительно ничего не поменялось — "
+                "просто закончи ход ещё раз, второй раз проверка не остановит.")
+    if h_m < j_m:
+        return f"[structured-report] JSON отчёта изменён, но HTML не пересобран: python3 {build} {report}"
+    return None
+
+
 def cmd_stop_hook(a):
-    """Stop: if the reader answered while the agent was working, don't let the turn end."""
+    """Stop: (1) the reader answered while the agent was working → don't let the turn end;
+    (2) the turn did work but the report was not updated → ask for the update once per prompt."""
     try:
         ev = json.load(sys.stdin)
         report = bound_report(ev.get("session_id"))
         if not report:
             return
-        pending = take_pending(journal_path(report))
+        jp = journal_path(report)
+        pending = take_pending(jp)
         if pending:
             print(json.dumps({"decision": "block",
                               "reason": "The reader answered in the report — treat this as their prompt and continue:\n" + pending}))
+            return
+        if ev.get("stop_hook_active"):
+            return
+        reason = stale_reason(report, ev)
+        if not reason:
+            return
+        j = journal(jp)
+        n = len(j["prompts"])
+        if j.get("nudged") == n:                       # once per prompt: the agent may decide nothing changed
+            return
+        j["nudged"] = n
+        save(jp, j)
+        print(json.dumps({"decision": "block", "reason": reason}, ensure_ascii=False))
     except Exception:
         pass
 

@@ -139,9 +139,31 @@ def wired(entries):
     return [e for e in entries for h in e.get("hooks", []) if "structured-report" in h.get("command", "") and MARK in h.get("command", "")]
 
 
+TRACK = os.path.join(os.path.dirname(os.path.realpath(__file__)), "track.py")
+TRACK_HOOKS = {"UserPromptSubmit": f'python3 "{TRACK}" hook',     # logs prompts, hands over report answers
+               "Stop": f'python3 "{TRACK}" stop-hook'}            # answers + "report not updated this turn"
+
+
+def has_track(d, event):
+    return any("structured-report" in h.get("command", "") and "track.py" in h.get("command", "")
+               for g in d.get("hooks", {}).get(event, []) for h in g.get("hooks", []))
+
+
 def install(args, on=True):
     p = settings_path(args)
     d = load(p, {})
+    glob = d if "--global" in args else load(os.path.expanduser("~/.claude/settings.json"), {})
+    for event, cmd in TRACK_HOOKS.items():           # report tracking: here, unless the user settings already have it
+        groups = d.setdefault("hooks", {}).setdefault(event, [])
+        sub = cmd.rsplit(" ", 1)[1]
+        mine = [g for g in groups for h in g.get("hooks", []) if "track.py" in h.get("command", "")
+                and "structured-report" in h.get("command", "") and h["command"].endswith(" " + sub)]
+        for g in mine:
+            groups.remove(g)
+        if on and not has_track(glob if glob is not d else {}, event):
+            groups.append({"hooks": [{"type": "command", "command": cmd, "timeout": 5}]})
+        if not groups:
+            d["hooks"].pop(event)
     ss = d.setdefault("hooks", {}).setdefault("SessionStart", [])
     old = wired(ss)
     for e in old:

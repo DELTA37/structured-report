@@ -44,8 +44,12 @@ python3 <skill>/scripts/track.py start reports/<file>.json      # creates <file>
 
 From then on the `UserPromptSubmit` hook (install once: `track.py install-hook`, which also adds
 the Stop hook) logs every user
-prompt to the journal and reminds you of the prompt number. **After each prompt that changes the
-work, update the JSON and rebuild** — `build.py` fingerprints every block (each node × section)
+prompt to the journal and reminds you of the prompt number. **Before ending every turn that did
+work, update the JSON and rebuild.** The Stop hook enforces it: when the turn edited files or made
+6+ tool calls and the report JSON is older than the prompt (or the HTML older than the JSON), it
+stops the turn once and asks for the update; if nothing in the work changed, end the turn again.
+`autobind.py install` wires these two hooks too (unless your user settings already have them).
+ — `build.py` fingerprints every block (each node × section)
 and stamps new or changed blocks with the current prompt. Never write stamps yourself. The report
 shows a Prompts rail; picking a prompt highlights what appeared (green) or changed (blue) there.
 
