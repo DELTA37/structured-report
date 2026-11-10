@@ -148,6 +148,12 @@ body.map-page{height:100vh;overflow:hidden;display:flex;flex-direction:column}
 .rail li > button[data-prompt][aria-pressed="true"]{background:var(--ink);color:var(--panel)}
 .rail .pn{font:600 12px/22px var(--display);height:22px;border-radius:11px;text-align:center;border:1px solid currentColor}
 .rail .pt{font-size:13px;line-height:1.4;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.rail .pt-paste{font-style:italic;color:var(--ink-2)}
+.rail .pp{display:inline-flex;align-items:center;gap:5px;margin:4px 6px 0 0;padding:1px 8px 1px 6px;border-radius:6px;
+  border:1px dashed var(--rule);background:var(--panel-2);color:var(--ink-2);font:500 11px/18px var(--text);white-space:nowrap}
+.rail .pp .icon{width:12px;height:12px}
+.rail li > button[aria-pressed="true"] .pp{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.35);color:var(--panel)}
+.rail li > button[aria-pressed="true"] .pt-paste{color:var(--panel)}
 .rail .pa{font-size:11.5px;opacity:.7;margin-top:2px;display:flex;gap:6px;align-items:center}
 .rail .pa .icon{width:13px;height:13px}
 .rail li.ev > button[data-prompt]{padding-top:6px;padding-bottom:6px}
@@ -495,6 +501,7 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
   <symbol id="i-print" viewBox="0 0 24 24"><path d="M7 9V3.5h10V9M7 17H4.5V9h15v8H17"/><rect x="7" y="14" width="10" height="6.5"/></symbol>
   <symbol id="i-copy" viewBox="0 0 24 24"><rect x="8" y="8" width="12" height="12" rx="1.5"/><path d="M16 8V4H4v12h4"/></symbol>
   <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4.5 4.5"/></symbol>
+  <symbol id="i-paste" viewBox="0 0 24 24"><rect x="6" y="4" width="12" height="17" rx="2"/><path d="M9 4V3h6v1M9 10h6M9 14h6M9 18h3"/></symbol>
   <symbol id="i-prompts" viewBox="0 0 24 24"><path d="M4 5h16v10H9l-5 4z"/><path d="M8 9h8M8 12h5"/></symbol>
   <symbol id="i-answer" viewBox="0 0 24 24"><path d="M10 9V5l-7 7 7 7v-4.1c5 0 8.5 1.6 11 5.1-1-5-4-10-11-11z"/></symbol>
   <symbol id="i-unchecked" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2" stroke-dasharray="3 2.4"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.6 2.2c-.7.4-1.1.9-1.1 1.6M12 16v.1"/></symbol>
@@ -529,7 +536,7 @@ a.ref-chip:hover{border-color:var(--cobalt);color:var(--cobalt)}
     <button class="rail-x" id="rail-close" title="Hide prompts" aria-label="Hide prompts" aria-controls="rail"><svg class="icon"><use href="#i-prev"/></svg></button>
   </div>
   <ol>{{#prompts}}
-    {{#event}}<li class="ev ev-{{ev_state}}" data-n="{{n}}"><button type="button" data-prompt="{{id}}" aria-pressed="false" title="Not a prompt you wrote — the session received it as #{{n}}"><span class="pn"><svg class="icon"><use href="#i-{{ev_icon}}"/></svg></span><span><span class="ek">{{ev_kind}}</span><span class="pt">{{ev_title}}</span><span class="pa"><span class="chip">{{ev_detail}}</span>#{{n}} · {{at}}</span></span></button></li>{{/event}}{{^event}}<li data-n="{{n}}"><button type="button" data-prompt="{{id}}" aria-pressed="false"><span class="pn">{{n}}</span><span><span class="pt">{{text}}</span><span class="pa">{{#answer}}<svg class="icon"><use href="#i-answer"/></svg>Answered in the report · {{/answer}}{{at}}</span></span></button></li>{{/event}}{{/prompts}}
+    {{#event}}<li class="ev ev-{{ev_state}}" data-n="{{n}}"><button type="button" data-prompt="{{id}}" aria-pressed="false" title="Not a prompt you wrote — the session received it as #{{n}}"><span class="pn"><svg class="icon"><use href="#i-{{ev_icon}}"/></svg></span><span><span class="ek">{{ev_kind}}</span><span class="pt">{{ev_title}}</span><span class="pa"><span class="chip">{{ev_detail}}</span>#{{n}} · {{at}}</span></span></button></li>{{/event}}{{^event}}<li data-n="{{n}}"><button type="button" data-prompt="{{id}}" aria-pressed="false"><span class="pn">{{n}}</span><span><span class="pt{{#text_is_paste}} pt-paste{{/text_is_paste}}">{{text}}</span>{{#pastes}}<span class="pp" title="{{preview}}"><svg class="icon"><use href="#i-paste"/></svg>Pasted · {{lines}} lines</span><span class="pp-body" hidden>{{body}}</span>{{/pastes}}<span class="pa">{{#answer}}<svg class="icon"><use href="#i-answer"/></svg>Answered in the report · {{/answer}}{{at}}</span></span></button></li>{{/event}}{{/prompts}}
   </ol>
 </aside>{{/prompts?}}
 <main class="canvas" id="map" aria-label="Work map" data-dir="LR">
@@ -1496,7 +1503,10 @@ document.addEventListener("click", e => {
       const title = li.classList.contains("ev-shell") ? "`" + t(".pt") + "`" : "**" + t(".pt") + "**";
       return copyMd(`${mark} ${t(".ek")}: ${title} — ${t(".chip")}\n\n_event #${li.dataset.n}, ${t(".pa").replace(t(".chip"), "").replace(/^#\d+ · /, "")}_`, "Event");
     }
-    return copyMd(tidy("> " + t(".pt").replace(/\n/g, "\n> ") + "\n\n_prompt #" + li.dataset.n + ", " + t(".pa") + "_"), "Prompt");
+    const own = li.querySelector(".pt-paste") ? "" : t(".pt");
+    const pasted = [...li.querySelectorAll(".pp-body")].map(b => "Pasted:\n\n```\n" + b.textContent + "\n```").join("\n\n");
+    return copyMd(tidy((own ? "> " + own.replace(/\n/g, "\n> ") + "\n\n" : "") + (pasted ? pasted + "\n\n" : "") +
+                       "_prompt #" + li.dataset.n + ", " + t(".pa") + "_"), "Prompt");
   }
 }, true);
 const setBar = () => document.documentElement.style.setProperty("--bar-h", $(".bar").offsetHeight + "px");

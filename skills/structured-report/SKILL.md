@@ -53,6 +53,11 @@ stops the turn once and asks for the update; if nothing in the work changed, end
 and stamps new or changed blocks with the current prompt. Never write stamps yourself. The report
 shows a Prompts rail; picking a prompt highlights what appeared (green) or changed (blue) there.
 
+**Pasted text.** What the reader pasted reaches you wrapped as `<pasted_content id="…">…</pasted_content>`.
+The Prompts rail shows it as a framed "Pasted · N lines" block by itself. In the report's own text never copy
+these tags: say what the paste is (an error log, a review, a spec) and quote only the lines that matter as a
+`> ` block; `build.py` warns about raw tags.
+
 **Questions for the reader.** Put decisions in `approvals`. Each is a question with `options` —
 **exclusive** by default (one answer) or `"multi": true` (any that apply) — your `recommend` (a
 list for multi), `why` and `due`. The reader always has "your own answer" as an extra option; a

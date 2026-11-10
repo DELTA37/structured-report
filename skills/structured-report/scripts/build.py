@@ -642,9 +642,26 @@ VIEW_CTX = {}
 _TAG = lambda name, t: (re.search(rf"<{name}>(.*?)</{name}>", t, re.S) or [None, ""])[1].strip()
 
 
+# Text the reader pasted arrives wrapped as <pasted_content id="…">…</pasted_content> (a cut-off one may
+# lack the closing tag). Show the reader's own words, and each paste as its own framed block.
+_PASTE = re.compile(r'<pasted_content\b[^>]*>\n?(.*?)(?:\n?</pasted_content\b[^>]*>|\Z)', re.S)
+
+
+def split_pastes(text):
+    """(own words, [pasted texts]) of a prompt."""
+    pastes = [m.group(1).strip("\n") for m in _PASTE.finditer(text)]
+    return re.sub(r"\n{3,}", "\n\n", _PASTE.sub("", text)).strip(), pastes
+
+
 def prompt_view(p):
     text = p.get("text", "")
-    v = dict(p, text=redact_text(text), answer=p.get("kind") == "answer", event=False)
+    own, pastes = split_pastes(text) if "<pasted_content" in text else (text, [])
+    v = dict(p, text=redact_text(own), answer=p.get("kind") == "answer", event=False, text_is_paste=False,
+             pastes=[{"body": redact_text(b), "lines": b.count("\n") + 1,
+                      "preview": redact_text(next((l.strip() for l in b.splitlines() if l.strip()), ""))[:160]}
+                     for b in pastes])
+    if not own and pastes:                               # nothing but a paste: lead with its first line
+        v.update(text=v["pastes"][0]["preview"], text_is_paste=True)
     if "<task-notification>" in text:
         summary, status = _TAG("summary", text), _TAG("status", text).lower()
         m = re.match(r'^(.*?)\s*"(.+)"\s*(.*)$', summary, re.S)
@@ -813,6 +830,9 @@ def validate(d):
             if not os.path.exists(fp):
                 err(f"{p}: local file does not exist: {fp}")
             local.append(p)
+        if "<pasted_content" in text or "</pasted_content" in text:
+            warn(f"{p}: raw <pasted_content> tag — the reader pasted this; don't copy the tags: summarise it, "
+                 "or quote the part that matters as a '> ' block")
     if local:
         warn(f"{len(local)} link(s) point to local files (file://) — readers on other machines cannot open them; prefer repo / web URLs")
     for p, rule, m in scan_secrets(d):
