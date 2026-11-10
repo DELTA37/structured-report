@@ -58,7 +58,8 @@ code{font:12.5px/1.4 ui-monospace,"SF Mono",Menlo,monospace;background:var(--pan
   background-image:radial-gradient(var(--dot) 1px,transparent 1.2px);background-size:18px 18px}
 .canvas a,.canvas img{-webkit-user-drag:none;user-drag:none}
 .canvas.dragging{cursor:grabbing} .canvas.dragging .node,.canvas.dragging .stage{cursor:grabbing}
-.canvas .graph{position:absolute;left:0;top:0;transform-origin:0 0;will-change:transform}
+.canvas .graph{position:absolute;left:0;top:0;transform-origin:0 0}
+.canvas.dragging .graph,.flow.full .canvas .graph{will-change:transform}
 .canvas.animate .graph{transition:transform .25s cubic-bezier(.2,.7,.2,1)}
 .canvas .graph[hidden]{display:none}
 .graph > svg{position:absolute;inset:0;overflow:visible;pointer-events:none}
@@ -893,7 +894,7 @@ class Canvas {
     const end = () => { if (drag?.moved) { suppress = true; setTimeout(() => suppress = false, 0); } drag = null; el.classList.remove("dragging"); };
     el.addEventListener("pointerup", end); el.addEventListener("pointercancel", end);
     el.addEventListener("click", e => { if (suppress) { e.stopPropagation(); e.preventDefault(); } }, true);
-    el.addEventListener("wheel", e => {
+    const onWheel = e => {
       const zoom = e.ctrlKey || e.metaKey;
       // embedded (inside a scrolling report): plain wheel scrolls the report; pinch / Ctrl+wheel zooms
       if (this.embedded && !zoom && !this.el.closest(".flow.full")) return;
@@ -901,7 +902,18 @@ class Canvas {
       const r = el.getBoundingClientRect();
       if (zoom) this.zoomAt(Math.exp(-e.deltaY * (e.deltaMode ? 0.05 : 0.01)), e.clientX - r.left, e.clientY - r.top);
       else { const k = e.deltaMode ? 30 : 1; this.pan(-(e.shiftKey ? e.deltaY : e.deltaX) * k, -(e.shiftKey ? 0 : e.deltaY) * k); }
-    }, {passive: false});
+    };
+    // A non-passive wheel listener makes every scroll over it wait for the main thread (scroll jank, worst in
+    // off-screen browsers such as the IDE's). An embedded canvas only takes the wheel once the reader works with it:
+    // after a press inside it or in full-screen mode; leaving it gives the wheel back to the page.
+    let armed = false;
+    const arm = on => { if (on === armed) return; armed = on; el[on ? "addEventListener" : "removeEventListener"]("wheel", onWheel, {passive: false}); };
+    if (!this.embedded) arm(true);
+    else {
+      el.addEventListener("pointerdown", () => arm(true), {passive: true});
+      el.addEventListener("pointermove", () => { if (!armed && this.el.closest(".flow.full")) arm(true); }, {passive: true});
+      el.addEventListener("pointerleave", () => { if (!this.el.closest(".flow.full")) arm(false); }, {passive: true});
+    }
     el.addEventListener("dblclick", e => { if (!e.target.closest("[data-id],.zoom,.minimap")) this.fit(true); });
     el.addEventListener("click", e => {
       const z = e.target.closest("[data-zoom]"); if (!z || !el.contains(z)) return;

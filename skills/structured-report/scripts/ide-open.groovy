@@ -11,7 +11,8 @@
 //   • session has a report with prompts             → one tab «Отчёт», in the editor window right of the
 //     session (split once), shows THAT session's report; switching sessions switches the report;
 //   • the shown report's HTML was rebuilt           → reload.
-// The page runs in a windowed (not off-screen) JCEF browser: native mouse input — clicks, scrolling, dragging.
+// Files are read on the service thread; the IDE's UI thread is touched only to look at the tabs and, when
+// something changed, to open / switch / reload the pane — so the IDE (and the report's scrolling) never waits on disk.
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.fileEditor.ex.FileEditorManagerEx
@@ -24,7 +25,7 @@ import com.intellij.openapi.util.Disposer
 import javax.swing.SwingConstants
 
 final String TITLE = "Отчёт"
-final String VERSION = "5"
+final String VERSION = "6"
 def home = System.getProperty("user.home")
 def dir = new File(home, ".claude/structured-report/ide")
 def sessionsFile = new File(home, ".claude/structured-report/sessions.json")
@@ -38,6 +39,7 @@ def sessionOf = { file ->                               // Air session tab → C
     catch (Throwable ignored) { return null }
 }
 
+def promptCache = [:]                                   // journal path → [mtime, hasPrompt]
 def reportOf = { String sid ->                          // session → [html, hasPrompt]  (no JSON lib in the IDE's Groovy)
     if (!sid || !sessionsFile.exists()) return null
     def m = (sessionsFile.getText("UTF-8") =~ /"${java.util.regex.Pattern.quote(sid)}"\s*:\s*\{[^}]*?"report"\s*:\s*"([^"]+)"/)
@@ -45,7 +47,9 @@ def reportOf = { String sid ->                          // session → [html, ha
     def base = m.group(1).replaceAll(/\.json$/, "")
     def html = new File(base + ".html"), journal = new File(base + ".journal.json")
     if (!html.exists()) return null
-    return [html, journal.exists() && journal.getText("UTF-8").contains('"kind": "prompt"')]
+    def jm = journal.lastModified(), c = promptCache[journal.path]
+    if (!c || c[0] != jm) { c = [jm, journal.exists() && journal.getText("UTF-8").contains('"kind": "prompt"')]; promptCache[journal.path] = c }
+    return [html, c[1]]
 }
 
 def paneFile = { FileEditorManagerEx fem -> fem.windows.collectMany { it.files.toList() }.find { it.name == TITLE } }
@@ -101,21 +105,23 @@ def debugHook = { b ->
     b.cefBrowser.executeJavaScript(DEBUG_JS.text, b.cefBrowser.URL, 0)
 }
 
-def tick = { Project project, st ->
+def selectedSid = { Project project ->                 // UI thread: the agent session the user looks at
+    def fem = FileEditorManagerEx.getInstanceEx(project)
+    def sel = ([fem.currentWindow] + fem.windows.toList()).findResult { w -> w?.selectedFile && sessionOf(w.selectedFile) ? w.selectedFile : null }
+    return [sid: sessionOf(sel), pane: paneFile(fem) != null]
+}
+
+def tick = { Project project, st, rep, long mtime ->    // UI thread: bring the pane in line with the session's report
     def fem = FileEditorManagerEx.getInstanceEx(project)
     def pane = paneFile(fem)
     if (!pane) { st.browser = null; st.html = null }
-    def sel = ([fem.currentWindow] + fem.windows.toList()).findResult { w -> w?.selectedFile && sessionOf(w.selectedFile) ? w.selectedFile : null }
-    def sid = sessionOf(sel)
-    if (!sid) return                                    // looking at code, not at a session: leave the pane alone
-    def rep = reportOf(sid)
     if (!rep || !rep[1]) { if (pane) closePane(fem, st); return }     // start screen / no report: no pane
     File html = rep[0]
     if (!pane) { openPane(project, fem, st, html); return }
     if (!st.browser) { st.browser = findBrowser(fem.getSelectedEditor(pane)?.component, 0); if (!st.browser) return }
     debugHook(st.browser)
-    if (st.html != html) { st.browser.loadURL(html.toURI().toString()); st.html = html; st.mtime = html.lastModified(); return }
-    if (html.lastModified() != st.mtime) { st.mtime = html.lastModified(); st.browser.cefBrowser.reloadIgnoreCache() }
+    if (st.html != html) { st.browser.loadURL(html.toURI().toString()); st.html = html; st.mtime = mtime; return }
+    if (mtime != st.mtime) { st.mtime = mtime; st.browser.cefBrowser.reloadIgnoreCache() }
 }
 
 def install = { Project project ->
@@ -133,9 +139,18 @@ def install = { Project project ->
         while (!Disposer.isDisposed(d) && !project.disposed) {
             try {
                 sleep(1500)
+                def snap = null
                 ApplicationManager.application.invokeAndWait {
-                    try { if (!Disposer.isDisposed(d)) tick(project, st) }
-                    catch (Throwable t) { log("${project.name}: ${t}") }
+                    try { if (!Disposer.isDisposed(d)) snap = selectedSid(project) } catch (Throwable t) { log("${project.name}: ${t}") }
+                }
+                if (snap == null || !snap.sid) continue           // looking at code, not at a session: leave the pane alone
+                def rep = reportOf(snap.sid)                      // disk, off the UI thread
+                long mtime = rep ? rep[0].lastModified() : 0L
+                def state = [rep?.getAt(0)?.path, rep?.getAt(1), mtime, snap.pane]
+                if (state == st.last && (snap.pane || !rep || !rep[1]) && (!snap.pane || st.browser)) continue   // nothing changed
+                st.last = state
+                ApplicationManager.application.invokeAndWait {
+                    try { if (!Disposer.isDisposed(d)) tick(project, st, rep, mtime) } catch (Throwable t) { log("${project.name}: ${t}") }
                 }
             } catch (InterruptedException ignored) { break }
             catch (Throwable t) { if (t.getClass().name.contains("Cancel")) break; log("${project.name}: ${t}") }
