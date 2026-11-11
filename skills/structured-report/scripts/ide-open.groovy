@@ -25,7 +25,7 @@ import com.intellij.openapi.util.Disposer
 import javax.swing.SwingConstants
 
 final String TITLE = "Отчёт"
-final String VERSION = "6"
+final String VERSION = "7"
 def home = System.getProperty("user.home")
 def dir = new File(home, ".claude/structured-report/ide")
 def sessionsFile = new File(home, ".claude/structured-report/sessions.json")
@@ -89,6 +89,45 @@ findBrowser = { Object o, int depth ->                  // the JCEF browser behi
     return null
 }
 
+// Smooth scrolling: the HTML editor's browser renders off-screen (OSR) — Chromium paints into a buffer that
+// Swing copies and repaints on the UI thread, and wheel/trackpad events go through Java: the pane stutters and
+// has no momentum. Put a windowed browser (Chromium draws straight into its own native view) inside the
+// editor's panel instead. Measured: same report, OSR pane — jerky; windowed — smooth. No IDE restart needed.
+def proxyOf = { ClassLoader cl, String iface, Closure on ->     // a JCEF handler: `on` answers what it knows, defaults elsewhere
+    java.lang.reflect.Proxy.newProxyInstance(cl, [cl.loadClass(iface)] as Class[], { proxy, m, args ->
+        if (m.name == "hashCode") return System.identityHashCode(proxy)
+        if (m.name == "equals") return proxy.is(args[0])
+        if (m.name == "toString") return "structured-report " + iface
+        def r = on(m.name, args)
+        if (r != null) return r
+        return m.returnType == boolean.class ? false : null } as java.lang.reflect.InvocationHandler)
+}
+def windowed = { editor, ob ->                          // OSR browser of the HTML editor → windowed browser in its place
+    def host = ob.component                             // JBCefBrowser$MyPanel (BorderLayout) holding the OSR view
+    def own = host.getClientProperty("structured-report.windowed")
+    if (own) return own
+    if (!ob.isOffScreenRendering()) return ob
+    def cl = ob.getClass().classLoader
+    def page = ob.cefBrowser.URL
+    def nb = cl.loadClass("com.intellij.ui.jcef.JBCefBrowser").createBuilder().setOffScreenRendering(false).setUrl(page).build()
+    def external = { String url ->                      // links leave the pane for the system browser, as in the HTML editor
+        if (!url || url.startsWith("devtools:")) return false
+        def here = nb.cefBrowser.URL?.replaceAll(/#.*$/, "")
+        if (url.replaceAll(/#.*$/, "") == here) return false
+        com.intellij.ide.BrowserUtil.browse(url); return true
+    }
+    nb.JBCefClient.addLifeSpanHandler(proxyOf(cl, "org.cef.handler.CefLifeSpanHandler", { name, args ->
+        name == "onBeforePopup" ? (external(args.find { it instanceof String }) || true) : null }), nb.cefBrowser)
+    nb.JBCefClient.addRequestHandler(proxyOf(cl, "org.cef.handler.CefRequestHandler", { name, args ->
+        if (name != "onBeforeBrowse") return null
+        def url = args.find { it?.getClass()?.name?.contains("CefRequest") }?.URL as String
+        return url && !url.startsWith("file:") ? external(url) : false }), nb.cefBrowser)
+    host.removeAll(); host.add(nb.component, java.awt.BorderLayout.CENTER); host.revalidate(); host.repaint()
+    host.putClientProperty("structured-report.windowed", nb)
+    Disposer.register(editor, nb)
+    return nb
+}
+
 def DEBUG_JS = new File(dir, "debug.js")                // temporary: log mouse events of the page into ide.log
 def debugHook = { b ->
     if (!DEBUG_JS.exists() || b == null) return
@@ -118,7 +157,13 @@ def tick = { Project project, st, rep, long mtime ->    // UI thread: bring the 
     if (!rep || !rep[1]) { if (pane) closePane(fem, st); return }     // start screen / no report: no pane
     File html = rep[0]
     if (!pane) { openPane(project, fem, st, html); return }
-    if (!st.browser) { st.browser = findBrowser(fem.getSelectedEditor(pane)?.component, 0); if (!st.browser) return }
+    if (!st.browser) {
+        def editor = fem.getSelectedEditor(pane)
+        def ob = findBrowser(editor?.component, 0)
+        if (!ob) return
+        st.browser = windowed(editor, ob)
+        if (!st.browser.is(ob)) { st.mtime = mtime; return }       // the windowed browser has just loaded the current HTML
+    }
     debugHook(st.browser)
     if (st.html != html) { st.browser.loadURL(html.toURI().toString()); st.html = html; st.mtime = mtime; return }
     if (mtime != st.mtime) { st.mtime = mtime; st.browser.cefBrowser.reloadIgnoreCache() }
